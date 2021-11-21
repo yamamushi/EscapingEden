@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"encoding/json"
+	"log"
 	"sync"
 )
 
@@ -13,7 +15,7 @@ type ChatWindow struct {
 	cwMutex      sync.Mutex
 }
 
-func NewChatWindow(x, y, w, h int) *ChatWindow {
+func NewChatWindow(x, y, w, h int, input, output chan string) *ChatWindow {
 	cw := new(ChatWindow)
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
@@ -36,8 +38,12 @@ func NewChatWindow(x, y, w, h int) *ChatWindow {
 	cw.Height = h
 	cw.Bordered = true
 
+	cw.ManagerReceive = input
+	cw.ManagerSend = output
+
 	cw.History = append(cw.History, "Hello World")
 	cw.HistoryIndex = 0
+	go cw.Listen()
 
 	return cw
 }
@@ -45,14 +51,44 @@ func NewChatWindow(x, y, w, h int) *ChatWindow {
 func (cw *ChatWindow) HandleInput(input string) {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
+	log.Println("Handling input")
 
-	cw.History = append(cw.History, input)
-	cw.HistoryIndex = len(cw.History) - 1
+	message := ConsoleMessage{Message: input, Type: "chat"}
+	output, err := json.Marshal(message)
+	if err == nil {
+		log.Println("Sending message on cw.ManagerSend")
+		cw.ManagerSend <- string(output)
+		log.Println("Message Sent")
+	} else {
+		log.Println(err.Error())
+	}
+}
+
+// Listens for any messages on cw.ReceiveMessages Chan and handles them
+func (cw *ChatWindow) Listen() {
+	for {
+		select {
+		case msg := <-cw.ManagerReceive:
+			log.Println("Received message on cw.ManagerReceive")
+
+			message := ConsoleMessage{}
+			err := json.Unmarshal([]byte(msg), &message)
+			if err == nil {
+				log.Println("Unmarshall success")
+				cw.cwMutex.Lock()
+				cw.History = append(cw.History, message.Message)
+				cw.HistoryIndex = len(cw.History) - 1
+				cw.cwMutex.Unlock()
+				log.Println("Appended to History")
+			} else {
+				log.Println(err.Error())
+			}
+		}
+	}
 }
 
 func (cw *ChatWindow) UpdateContent() {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
-
 	cw.SetContent(cw.History[cw.HistoryIndex])
 }

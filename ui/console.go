@@ -16,11 +16,43 @@ type Console struct {
 	LastSentOutput  string
 	mutex           sync.Mutex
 	Shutdown        bool
+
+	// Channels for communicating with ConnectionManager
+	SendMessages    chan string
+	ReceiveMessages chan string
 }
 
 // NewConsole creates a new console with no windows.
-func NewConsole(height int, width int) *Console {
-	return &Console{Height: height, Width: width}
+func NewConsole(height int, width int, outputChannel chan string) *Console {
+	// Setup a new Chat Window and add it to the console at the bottom.
+	receiver := make(chan string)
+
+	return &Console{Height: height, Width: width, SendMessages: outputChannel, ReceiveMessages: receiver}
+}
+
+func (c *Console) Init() {
+
+	chatWindow := NewChatWindow(0, c.Height-10, c.Width-50, 10, c.ReceiveMessages, c.SendMessages)
+	c.SetActiveWindow(chatWindow) // Set our default active window to the chat window.
+	c.AddWindow(chatWindow)
+
+	c.ConsoleCommands += c.HardClear() + c.MoveCursorToTopLeft()
+}
+
+// SetManagerSendChannel sets the channel for sending messages to the ConnectionManager.
+func (c *Console) SetManagerSendChannel(ch chan string) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	c.SendMessages = ch
+}
+
+// SetManagerReceiveChannel sets the channel for receiving messages from the ConnectionManager.
+func (c *Console) SetManagerReceiveChannel(ch chan string) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	c.ReceiveMessages = ch
 }
 
 // AddWindow adds a window to the console if it is not already in the console by ID.
@@ -60,9 +92,10 @@ func (c *Console) Draw() []byte {
 
 	for _, window := range c.Windows {
 		if !window.GetHidden() {
+
 			window.UpdateContent()
 			s = s + c.DrawWindow(window)
-
+			
 			if window == c.Windows[len(c.Windows)-1] {
 				s = s + c.DrawPrompt()
 			}
@@ -96,26 +129,23 @@ func (c *Console) HandleInput(input string) {
 
 	for _, window := range c.Windows {
 		window.HandleInput(input)
+		log.Println("Input Handled")
 	}
-}
-
-func (c *Console) Init() {
-	// Setup a new Chat Window and add it to the console at the bottom.
-
-	chatWindow := NewChatWindow(0, c.Height-10, c.Width-50, 10)
-	c.SetActiveWindow(chatWindow) // Set our default active window to the chat window.
-	c.AddWindow(chatWindow)
-
-	c.ConsoleCommands += c.HardClear() + c.MoveCursorToTopLeft()
 }
 
 // GetShutdown returns the shutdown status of the console.
 func (c *Console) GetShutdown() bool {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	return c.Shutdown
 }
 
 // SetShutdown sets the shutdown status of the console.
 func (c *Console) SetShutdown(status bool) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	c.Shutdown = status
 }
 

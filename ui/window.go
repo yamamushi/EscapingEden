@@ -64,6 +64,10 @@ type Window struct {
 	BorderFG int // The foreground color of the Window Border
 	BorderBG int // The background color of the Window Border
 
+	// Channels for communicating with ConnectionManager
+	ManagerSend    chan string // Send messages to the ConnectionManager
+	ManagerReceive chan string // Receive messages from the ConnectionManager
+
 	mutex sync.Mutex
 }
 

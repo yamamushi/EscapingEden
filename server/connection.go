@@ -42,7 +42,6 @@ func (c *Connection) Write(msg []byte) {
 
 // handleConnection handles a single connection
 func (c *Connection) Handle() {
-	defer c.conn.Close()
 	/*
 		We need to setup the session, and to do that we need to do some communication with the client.
 	*/
@@ -53,11 +52,12 @@ func (c *Connection) Handle() {
 		c.manager.HandleDisconnect(c)
 		return
 	}
-	c.console = ui.NewConsole(w, h)
-	log.Println("Initializing connection console")
+	c.console = ui.NewConsole(w, h, c.manager.CMReceiveMessages)
+	log.Println("Initializing Console")
 	c.console.Init()
-	log.Println("Connection console initialized")
+	log.Println("Console Initialized")
 	time.Sleep(time.Second * 1)
+
 	// Enter our client loop
 	for {
 		userInput, err := bufio.NewReader(c.conn).ReadString('\n')
@@ -67,6 +67,7 @@ func (c *Connection) Handle() {
 			return
 		}
 		c.console.HandleInput(userInput)
+		log.Println("Continuing client loop")
 
 		if c.console.GetShutdown() {
 			log.Println("Client requested shutdown")
@@ -75,7 +76,10 @@ func (c *Connection) Handle() {
 			c.manager.HandleDisconnect(c)
 			return
 		}
+		log.Println("Writing in client loop")
 
 		c.Write(c.outputBuffer)
+		log.Println("Finished Writing in client loop")
+
 	}
 }
