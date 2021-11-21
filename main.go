@@ -1,5 +1,7 @@
 package main
 
+import server2 "github.com/yamamushi/EscapingEden/server"
+
 /*
 Escaping Eden is a simple text adventure mud ;)
 */
@@ -20,6 +22,6 @@ func main() {
 			}
 		}
 	*/
-	server := NewServer("localhost", "8080")
+	server := server2.NewServer("localhost", "8080")
 	server.Start()
 }

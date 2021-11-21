@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bufio"
@@ -67,6 +67,15 @@ func (c *Connection) Handle() {
 			return
 		}
 		c.console.HandleInput(userInput)
+
+		if c.console.GetShutdown() {
+			log.Println("Client requested shutdown")
+			c.conn.Write([]byte("Goodbye!\n"))
+			c.conn.Close()
+			c.manager.HandleDisconnect(c)
+			return
+		}
+
 		c.Write(c.outputBuffer)
 	}
 }

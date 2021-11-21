@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"errors"
@@ -29,11 +29,10 @@ const Escape = byte('\033')
 
 // Telnet Options
 const (
-	ECHO    = byte(1)
-	TTYPE   = byte(24)
-	NAWS    = byte(31)
-	ENCRYPT = byte(38)
-	EOR     = byte(239)
+	ECHO  = byte(1)
+	TTYPE = byte(24)
+	NAWS  = byte(31)
+	EOR   = byte(239)
 )
 
 // RequestTerminalType sends the terminal type request

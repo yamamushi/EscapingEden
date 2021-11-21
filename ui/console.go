@@ -3,6 +3,7 @@ package ui
 import (
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -14,6 +15,7 @@ type Console struct {
 	ConsoleCommands string
 	LastSentOutput  string
 	mutex           sync.Mutex
+	Shutdown        bool
 }
 
 // NewConsole creates a new console with no windows.
@@ -62,7 +64,7 @@ func (c *Console) Draw() []byte {
 			s = s + c.DrawWindow(window)
 
 			if window == c.Windows[len(c.Windows)-1] {
-				s = s + c.MoveCursorToBottomLeft()
+				s = s + c.DrawPrompt()
 			}
 		}
 	}
@@ -81,17 +83,40 @@ func (c *Console) HandleInput(input string) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
+	// If input contains a newline remove it
+	input = strings.TrimRight(input, "\n")
+	input = strings.TrimRight(input, "\r")
+	input = strings.TrimRight(input, "\r\n")
+
 	log.Println("Input recieved: " + input)
+	if input == "quit" {
+		c.SetShutdown(true)
+		return
+	}
+
 	for _, window := range c.Windows {
 		window.HandleInput(input)
 	}
 }
 
 func (c *Console) Init() {
-	// Setup a new Chat Window and add it to the console
-	chatWindow := NewChatWindow(5, 10, c.Width/2, c.Height/2)
+	// Setup a new Chat Window and add it to the console at the bottom.
+
+	chatWindow := NewChatWindow(0, c.Height-10, c.Width-50, 10)
+	c.SetActiveWindow(chatWindow) // Set our default active window to the chat window.
 	c.AddWindow(chatWindow)
+
 	c.ConsoleCommands += c.HardClear() + c.MoveCursorToTopLeft()
+}
+
+// GetShutdown returns the shutdown status of the console.
+func (c *Console) GetShutdown() bool {
+	return c.Shutdown
+}
+
+// SetShutdown sets the shutdown status of the console.
+func (c *Console) SetShutdown(status bool) {
+	c.Shutdown = status
 }
 
 // Moves the cursor to the top left corner of the console
@@ -102,6 +127,12 @@ func (c *Console) MoveCursorToTopLeft() string {
 // Moves the cursor to the bottom left corner of the console
 func (c *Console) MoveCursorToBottomLeft() string {
 	return "\033[" + strconv.Itoa(c.Height) + ";0H"
+}
+
+// DrawPrompt returns the prompt for the console
+func (c *Console) DrawPrompt() string {
+	output := c.MoveCursorToBottomLeft()
+	return output + "> "
 }
 
 // ScrollLock locks the scroll
@@ -161,4 +192,15 @@ func (c *Console) DrawWindow(window WindowType) (content string) {
 	content += window.Draw(winX, winY, visibleLength, visibleHeight)
 
 	return content
+}
+
+// SetActiveWindow sets the active window and sets all other windows to inactive
+func (c *Console) SetActiveWindow(window WindowType) {
+	for _, w := range c.Windows {
+		if w.GetID() == window.GetID() {
+			w.SetActive(true)
+		} else {
+			w.SetActive(false)
+		}
+	}
 }

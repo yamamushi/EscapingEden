@@ -35,6 +35,7 @@ type WindowType interface {
 	GetHeight() int
 	GetContents() string
 	GetActive() bool
+	SetActive(bool)
 	GetHidden() bool
 	GetBordered() bool
 	GetFG() int
@@ -156,6 +157,14 @@ func (w *Window) GetActive() bool {
 	return w.Active
 }
 
+// SetActive sets the active state of the Window
+func (w *Window) SetActive(active bool) {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	w.Active = active
+}
+
 // GetHidden returns whether or not the Window is hidden
 func (w *Window) GetHidden() bool {
 	w.mutex.Lock()
@@ -259,9 +268,9 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 	// Move cursor to top left corner of window accounting for the border
 	// and the visible length and height of the window
 	parsed := "\033[" + strconv.Itoa(winY+1) + ";" + strconv.Itoa(winX+1) + "H"
-	// maxLength is the maximum length of the window subtracing the border
+	// maxLength is the maximum length of the window subtracting the border
 	maxLength := visibleLength - 2
-	// maxHeight is the maximum height of the window subtracing the border
+	// maxHeight is the maximum height of the window subtracting the border
 	maxHeight := visibleHeight - 2
 
 	currentColumn := winX + 1
