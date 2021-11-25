@@ -42,6 +42,10 @@ func (c *Console) Init() {
 	chatWindow := NewChatWindow(0, c.Height-10, c.Width-50, 10, c.ReceiveMessages, c.SendMessages)
 	c.AddWindow(chatWindow)
 
+	// Then we add our toolbox last
+	toolboxWindow := NewToolboxWindow(c.Width-48, 0, 50, c.Height, c.ReceiveMessages, c.SendMessages)
+	c.AddWindow(toolboxWindow)
+
 	c.ConsoleCommands += c.HardClear() + c.MoveCursorToTopLeft()
 }
 
@@ -67,8 +71,8 @@ func (c *Console) AddWindow(w WindowType) {
 	defer c.mutex.Unlock()
 
 	for _, window := range c.Windows {
-		log.Println("duplicate window: ", window.GetID())
 		if window.GetID() == w.GetID() {
+			log.Println("duplicate window: ", window.GetID())
 			return
 		}
 	}
@@ -100,7 +104,7 @@ func (c *Console) Draw() []byte {
 	for _, window := range c.Windows {
 		if !window.GetHidden() {
 
-			window.UpdateContent()
+			window.UpdateContents()
 			s = s + c.DrawWindow(window)
 
 			if window == c.Windows[len(c.Windows)-1] {
@@ -142,8 +146,11 @@ func (c *Console) HandleInput(input string) {
 	}
 
 	for _, window := range c.Windows {
-		window.HandleInput(input)
-		log.Println("Input Handled")
+		if window.GetActive() {
+			window.HandleInput(input)
+			log.Println("Input Handled on window: ", window.GetID())
+			return
+		}
 	}
 }
 
@@ -255,6 +262,7 @@ func (c *Console) DrawWindow(window WindowType) (content string) {
 func (c *Console) SetActiveWindow(window WindowType) {
 	for _, w := range c.Windows {
 		if w.GetID() == window.GetID() {
+			log.Println("Active window set to: ", w.GetID())
 			w.SetActive(true)
 		} else {
 			w.SetActive(false)

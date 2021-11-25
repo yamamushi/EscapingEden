@@ -97,7 +97,7 @@ func (cw *ChatWindow) Listen() {
 	}
 }
 
-func (cw *ChatWindow) UpdateContent() {
+func (cw *ChatWindow) UpdateContents() {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
 

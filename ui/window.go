@@ -21,6 +21,7 @@ const (
 	TARGETLIST = 10
 	LOGINMENU  = 11
 	WORLDMAP   = 12
+	TOOLBOX    = 13
 )
 
 type WindowType interface {
@@ -28,8 +29,9 @@ type WindowType interface {
 	HandleInput(input string)
 
 	DrawBorder(X, Y, height, width int) string
-	UpdateContent()
+	UpdateContents()
 	SetContent(string)
+	PrintAt(X, Y int, text string) string
 
 	GetID() int
 	GetX() int
@@ -85,9 +87,9 @@ func (w *Window) Draw(X int, Y int, height, width int, startX, startY int) strin
 	defer w.mutex.Unlock()
 
 	output := w.MoveCursorTopLeft()
-	output += w.DrawBorder(X, Y, height, width)
 
 	output += w.ParseContents(X, Y, height, width, startX, startY)
+	output += w.DrawBorder(X, Y, height, width)
 
 	return output
 }
@@ -114,7 +116,7 @@ func (w *Window) Move(X int, Y int) {
 }
 
 // updateContent updates the contents of the window
-func (w *Window) UpdateContent() {
+func (w *Window) UpdateContents() {
 	return
 }
 
@@ -243,6 +245,11 @@ func (w *Window) GetBorderBG() int {
 func (w *Window) MoveCursorTopLeft() string {
 	// set cursor to top left of window taking into account border
 	return fmt.Sprintf("\033[%d;%dH", w.Y+1, w.X+1)
+}
+
+func (w *Window) PrintAt(X int, Y int, text string) string {
+	// set cursor to X and Y
+	return fmt.Sprintf("\033[%d;%dH%s", X+w.GetX(), Y+w.GetY(), text)
 }
 
 // CenterText takes a text string and outputs it at the center of the window
