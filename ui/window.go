@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"strconv"
 	"sync"
 )
@@ -18,10 +19,12 @@ const (
 	TARGET     = 8
 	TARGETINFO = 9
 	TARGETLIST = 10
+	LOGINMENU  = 11
+	WORLDMAP   = 12
 )
 
 type WindowType interface {
-	Draw(X, Y, height, width int) string
+	Draw(X, Y, height, width, startX, startY int) string
 	HandleInput(input string)
 
 	DrawBorder(X, Y, height, width int) string
@@ -31,6 +34,8 @@ type WindowType interface {
 	GetID() int
 	GetX() int
 	GetY() int
+	GetStartX() int
+	GetStartY() int
 	GetWidth() int
 	GetHeight() int
 	GetContents() string
@@ -48,6 +53,9 @@ type Window struct {
 	ID int
 	X  int // The X position of the Window
 	Y  int // The Y position of the Window
+
+	StartX int // When window content is rendered, it is a 2D array, so this is the starting X position of the content
+	StartY int // When window content is rendered, it is a 2D array, so this is the starting Y position of the content
 
 	Contents         string // The contents of the window
 	LastSentContents string // The last contents sent to the client
@@ -72,14 +80,14 @@ type Window struct {
 }
 
 // Draw returns a string of the Window's contents
-func (w *Window) Draw(X int, Y int, height, width int) string {
+func (w *Window) Draw(X int, Y int, height, width int, startX, startY int) string {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 
 	output := w.MoveCursorTopLeft()
 	output += w.DrawBorder(X, Y, height, width)
 
-	output += w.ParseContents(X, Y, height, width)
+	output += w.ParseContents(X, Y, height, width, startX, startY)
 
 	return output
 }
@@ -122,6 +130,20 @@ func (w *Window) GetY() int {
 	defer w.mutex.Unlock()
 
 	return w.Y
+}
+
+func (w *Window) GetStartX() int {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	return w.StartX
+}
+
+func (w *Window) GetStartY() int {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	return w.StartY
 }
 
 func (w *Window) GetWidth() int {
@@ -219,8 +241,8 @@ func (w *Window) GetBorderBG() int {
 
 // MoveCursorTopLeft moves the cursor to the top left of the Window and returns as a string
 func (w *Window) MoveCursorTopLeft() string {
-	// set cursor to top left
-	return "\033[1;1H"
+	// set cursor to top left of window taking into account border
+	return fmt.Sprintf("\033[%d;%dH", w.Y+1, w.X+1)
 }
 
 // DrawBorder draws the Window's border
@@ -267,38 +289,78 @@ func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int
 }
 
 // Parse contents reads a string one character at a time, placing it within the bounds of the window and returns the string
-func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight int) string {
+func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight int, startX, startY int) string {
 	// Parse contents of window into a string
-	// Move cursor to top left corner of window accounting for the border
-	// and the visible length and height of the window
-	parsed := "\033[" + strconv.Itoa(winY+1) + ";" + strconv.Itoa(winX+1) + "H"
+
 	// maxLength is the maximum length of the window subtracting the border
-	maxLength := visibleLength - 2
+	maxLength := visibleLength
 	// maxHeight is the maximum height of the window subtracting the border
-	maxHeight := visibleHeight - 2
+	maxHeight := visibleHeight
 
 	currentColumn := winX + 1
-	currentLine := winY + 1
+
+	var lines []string
+	parsed := ""
 
 	// For every character in the contents
 	for i := 0; i < len(w.Contents); i++ {
 		if currentColumn > maxLength+winX {
-			// increment currentLine
-			currentLine++
 			// reset currentColumn
 			currentColumn = winX + 1
-			// if the currentLine is greater than the height then return the parsed string
-			if currentLine > maxHeight+winY {
-				return parsed
-			}
-			// Move cursor down one line
-			parsed += "\033[" + strconv.Itoa(currentLine) + ";" + strconv.Itoa(currentColumn) + "H"
+			// append the current line to the lines slice
+			lines = append(lines, parsed)
+			// reset parsed
+			parsed = ""
 
 		}
+		// if the character is a newline
+		if w.Contents[i] == '\n' {
+			// reset currentColumn
+			currentColumn = winX + 1
+			// append the current line to the lines slice
+			lines = append(lines, parsed)
+			// reset parsed
+			parsed = ""
+			currentColumn++
+			continue
+		}
+
 		// append the character to the parsed string
 		parsed += string(w.Contents[i])
 		// increment currentColumn
 		currentColumn++
+
+		// If this is the last character in the contents
+		if i == len(w.Contents)-1 {
+			// append the current line to the lines slice
+			lines = append(lines, parsed)
+		}
 	}
-	return parsed
+
+	// Move cursor to top left corner of window accounting for the border
+	// and the visible length and height of the window
+	output := "\033[" + strconv.Itoa(winY+1) + ";" + strconv.Itoa(winX+1) + "H"
+	currentLine := winY + 1
+
+	// append the last maxHeight lines to the output string
+	if len(lines) >= maxHeight {
+		for i := len(lines) - maxHeight; i < len(lines); i++ {
+			output += lines[i]
+			// increment currentLine
+			currentLine++
+			// Move cursor down one line
+			output += "\033[" + strconv.Itoa(currentLine) + ";" + strconv.Itoa(winX+1) + "H"
+
+		}
+	} else {
+		for i := 0; i < len(lines); i++ {
+			output += lines[i]
+			// increment currentLine
+			currentLine++
+			// Move cursor down one line
+			output += "\033[" + strconv.Itoa(currentLine) + ";" + strconv.Itoa(winX+1) + "H"
+		}
+	}
+
+	return output
 }

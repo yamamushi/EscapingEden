@@ -95,7 +95,7 @@ func (c *Console) Draw() []byte {
 
 			window.UpdateContent()
 			s = s + c.DrawWindow(window)
-			
+
 			if window == c.Windows[len(c.Windows)-1] {
 				s = s + c.DrawPrompt()
 			}
@@ -120,6 +120,13 @@ func (c *Console) HandleInput(input string) {
 	input = strings.TrimRight(input, "\n")
 	input = strings.TrimRight(input, "\r")
 	input = strings.TrimRight(input, "\r\n")
+	/*
+		// If length of input is greater than 80
+		if len(input) > 80 {
+			c.GetChatWindow().ConsoleMessage("Input too long (Max 80 characters). Please try again.")
+			return
+		}
+	*/
 
 	log.Println("Input recieved: " + input)
 	if input == "quit" {
@@ -131,6 +138,19 @@ func (c *Console) HandleInput(input string) {
 		window.HandleInput(input)
 		log.Println("Input Handled")
 	}
+}
+
+// GetChatWindow returns the chat window.
+func (c *Console) GetChatWindow() *ChatWindow {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	for _, window := range c.Windows {
+		if window.GetID() == 0 {
+			return window.(*ChatWindow)
+		}
+	}
+	return nil
 }
 
 // GetShutdown returns the shutdown status of the console.
@@ -219,7 +239,7 @@ func (c *Console) DrawWindow(window WindowType) (content string) {
 	winX, winY, visibleLength, visibleHeight := c.GetWindowAttrs(window)
 
 	// Draw content of window
-	content += window.Draw(winX, winY, visibleLength, visibleHeight)
+	content += window.Draw(winX, winY, visibleLength, visibleHeight, 0, 0)
 
 	return content
 }

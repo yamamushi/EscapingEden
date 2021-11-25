@@ -64,6 +64,13 @@ func (cw *ChatWindow) HandleInput(input string) {
 	}
 }
 
+// ConsoleMessage is called by console to manually write a console message to the history
+func (cw *ChatWindow) ConsoleMessage(message string) {
+	cw.cwMutex.Lock()
+	defer cw.cwMutex.Unlock()
+	cw.History = append(cw.History, message)
+}
+
 // Listens for any messages on cw.ReceiveMessages Chan and handles them
 func (cw *ChatWindow) Listen() {
 	for {
@@ -77,7 +84,6 @@ func (cw *ChatWindow) Listen() {
 				log.Println("Unmarshall success")
 				cw.cwMutex.Lock()
 				cw.History = append(cw.History, message.Message)
-				cw.HistoryIndex = len(cw.History) - 1
 				cw.cwMutex.Unlock()
 				log.Println("Appended to History")
 			} else {
@@ -90,5 +96,16 @@ func (cw *ChatWindow) Listen() {
 func (cw *ChatWindow) UpdateContent() {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
-	cw.SetContent(cw.History[cw.HistoryIndex])
+
+	// only keep the newest 500 messages in cw.history
+	if len(cw.History) > 500 {
+		cw.History = cw.History[len(cw.History)-500:]
+	}
+
+	output := ""
+	for i := 0; i < len(cw.History); i++ {
+		output += cw.History[i] + "\n"
+	}
+
+	cw.SetContent(output)
 }

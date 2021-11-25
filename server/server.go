@@ -32,6 +32,7 @@ func NewServer(host string, port string) *Server {
 func (s *Server) Start() {
 	l, err := net.Listen("tcp", s.Host+":"+s.Port)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 
