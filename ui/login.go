@@ -2,6 +2,7 @@ package ui
 
 import (
 	"log"
+	"strings"
 	"sync"
 )
 
@@ -70,7 +71,7 @@ func NewLoginWindow(x, y, w, h int, input, output chan string) *LoginWindow {
 	lw.Height = h
 	lw.Bordered = true
 	lw.ConsoleReceive = input
-	lw.ManagerSend = output
+	lw.ConsoleSend = output
 	lw.windowState = LoginWindowMenu
 
 	lw.credentials = &LoginCreds{}
@@ -78,46 +79,33 @@ func NewLoginWindow(x, y, w, h int, input, output chan string) *LoginWindow {
 }
 
 func (lw *LoginWindow) HandleInput(input string) {
-	lw.lwMutex.Lock()
-	defer lw.lwMutex.Unlock()
-
-	if lw.GetActive() {
-		log.Println("LoginWindow Handling input")
-	}
-
-	if input != "cherry" {
-		lw.Error("Invalid input")
-		return
+	switch lw.windowState {
+	case LoginWindowMenu:
+		lw.handleMenuInput(input)
+	case LoginWindowLogin:
+		lw.handleLoginInput(input)
+	case LoginWindowRegister:
+		lw.handleRegistrationInput(input)
 	}
 }
 
 func (lw *LoginWindow) UpdateContents() {
-	lw.lwMutex.Lock()
-	defer lw.lwMutex.Unlock()
-	// First we are going to setup our default login screen
-	lw.Contents = ""
-
 	switch lw.windowState {
 	case LoginWindowMenu:
-		lw.Contents = lw.DrawMenu()
+		lw.drawMenu()
 	case LoginWindowLogin:
-		lw.Contents = "Login"
+		lw.drawLoginMenu()
 	case LoginWindowRegister:
-		lw.Contents = "Register"
-	}
-
-	// parse the current state as a string
-	switch lw.loginState {
-	case LoginUsername:
-		//lw.Contents += lw.CenterText(SetRGB(&ColorCode{0xAA, 0x00, 0x00}, "Username:"), 10)
-	case LoginPassword:
-		//lw.Contents += lw.CenterText(SetRGB(&ColorCode{0xAA, 0x00, 0x00}, "Password:"), 5)
-	case LoginSubmit:
-		//lw.Contents += lw.CenterText(SetRGB(&ColorCode{0xAA, 0x00, 0x00}, "Submitting..."), 5)
+		lw.drawRegistrationMenu()
 	}
 }
 
-func (lw *LoginWindow) DrawMenu() string {
+func (lw *LoginWindow) drawMenu() {
+	lw.lwMutex.Lock()
+	defer lw.lwMutex.Unlock()
+
+	// First we are going to setup our default login screen
+	lw.SetContents("")
 
 	artConvert := NewArtConvert()
 	artWork, err := artConvert.OpenAt("./assets/ascii/menuIsland.txt", lw, 10, 10)
@@ -134,7 +122,99 @@ func (lw *LoginWindow) DrawMenu() string {
 	output += lw.PrintAt(16, 10, "("+BoldText("q")+")quit")
 
 	output += ResetStyle()
+	lw.SetContents(output)
+	return
+}
 
-	return output
+func (lw *LoginWindow) handleMenuInput(input string) {
+	lw.lwMutex.Lock()
+	defer lw.lwMutex.Unlock()
 
+	if !lw.GetActive() {
+		return
+	}
+
+	input = strings.ToLower(input[:1])
+
+	switch input {
+	case "l":
+		log.Println("Login selected")
+		lw.windowState = LoginWindowLogin
+		lw.loginState = LoginUsername
+	case "r":
+		log.Println("Register selected")
+		lw.windowState = LoginWindowRegister
+		lw.registrationState = RegistrationUsername
+	case "q":
+		log.Println("Quit selected")
+		consoleMessage := &ConsoleMessage{Type: "quit"}
+		lw.ConsoleSend <- consoleMessage.String()
+	}
+}
+
+func (lw *LoginWindow) handleLoginInput(input string) {
+	lw.lwMutex.Lock()
+	defer lw.lwMutex.Unlock()
+
+	if !lw.GetActive() {
+		return
+	}
+
+	input = strings.ToLower(input[:1])
+
+	switch lw.loginState {
+	case LoginUsername:
+		lw.credentials.Username = input
+		lw.loginState = LoginPassword
+	case LoginPassword:
+		lw.credentials.Hash = input
+		lw.loginState = LoginSubmit
+	case LoginSubmit:
+		lw.ConsoleSend <- "login:" + lw.credentials.Username + ":" + lw.credentials.Hash
+		lw.loginState = LoginUsername
+	}
+}
+
+func (lw *LoginWindow) handleRegistrationInput(input string) {
+	lw.lwMutex.Lock()
+	defer lw.lwMutex.Unlock()
+
+	if !lw.GetActive() {
+		return
+	}
+
+	switch lw.registrationState {
+	case RegistrationUsername:
+		lw.credentials.Username = input
+		lw.registrationState = RegistrationPassword
+	case RegistrationPassword:
+		lw.credentials.Hash = input
+		lw.registrationState = RegistrationPasswordConfirm
+	case RegistrationPasswordConfirm:
+		lw.credentials.Hash = input
+		lw.registrationState = RegistrationEmail
+	case RegistrationEmail:
+		lw.credentials.Hash = input
+		lw.registrationState = RegistrationDiscord
+	case RegistrationDiscord:
+		lw.credentials.Hash = input
+		lw.registrationState = RegistrationSubmit
+	case RegistrationSubmit:
+		lw.ConsoleSend <- "register:" + lw.credentials.Username + ":" + lw.credentials.Hash
+		lw.registrationState = RegistrationUsername
+	}
+}
+
+func (lw *LoginWindow) drawLoginMenu() {
+	lw.lwMutex.Lock()
+	defer lw.lwMutex.Unlock()
+
+	lw.SetContents("Login")
+}
+
+func (lw *LoginWindow) drawRegistrationMenu() {
+	lw.lwMutex.Lock()
+	defer lw.lwMutex.Unlock()
+
+	lw.SetContents("Registration")
 }

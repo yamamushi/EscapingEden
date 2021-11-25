@@ -13,13 +13,15 @@ type Console struct {
 	Height       int    // The height of the console
 	Width        int    // The width of the console
 
-	Windows           []WindowType // The list of windows that are currently in the console
-	ConsoleCommands   string
-	LastSentOutput    string
-	mutex             sync.Mutex
-	Shutdown          bool
-	cursorReset       bool
-	backspaceReceived bool
+	Windows            []WindowType // The list of windows that are currently in the console
+	ConsoleCommands    string
+	LastSentOutput     string
+	mutex              sync.Mutex
+	Shutdown           bool
+	cursorReset        bool
+	backspaceReceived  bool
+	consoleInitialized bool
+	initConsole        sync.Once
 
 	// Channels for communicating with ConnectionManager
 	WindowMessages  chan string
@@ -48,6 +50,7 @@ func NewConsole(height int, width int, connectionID string, outputChannel chan s
 
 func (c *Console) Init() {
 
+	c.consoleInitialized = false
 	// First we setup our login window
 	loginWindow := NewLoginWindow(0, 0, c.Width-50, c.Height-12, c.LoginMessages, c.WindowMessages)
 	c.AddWindow(loginWindow)
@@ -83,6 +86,8 @@ func (c *Console) CaptureWindowMessages() {
 			switch consoleMessage.Type {
 			case "error":
 				consoleMessage.RecipientID = c.ConnectionID
+			case "quit":
+				consoleMessage.RecipientID = c.ConnectionID
 			}
 			consoleMessage.SenderID = c.ConnectionID
 			c.SendMessages <- consoleMessage.String()
@@ -115,8 +120,10 @@ func (c *Console) CaptureManagerMessages() {
 				log.Println("Broadcast message received from manager")
 				consoleMessage.Message = BoldText("Server Message: ") + consoleMessage.Message
 				c.ChatMessages <- consoleMessage.String()
+			case "quit":
+				log.Println("Quit message received from manager")
+				c.SetShutdown(true)
 			}
-
 		}
 	}
 }
@@ -171,11 +178,15 @@ func (c *Console) Draw() []byte {
 
 	var s string
 	s = s + c.ConsoleCommands
-	//c.ConsoleCommands = ""
+
+	if !c.consoleInitialized {
+		c.consoleInitialized = true
+		s = s + c.DrawPrompt() + c.ResetCursor()
+		return []byte(s)
+	}
 
 	for _, window := range c.Windows {
 		if !window.GetHidden() {
-			log.Println("Getting contents from window : ", window.GetID())
 			window.UpdateContents()
 			s = s + c.DrawWindow(window)
 
@@ -191,7 +202,7 @@ func (c *Console) Draw() []byte {
 	}
 
 	s = s + c.RestoreCursor()
-	
+
 	if c.backspaceReceived {
 		c.backspaceReceived = false
 		s = s + "\b"
@@ -226,10 +237,13 @@ func (c *Console) HandleInput(input string) {
 	*/
 
 	log.Println("Input recieved: " + input)
-	if input == "quit" {
-		c.SetShutdown(true)
+	if input == "" {
 		return
 	}
+	//if input == "quit" {
+	//	c.SetShutdown(true)
+	//	return
+	//}
 
 	for _, window := range c.Windows {
 		if window.GetActive() {

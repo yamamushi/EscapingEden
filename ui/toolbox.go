@@ -35,7 +35,7 @@ func NewToolboxWindow(x, y, w, h int, input, output chan string) *ToolboxWindow 
 	lw.Height = h
 	lw.Bordered = true
 	lw.ConsoleReceive = input
-	lw.ManagerSend = output
+	lw.ConsoleSend = output
 
 	return lw
 }
@@ -61,5 +61,4 @@ func (tw *ToolboxWindow) UpdateContents() {
 	time := time.Now().Format("15:04:05")
 
 	tw.SetContents("Current server time: " + time)
-	log.Println("Toolbox contents updated")
 }

@@ -122,6 +122,22 @@ func (cm *ConnectionManager) MessageParser() {
 					}
 					return true
 				})
+			case "quit":
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						if managerMessage.RecipientID == conn.ID {
+							// json marshal message to string
+							output, err := json.Marshal(managerMessage)
+							if err == nil {
+								log.Println("Quit message found, sending to conn.console.ReceiveMessages")
+								conn.console.ReceiveMessages <- string(output)
+							}
+						}
+					}
+					return true
+				})
+			default:
+				log.Println("Unknown message type received: ", managerMessage.Type, managerMessage.SenderID, managerMessage.RecipientID)
 			}
 
 		}

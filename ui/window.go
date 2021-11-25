@@ -77,8 +77,8 @@ type Window struct {
 	BorderBG int // The background color of the Window Border
 
 	// Channels for communicating with ConnectionManager
-	ManagerSend    chan string // Send messages to the ConnectionManager
-	ConsoleReceive chan string // Receive messages from the ConnectionManager
+	ConsoleSend    chan string // Send messages to the Console
+	ConsoleReceive chan string // Receive messages from the Console
 
 	mutex sync.Mutex
 }
@@ -102,7 +102,7 @@ func (w *Window) HandleInput(input string) {
 
 func (w *Window) Error(err string) {
 	consoleMessage := &ConsoleMessage{Type: "error", Message: err}
-	w.ManagerSend <- consoleMessage.String()
+	w.ConsoleSend <- consoleMessage.String()
 }
 
 // These functions implement the default WindowType interface for Window

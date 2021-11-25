@@ -40,7 +40,7 @@ func NewChatWindow(x, y, w, h int, input, output chan string) *ChatWindow {
 	cw.Bordered = true
 
 	cw.ConsoleReceive = input
-	cw.ManagerSend = output
+	cw.ConsoleSend = output
 
 	cw.History = append(cw.History, "Hello World")
 	cw.HistoryIndex = 0
@@ -56,12 +56,12 @@ func (cw *ChatWindow) HandleInput(input string) {
 		log.Println("ChatWindow Handling input")
 	}
 
-	// Send a console message to the ManagerSend channel
+	// Send a console message to the ConsoleSend channel
 	message := ConsoleMessage{Message: input, Type: "chat"}
 	output, err := json.Marshal(message)
 	if err == nil {
-		log.Println("Sending message on cw.ManagerSend")
-		cw.ManagerSend <- string(output)
+		log.Println("Sending message on cw.ConsoleSend")
+		cw.ConsoleSend <- string(output)
 		log.Println("Message Sent")
 	} else {
 		log.Println(err.Error())
@@ -85,11 +85,9 @@ func (cw *ChatWindow) Listen() {
 			message := ConsoleMessage{}
 			err := json.Unmarshal([]byte(msg), &message)
 			if err == nil {
-				log.Println("Unmarshall success")
 				cw.cwMutex.Lock()
 				cw.History = append(cw.History, message.Message)
 				cw.cwMutex.Unlock()
-				log.Println("Appended to History")
 			} else {
 				log.Println(err.Error())
 			}
@@ -98,7 +96,6 @@ func (cw *ChatWindow) Listen() {
 }
 
 func (cw *ChatWindow) UpdateContents() {
-	log.Println("Chat window updating contents")
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
 
@@ -113,5 +110,4 @@ func (cw *ChatWindow) UpdateContents() {
 	}
 
 	cw.SetContents(output)
-	log.Println("Contents updated")
 }
