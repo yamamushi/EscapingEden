@@ -33,11 +33,13 @@ func NewConnection(conn net.Conn, id string, manager *ConnectionManager) *Connec
 func (c *Connection) Write(msg []byte) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	//c.conn.Write([]byte{IAC, DONT, ECHO})
 
 	_, err := c.conn.Write(msg)
 	if err != nil {
 		log.Println(err)
 	}
+	//c.conn.Write([]byte{IAC, DO, ECHO})
 }
 
 // handleConnection handles a single connection
@@ -52,7 +54,7 @@ func (c *Connection) Handle() {
 		c.manager.HandleDisconnect(c)
 		return
 	}
-	c.console = ui.NewConsole(w, h, c.manager.CMReceiveMessages)
+	c.console = ui.NewConsole(w, h, c.ID, c.manager.CMReceiveMessages)
 	log.Println("Initializing Console")
 	c.console.Init()
 	log.Println("Console Initialized")
@@ -60,7 +62,26 @@ func (c *Connection) Handle() {
 
 	// Enter our client loop
 	for {
-		userInput, err := bufio.NewReader(c.conn).ReadString('\n')
+		buff := make([]byte, 256)
+		reader := bufio.NewReader(c.conn)
+		for {
+			readByte, err := reader.ReadByte()
+			if err != nil {
+				log.Println("Client closed connection")
+				c.manager.HandleDisconnect(c)
+				return
+			}
+			if readByte == '\n' {
+				break
+			}
+			if readByte == '\b' {
+				c.console.SetBackspaceReceived()
+			}
+			buff = append(buff, readByte)
+		}
+
+		//userInput, err := bufio.NewReader(c.conn).ReadString('\n')
+		userInput := string(buff)
 		if err != nil {
 			log.Println("Client closed connection")
 			c.manager.HandleDisconnect(c)

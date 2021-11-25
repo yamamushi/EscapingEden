@@ -69,7 +69,7 @@ func NewLoginWindow(x, y, w, h int, input, output chan string) *LoginWindow {
 	lw.Width = w
 	lw.Height = h
 	lw.Bordered = true
-	lw.ManagerReceive = input
+	lw.ConsoleReceive = input
 	lw.ManagerSend = output
 	lw.windowState = LoginWindowMenu
 
@@ -80,12 +80,14 @@ func NewLoginWindow(x, y, w, h int, input, output chan string) *LoginWindow {
 func (lw *LoginWindow) HandleInput(input string) {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
+
 	if lw.GetActive() {
 		log.Println("LoginWindow Handling input")
 	}
 
-	if len(input) > 0 {
-		log.Println(input[len(input)-1])
+	if input != "cherry" {
+		lw.Error("Invalid input")
+		return
 	}
 }
 

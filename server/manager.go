@@ -45,6 +45,7 @@ func (cm *ConnectionManager) Run() {
 		cm.connectionMap.Range(func(key, value interface{}) bool {
 			// Send the message "Boo!" to the client
 			if conn, ok := value.(*Connection); ok {
+
 				// convert string to byte array
 				if conn.console != nil {
 					output := conn.console.Draw()
@@ -70,7 +71,7 @@ func (cm *ConnectionManager) MessageParser() {
 	for {
 		select {
 		case message := <-cm.CMReceiveMessages:
-			log.Println("Message received")
+			log.Println("Message received from cm.CMReceiveMessages")
 
 			managerMessage := &ManagerMessage{}
 			err := json.Unmarshal([]byte(message), managerMessage)
@@ -83,6 +84,7 @@ func (cm *ConnectionManager) MessageParser() {
 				// For every connection, send the message to the console channel
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
+						managerMessage.Message = conn.ID + ": " + managerMessage.Message
 						// json marshal message to string
 						output, err := json.Marshal(managerMessage)
 						if err == nil {
@@ -92,10 +94,36 @@ func (cm *ConnectionManager) MessageParser() {
 					}
 					return true
 				})
+			case "broadcast":
+				// For every connection, send the message to the console channel
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						// json marshal message to string
+						output, err := json.Marshal(managerMessage)
+						if err == nil {
+							log.Println("Broadcast message found, sending to conn.console.ReceiveMessages")
+							conn.console.ReceiveMessages <- string(output)
+						}
+					}
+					return true
+				})
+			case "error":
+				// For every connection, send the message to the console channel
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						if managerMessage.RecipientID == conn.ID {
+							// json marshal message to string
+							output, err := json.Marshal(managerMessage)
+							if err == nil {
+								log.Println("Error message found, sending to conn.console.ReceiveMessages")
+								conn.console.ReceiveMessages <- string(output)
+							}
+						}
+					}
+					return true
+				})
 			}
 
-		default:
-			// Do nothing
 		}
 	}
 }

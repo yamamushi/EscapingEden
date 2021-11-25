@@ -39,7 +39,7 @@ func NewChatWindow(x, y, w, h int, input, output chan string) *ChatWindow {
 	cw.Height = h
 	cw.Bordered = true
 
-	cw.ManagerReceive = input
+	cw.ConsoleReceive = input
 	cw.ManagerSend = output
 
 	cw.History = append(cw.History, "Hello World")
@@ -79,8 +79,8 @@ func (cw *ChatWindow) ConsoleMessage(message string) {
 func (cw *ChatWindow) Listen() {
 	for {
 		select {
-		case msg := <-cw.ManagerReceive:
-			log.Println("Received message on cw.ManagerReceive")
+		case msg := <-cw.ConsoleReceive:
+			log.Println("Chat window received message from console")
 
 			message := ConsoleMessage{}
 			err := json.Unmarshal([]byte(msg), &message)
@@ -98,6 +98,7 @@ func (cw *ChatWindow) Listen() {
 }
 
 func (cw *ChatWindow) UpdateContents() {
+	log.Println("Chat window updating contents")
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
 
@@ -111,5 +112,6 @@ func (cw *ChatWindow) UpdateContents() {
 		output += cw.History[i] + "\n"
 	}
 
-	cw.SetContent(output)
+	cw.SetContents(output)
+	log.Println("Contents updated")
 }

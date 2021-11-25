@@ -30,7 +30,7 @@ type WindowType interface {
 
 	DrawBorder(X, Y, height, width int) string
 	UpdateContents()
-	SetContent(string)
+	SetContents(string)
 	PrintAt(X, Y int, text string) string
 
 	GetID() int
@@ -49,6 +49,8 @@ type WindowType interface {
 	GetBG() int
 	GetBorderFG() int
 	GetBorderBG() int
+
+	Error(string)
 }
 
 type Window struct {
@@ -76,7 +78,7 @@ type Window struct {
 
 	// Channels for communicating with ConnectionManager
 	ManagerSend    chan string // Send messages to the ConnectionManager
-	ManagerReceive chan string // Receive messages from the ConnectionManager
+	ConsoleReceive chan string // Receive messages from the ConnectionManager
 
 	mutex sync.Mutex
 }
@@ -96,6 +98,11 @@ func (w *Window) Draw(X int, Y int, height, width int, startX, startY int) strin
 
 func (w *Window) HandleInput(input string) {
 	return
+}
+
+func (w *Window) Error(err string) {
+	consoleMessage := &ConsoleMessage{Type: "error", Message: err}
+	w.ManagerSend <- consoleMessage.String()
 }
 
 // These functions implement the default WindowType interface for Window
@@ -170,7 +177,7 @@ func (w *Window) GetContents() string {
 }
 
 // SetContent sets the contents of the window
-func (w *Window) SetContent(content string) {
+func (w *Window) SetContents(content string) {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 

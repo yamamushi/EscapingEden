@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"encoding/json"
 	"log"
 	"strconv"
 	"strings"
@@ -8,45 +9,116 @@ import (
 )
 
 type Console struct {
-	Height int // The height of the console
-	Width  int // The width of the console
+	ConnectionID string // The ID of the connection using this console
+	Height       int    // The height of the console
+	Width        int    // The width of the console
 
-	Windows         []WindowType // The list of windows that are currently in the console
-	ConsoleCommands string
-	LastSentOutput  string
-	mutex           sync.Mutex
-	Shutdown        bool
+	Windows           []WindowType // The list of windows that are currently in the console
+	ConsoleCommands   string
+	LastSentOutput    string
+	mutex             sync.Mutex
+	Shutdown          bool
+	cursorReset       bool
+	backspaceReceived bool
 
 	// Channels for communicating with ConnectionManager
+	WindowMessages  chan string
 	SendMessages    chan string
 	ReceiveMessages chan string
+
+	// Channels for communicating with windows
+	LoginMessages   chan string
+	ChatMessages    chan string
+	ToolboxMessages chan string
 }
 
 // NewConsole creates a new console with no windows.
-func NewConsole(height int, width int, outputChannel chan string) *Console {
+func NewConsole(height int, width int, connectionID string, outputChannel chan string) *Console {
 	// Setup a new Chat Window and add it to the console at the bottom.
 	receiver := make(chan string)
+	windowMessages := make(chan string)
+	loginMessages := make(chan string)
+	chatMessages := make(chan string)
+	toolboxMessages := make(chan string)
 
-	return &Console{Height: height, Width: width, SendMessages: outputChannel, ReceiveMessages: receiver}
+	return &Console{Height: height, Width: width, ConnectionID: connectionID, SendMessages: outputChannel,
+		ReceiveMessages: receiver, WindowMessages: windowMessages, LoginMessages: loginMessages,
+		ChatMessages: chatMessages, ToolboxMessages: toolboxMessages}
 }
 
 func (c *Console) Init() {
 
 	// First we setup our login window
-	loginWindow := NewLoginWindow(0, 0, c.Width-50, c.Height-12, c.ReceiveMessages, c.SendMessages)
+	loginWindow := NewLoginWindow(0, 0, c.Width-50, c.Height-12, c.LoginMessages, c.WindowMessages)
 	c.AddWindow(loginWindow)
 	c.SetActiveWindow(loginWindow) // Set our default active window to the login window, we will pass this to another
 	// window after we log in.
 
 	// Next we setup our chat window
-	chatWindow := NewChatWindow(0, c.Height-10, c.Width-50, 10, c.ReceiveMessages, c.SendMessages)
+	chatWindow := NewChatWindow(0, c.Height-10, c.Width-50, 10, c.ChatMessages, c.WindowMessages)
 	c.AddWindow(chatWindow)
 
 	// Then we add our toolbox last
-	toolboxWindow := NewToolboxWindow(c.Width-48, 0, 50, c.Height, c.ReceiveMessages, c.SendMessages)
+	toolboxWindow := NewToolboxWindow(c.Width-48, 0, 50, c.Height, c.ToolboxMessages, c.WindowMessages)
 	c.AddWindow(toolboxWindow)
+	go c.CaptureWindowMessages()
+	go c.CaptureManagerMessages()
 
-	c.ConsoleCommands += c.HardClear() + c.MoveCursorToTopLeft()
+	c.ConsoleCommands += c.ClearNotPrompt() //+ c.MoveCursorToTopLeft()
+}
+
+func (c *Console) CaptureWindowMessages() {
+	for {
+		select {
+		case message := <-c.WindowMessages:
+			c.mutex.Lock()
+			log.Println("Client received window message")
+
+			consoleMessage := &ConsoleMessage{}
+			err := json.Unmarshal([]byte(message), consoleMessage)
+			if err != nil {
+				log.Println("Error unmarshalling consoleMessage: ", err)
+				continue
+			}
+			switch consoleMessage.Type {
+			case "error":
+				consoleMessage.RecipientID = c.ConnectionID
+			}
+			consoleMessage.SenderID = c.ConnectionID
+			c.SendMessages <- consoleMessage.String()
+			c.mutex.Unlock()
+		}
+	}
+}
+
+func (c *Console) CaptureManagerMessages() {
+	for {
+		select {
+		case message := <-c.ReceiveMessages:
+			log.Println("Console received message from manager")
+			consoleMessage := &ConsoleMessage{}
+			err := json.Unmarshal([]byte(message), consoleMessage)
+			if err != nil {
+				log.Println("Error unmarshalling consoleMessage: ", err)
+				continue
+			}
+
+			switch consoleMessage.Type {
+			case "chat":
+				log.Println("Chat message received from manager")
+				c.ChatMessages <- message
+			case "error":
+				log.Println("Error message received from manager")
+				consoleMessage.Message = BoldText("Error: ") + consoleMessage.Message
+				c.ChatMessages <- consoleMessage.String()
+			case "broadcast":
+				log.Println("Broadcast message received from manager")
+				consoleMessage.Message = BoldText("Server Message: ") + consoleMessage.Message
+				c.ChatMessages <- consoleMessage.String()
+			}
+
+		}
+	}
 }
 
 // SetManagerSendChannel sets the channel for sending messages to the ConnectionManager.
@@ -103,14 +175,26 @@ func (c *Console) Draw() []byte {
 
 	for _, window := range c.Windows {
 		if !window.GetHidden() {
-
+			log.Println("Getting contents from window : ", window.GetID())
 			window.UpdateContents()
 			s = s + c.DrawWindow(window)
 
-			if window == c.Windows[len(c.Windows)-1] {
-				s = s + c.DrawPrompt()
-			}
+			//if window == c.Windows[len(c.Windows)-1] {
+			//	s = s + c.DrawPrompt()
+			//}
 		}
+	}
+	if c.cursorReset {
+		c.cursorReset = false
+		s = s + c.DrawPrompt()
+		s = s + c.ResetCursor()
+	}
+
+	s = s + c.RestoreCursor()
+	
+	if c.backspaceReceived {
+		c.backspaceReceived = false
+		s = s + "\b"
 	}
 
 	// If the last output was not the same as the current output, we send it to the client and update the last output.
@@ -126,6 +210,8 @@ func (c *Console) Draw() []byte {
 func (c *Console) HandleInput(input string) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+
+	c.cursorReset = true
 
 	// If input contains a newline remove it
 	input = strings.TrimRight(input, "\n")
@@ -183,6 +269,18 @@ func (c *Console) SetShutdown(status bool) {
 	c.Shutdown = status
 }
 
+func (c *Console) SetBackspaceReceived() {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	c.backspaceReceived = true
+}
+
+func (c *Console) UnsetBackspaceReceived() {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	c.backspaceReceived = false
+}
+
 // Moves the cursor to the top left corner of the console
 func (c *Console) MoveCursorToTopLeft() string {
 	return "\033[1;1H"
@@ -212,6 +310,36 @@ func (c *Console) ScrollUnlock() string {
 // ClearTerminal
 func (c *Console) ClearTerminal() string {
 	return "\033[2J\n"
+}
+
+// ClearNotPrompt will clear each line of the console except the prompt
+func (c *Console) ClearNotPrompt() string {
+	var s string
+	// save cursor position
+	s = c.SaveCursor()
+	for i := 0; i < c.Height-1; i++ {
+		// Move cursor to line i
+		s = s + "\033[" + strconv.Itoa(i+1) + ";0H"
+		// Clear line
+		s = s + "\033[2K"
+	}
+	return s
+}
+
+func (c *Console) ResetCursor() string {
+	// Move cursor to line c.Height, 2
+	output := c.DrawPrompt()
+	output += c.SaveCursor()
+
+	return output
+}
+
+func (c *Console) SaveCursor() string {
+	return "\033[s"
+}
+
+func (c *Console) RestoreCursor() string {
+	return "\033[u"
 }
 
 // HardClear Terminal clears each line individually for height of console

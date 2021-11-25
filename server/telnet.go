@@ -88,3 +88,13 @@ func RequestTerminalSize(conn net.Conn) (height, width int, err error) {
 	}
 	return height, width, nil
 }
+
+// DisableEcho disables echo
+func DisableEcho(conn net.Conn) {
+	conn.Write([]byte{IAC, DONT, ECHO})
+}
+
+// EnableEcho enables echo
+func EnableEcho(conn net.Conn) {
+	conn.Write([]byte{IAC, DO, ECHO})
+}

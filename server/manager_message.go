@@ -1,10 +1,11 @@
 package server
 
 type ManagerMessage struct {
-	Type     string `json:"type"`
-	Message  string `json:"message"`
-	Options  string `json:"options"`
-	SenderID string `json:"sender_id"`
+	Type        string `json:"type"`
+	Message     string `json:"message"`
+	Options     string `json:"options"`
+	SenderID    string `json:"sender_id"`
+	RecipientID string `json:"recipient_id"`
 }
 
 // MessageType is the type of message

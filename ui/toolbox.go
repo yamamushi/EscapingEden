@@ -34,7 +34,7 @@ func NewToolboxWindow(x, y, w, h int, input, output chan string) *ToolboxWindow 
 	lw.Width = w
 	lw.Height = h
 	lw.Bordered = true
-	lw.ManagerReceive = input
+	lw.ConsoleReceive = input
 	lw.ManagerSend = output
 
 	return lw
@@ -43,6 +43,7 @@ func NewToolboxWindow(x, y, w, h int, input, output chan string) *ToolboxWindow 
 func (tw *ToolboxWindow) HandleInput(input string) {
 	tw.twMutex.Lock()
 	defer tw.twMutex.Unlock()
+
 	if tw.GetActive() {
 		log.Println("Toolbox Handling input")
 	}
@@ -55,9 +56,10 @@ func (tw *ToolboxWindow) HandleInput(input string) {
 func (tw *ToolboxWindow) UpdateContents() {
 	tw.twMutex.Lock()
 	defer tw.twMutex.Unlock()
-	
+
 	// current time with second accuracy as a string
 	time := time.Now().Format("15:04:05")
 
-	tw.Contents = "Current server time: " + time
+	tw.SetContents("Current server time: " + time)
+	log.Println("Toolbox contents updated")
 }
