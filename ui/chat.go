@@ -17,6 +17,7 @@ type ChatWindow struct {
 
 func NewChatWindow(x, y, w, h int, input, output chan string) *ChatWindow {
 	cw := new(ChatWindow)
+	cw.ID = CHATBOX
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
 		x = 1
@@ -51,8 +52,11 @@ func NewChatWindow(x, y, w, h int, input, output chan string) *ChatWindow {
 func (cw *ChatWindow) HandleInput(input string) {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
-	log.Println("Handling input")
+	if cw.GetActive() {
+		log.Println("ChatWindow Handling input")
+	}
 
+	// Send a console message to the ManagerSend channel
 	message := ConsoleMessage{Message: input, Type: "chat"}
 	output, err := json.Marshal(message)
 	if err == nil {

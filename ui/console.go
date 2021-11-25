@@ -32,8 +32,14 @@ func NewConsole(height int, width int, outputChannel chan string) *Console {
 
 func (c *Console) Init() {
 
+	// First we setup our login window
+	loginWindow := NewLoginWindow(0, 0, c.Width-50, c.Height-12, c.ReceiveMessages, c.SendMessages)
+	c.AddWindow(loginWindow)
+	c.SetActiveWindow(loginWindow) // Set our default active window to the login window, we will pass this to another
+	// window after we log in.
+
+	// Next we setup our chat window
 	chatWindow := NewChatWindow(0, c.Height-10, c.Width-50, 10, c.ReceiveMessages, c.SendMessages)
-	c.SetActiveWindow(chatWindow) // Set our default active window to the chat window.
 	c.AddWindow(chatWindow)
 
 	c.ConsoleCommands += c.HardClear() + c.MoveCursorToTopLeft()
@@ -61,6 +67,7 @@ func (c *Console) AddWindow(w WindowType) {
 	defer c.mutex.Unlock()
 
 	for _, window := range c.Windows {
+		log.Println("duplicate window: ", window.GetID())
 		if window.GetID() == w.GetID() {
 			return
 		}

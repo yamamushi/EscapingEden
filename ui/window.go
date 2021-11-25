@@ -245,6 +245,18 @@ func (w *Window) MoveCursorTopLeft() string {
 	return fmt.Sprintf("\033[%d;%dH", w.Y+1, w.X+1)
 }
 
+// CenterText takes a text string and outputs it at the center of the window
+func (w *Window) CenterText(text string, line int) string {
+	// get the length of the text
+	length := len(text)
+
+	// get the center of the window
+	center := (w.Width / 2) - (length / 2)
+
+	// return the text centered in the window
+	return fmt.Sprintf("\033[%d;%dH%s", w.Y+line, w.X+center+1, text)
+}
+
 // DrawBorder draws the Window's border
 
 // DrawBorder returns the border of a window using code page 437 characters as a string
