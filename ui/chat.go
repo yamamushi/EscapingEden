@@ -41,6 +41,7 @@ func NewChatWindow(x, y, w, h int, input, output chan string) *ChatWindow {
 
 	cw.ConsoleReceive = input
 	cw.ConsoleSend = output
+	cw.ScrollingSupported = true
 
 	cw.History = append(cw.History, "Hello World")
 	cw.HistoryIndex = 0
@@ -115,6 +116,16 @@ func (cw *ChatWindow) Listen() {
 			if err == nil {
 				cw.cwMutex.Lock()
 				cw.History = append(cw.History, message.Message)
+				// We know if our starting position is less than 0, and we append a new message, then there is
+				// Content in the scroll buffer that has not been displayed yet.
+				if cw.ContentStartPos < 0 {
+					cw.DecreaseContentPos()
+					cw.ScrollBufferHasNew = true
+				} else {
+					cw.ScrollBufferHasNew = false
+				}
+
+				log.Println("content start pos: ", cw.ContentStartPos)
 				cw.cwMutex.Unlock()
 			} else {
 				log.Println(err.Error())

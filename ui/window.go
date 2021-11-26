@@ -51,6 +51,8 @@ type WindowType interface {
 	GetBorderFG() int
 	GetBorderBG() int
 
+	SupportsScrolling() bool
+
 	Error(string)
 	Quit()
 }
@@ -63,9 +65,11 @@ type Window struct {
 	StartX int // When window content is rendered, it is a 2D array, so this is the starting X position of the content
 	StartY int // When window content is rendered, it is a 2D array, so this is the starting Y position of the content
 
-	Contents         string // The contents of the window
-	ContentStartPos  int    // The starting position of the content
-	LastSentContents string // The last contents sent to the client
+	Contents           string // The contents of the window
+	ContentStartPos    int    // The starting position of the content
+	LastSentContents   string // The last contents sent to the client
+	ScrollingSupported bool
+	ScrollBufferHasNew bool // Indicates that the scroll buffer has new content
 
 	Width    int  // The width of the Window
 	Height   int  // The height of the Window
@@ -82,6 +86,8 @@ type Window struct {
 	// Channels for communicating with ConnectionManager
 	ConsoleSend    chan string // Send messages to the Console
 	ConsoleReceive chan string // Receive messages from the Console
+
+	DirectionInput InputType // The last direction input from the user
 
 	mutex sync.Mutex
 }
@@ -147,6 +153,13 @@ func (w *Window) GetY() int {
 	defer w.mutex.Unlock()
 
 	return w.Y
+}
+
+func (w *Window) SupportsScrolling() bool {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	return w.ScrollingSupported
 }
 
 func (w *Window) GetStartX() int {
@@ -259,13 +272,13 @@ func (w *Window) GetBorderBG() int {
 func (w *Window) IncreaseContentPos() {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
-	w.ContentStartPos++
+	w.DirectionInput = InputUp
 }
 
 func (w *Window) DecreaseContentPos() {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
-	w.ContentStartPos--
+	w.DirectionInput = InputDown
 }
 
 // MoveCursorTopLeft moves the cursor to the top left of the Window and returns as a string
@@ -330,6 +343,10 @@ func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int
 		} else {
 			border += "\u2502"
 		}
+
+		// Move cursor to the right side of the window
+		border += "\033[" + strconv.Itoa(winY+i+1) + ";" + strconv.Itoa(winX+visibleLength) + "H"
+
 		// Move cursor to right side of window
 		border += "\033[" + strconv.Itoa(winY+i+1) + ";" + strconv.Itoa(winX+visibleLength+1) + "H"
 		// Draw right border
@@ -368,14 +385,9 @@ func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int
 	return border
 }
 
-// Parse contents reads a string one character at a time, placing it within the bounds of the window and returns the string
-func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight int, startX, startY int) string {
-	// Parse contents of window into a string
-
+func (w *Window) ContentToLines(winX int, winY int, visibleLength int) ([]string, int) {
 	// maxLength is the maximum length of the window subtracting the border
 	maxLength := visibleLength
-	// maxHeight is the maximum height of the window subtracting the border
-	maxHeight := visibleHeight
 
 	currentColumn := winX + 1
 
@@ -416,10 +428,20 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 			lines = append(lines, parsed)
 		}
 	}
+	return lines, len(lines)
+}
+
+// Parse contents reads a string one character at a time, placing it within the bounds of the window and returns the string
+func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight int, startX, startY int) string {
+	// Parse contents of window into a string
+
+	// maxHeight is the maximum height of the window subtracting the border
+	maxHeight := visibleHeight
+	lines, _ := w.ContentToLines(winX, winY, visibleLength)
 
 	// Move cursor to top left corner of window accounting for the border
 	// and the visible length and height of the window
-	output := "\033[" + strconv.Itoa(winY+1) + ";" + strconv.Itoa(winX+1) + "H"
+	output := ""
 	currentLine := winY + 1
 
 	// append the last maxHeight lines to the output string
@@ -427,6 +449,20 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 		//if currentLine > maxHeight {
 		//	return output
 		//}
+
+		if w.ScrollingSupported {
+			if w.DirectionInput == InputUp {
+				w.ContentStartPos++
+				w.DirectionInput = 0
+			} else if w.DirectionInput == InputDown {
+				w.ContentStartPos--
+				w.DirectionInput = 0
+			}
+		}
+
+		if w.ContentStartPos == 0 {
+			w.ScrollBufferHasNew = false
+		}
 
 		contentStartPos := 0
 		if len(lines)-maxHeight+w.ContentStartPos-1 < 0 {
@@ -438,7 +474,29 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 		} else {
 			contentStartPos = w.ContentStartPos
 		}
-		
+
+		if len(lines)-maxHeight+contentStartPos-1 > 0 {
+			// Move cursor to the top right corner of the window
+			output += "\033[" + strconv.Itoa(winY+1) + ";" + strconv.Itoa(winX+visibleLength+1) + "H"
+			// draw an up arrow in grey
+			output += "\033[37m" + "\u2191" + "\033[37m"
+		}
+		if len(lines)-maxHeight+contentStartPos-1 < len(lines)-maxHeight-1 {
+			// Move cursor to the bottom right corner of the window
+			output += "\033[" + strconv.Itoa(winY+visibleHeight+1) + ";" + strconv.Itoa(winX+visibleLength+1) + "H"
+
+			if w.ScrollBufferHasNew {
+				// draw a down arrow in red
+				output += "\033[31m" + "\u2193" + "\033[37m"
+			} else {
+				// draw a down arrow in grey
+				output += "\033[37m" + "\u2193" + "\033[37m"
+			}
+		}
+
+		// Return cursor to top left
+		output += "\033[" + strconv.Itoa(winY+1) + ";" + strconv.Itoa(winX+1) + "H"
+
 		for i := len(lines) - maxHeight + contentStartPos - 1; i < len(lines); i++ {
 			output += lines[i]
 			// increment currentLine
@@ -448,6 +506,18 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 
 		}
 	} else {
+		if w.ScrollingSupported {
+			// If the length of content doesn't exceed our visible height, we don't need to scroll
+			// And we can discard the DirectionInput
+			if w.DirectionInput == InputUp {
+				w.ContentStartPos = 0
+				w.DirectionInput = 0
+			} else if w.DirectionInput == InputDown {
+				w.ContentStartPos = 0
+				w.DirectionInput = 0
+			}
+		}
+
 		for i := 0; i < len(lines); i++ {
 			output += lines[i]
 			// increment currentLine
