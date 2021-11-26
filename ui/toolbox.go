@@ -40,7 +40,7 @@ func NewToolboxWindow(x, y, w, h int, input, output chan string) *ToolboxWindow 
 	return lw
 }
 
-func (tw *ToolboxWindow) HandleInput(input string) {
+func (tw *ToolboxWindow) HandleInput(input Input) {
 	tw.twMutex.Lock()
 	defer tw.twMutex.Unlock()
 
@@ -48,8 +48,8 @@ func (tw *ToolboxWindow) HandleInput(input string) {
 		log.Println("Toolbox Handling input")
 	}
 
-	if len(input) > 0 {
-		log.Println(input[len(input)-1])
+	if len(input.Data) > 0 {
+		log.Println(input.Data)
 	}
 }
 

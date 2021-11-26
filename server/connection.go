@@ -11,12 +11,11 @@ import (
 
 // Connection is a connection to a client in case we need to store any extra details later
 type Connection struct {
-	ID           string
-	conn         net.Conn
-	mutex        sync.Mutex
-	outputBuffer []byte
-	console      *ui.Console
-	manager      *ConnectionManager
+	ID      string
+	conn    net.Conn
+	mutex   sync.Mutex
+	console *ui.Console
+	manager *ConnectionManager
 }
 
 // NewConnection creates a new connection
@@ -56,9 +55,10 @@ func (c *Connection) Handle() {
 	//RequestTerminalType(conn)
 	w, h, err := RequestTerminalSize(c.conn)
 	log.Println("Enabling LineMode on client")
-	EnableLineMode(c.conn)
+	err = EnableLineMode(c.conn)
+	err = DisableEcho(c.conn) // Flush our IAC codes, we don't care about the responses (for now)
 	if err != nil {
-		log.Println("Client unsupported, disconnecting")
+		log.Println("Client unsupported, disconnecting: ", err)
 		c.manager.HandleDisconnect(c)
 		return
 	}
@@ -68,114 +68,16 @@ func (c *Connection) Handle() {
 	log.Println("Console Initialized")
 	time.Sleep(time.Second * 1)
 
+	reader := bufio.NewReader(c.conn)
+
 	// Enter our client loop
 	for {
-
-		var buff []byte
-		reader := bufio.NewReader(c.conn)
-		for {
-			readByte, err := reader.ReadByte()
-			if err != nil {
-				log.Println("Client closed connection")
-				c.manager.HandleDisconnect(c)
-				return
-			}
-			// if byte is return character
-			if readByte == '\r' {
-				if len(buff) == 0 {
-					buff = append(buff, readByte)
-					continue
-				}
-				break
-			}
-			if readByte == '\n' {
-				if len(buff) == 0 {
-					buff = append(buff, readByte)
-					continue
-				}
-				break
-			}
-			// if byte is a backspace sequence
-			if readByte == '\b' {
-				if len(buff) > 0 {
-					buff = buff[:len(buff)-1]
-				}
-				c.console.SetBackspaceReceived(1)
-				continue
-			}
-			// if control key is pressed log it
-			if readByte == '\x1b' {
-				log.Println("Control key pressed")
-			}
-			if readByte == '\x7f' {
-				c.console.SetBackspaceReceived(3)
-				continue
-			}
-			// if ascll code is a control character, log it
-			if readByte < 32 {
-				log.Println("Control character received:", readByte)
-			}
-
-			// If up arrow pressed, move cursor up and erase
-			if readByte == '\033' {
-				log.Println("Read escape sequence")
-				// Read the next byte
-				readByte, err = reader.ReadByte()
-				if err != nil {
-					log.Println("Client closed connection")
-					c.manager.HandleDisconnect(c)
-					return
-				}
-				log.Println("Read byte after escape: ", string(readByte))
-				if readByte == '[' {
-					// Read the next byte
-					readByte, err = reader.ReadByte()
-					if err != nil {
-						log.Println("Client closed connection")
-						c.manager.HandleDisconnect(c)
-						return
-					}
-					if readByte == 'A' {
-						log.Println("Up arrow pressed")
-						c.console.HandleMovement("up")
-					}
-					if readByte == 'B' {
-						log.Println("Down arrow pressed")
-						c.console.HandleMovement("down")
-					}
-					if readByte == 'C' {
-						log.Println("Right arrow pressed")
-						c.console.HandleMovement("right")
-					}
-					if readByte == 'D' {
-						log.Println("Left arrow pressed")
-						c.console.HandleMovement("left")
-					}
-				}
-				c.console.SetBackspaceReceived(3)
-			}
-			buff = append(buff, readByte)
-			log.Println("Read byte: ", string(readByte))
-		}
-
-		//userInput, err := bufio.NewReader(c.conn).ReadString('\n')
-		userInput := string(buff)
-		log.Println("User Input Buffer received: " + userInput)
+		readByte, err := reader.ReadByte()
 		if err != nil {
 			log.Println("Client closed connection")
 			c.manager.HandleDisconnect(c)
 			return
 		}
-		c.console.HandleInput(userInput)
-		c.Write(c.outputBuffer)
-		if c.console.GetShutdown() {
-			log.Println("Client requested shutdown")
-			c.conn.Write([]byte("Goodbye!\n"))
-			c.conn.Close()
-			c.manager.HandleDisconnect(c)
-			return
-		}
-		log.Println("Finished Writing in client loop")
-
+		c.console.HandleInput(readByte)
 	}
 }

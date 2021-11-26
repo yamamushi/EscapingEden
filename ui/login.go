@@ -79,14 +79,14 @@ func NewLoginWindow(x, y, w, h int, input, output chan string) *LoginWindow {
 	return lw
 }
 
-func (lw *LoginWindow) HandleInput(input string) {
+func (lw *LoginWindow) HandleInput(input Input) {
 	switch lw.windowState {
 	case LoginWindowMenu:
-		lw.handleMenuInput(input)
+		lw.handleMenuInput(input.Data)
 	case LoginWindowLogin:
-		lw.handleLoginInput(input)
+		lw.handleLoginInput(input.Data)
 	case LoginWindowRegister:
-		lw.handleRegistrationInput(input)
+		lw.handleRegistrationInput(input.Data)
 	}
 }
 

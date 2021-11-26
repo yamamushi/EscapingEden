@@ -27,7 +27,7 @@ const (
 
 type WindowType interface {
 	Draw(X, Y, height, width, startX, startY int) string
-	HandleInput(input string)
+	HandleInput(input Input)
 
 	DrawBorder(X, Y, height, width int) string
 	UpdateContents()
@@ -99,7 +99,7 @@ func (w *Window) Draw(X int, Y int, height, width int, startX, startY int) strin
 	return output
 }
 
-func (w *Window) HandleInput(input string) {
+func (w *Window) HandleInput(input Input) {
 	return
 }
 

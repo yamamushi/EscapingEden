@@ -40,7 +40,7 @@ func NewPopupBox(x, y, w, h int, input, output chan string) *PopupBox {
 	return pb
 }
 
-func (pb *PopupBox) HandleInput(input string) {
+func (pb *PopupBox) HandleInput(input Input) {
 	pb.pbMutex.Lock()
 	defer pb.pbMutex.Unlock()
 
@@ -48,8 +48,8 @@ func (pb *PopupBox) HandleInput(input string) {
 		log.Println("PopupBox Handling input")
 	}
 
-	if len(input) > 0 {
-		log.Println(input[len(input)-1])
+	if len(input.Data) > 0 {
+		log.Println(input.Data)
 	}
 }
 

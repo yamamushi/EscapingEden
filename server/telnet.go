@@ -91,23 +91,112 @@ func RequestTerminalSize(conn net.Conn) (height, width int, err error) {
 }
 
 // DisableEcho disables echo
-func DisableEcho(conn net.Conn) {
-	conn.Write([]byte{IAC, DONT, ECHO})
-}
+func DisableEcho(conn net.Conn) error {
+	conn.Write([]byte{IAC, WILL, ECHO})
+	// We don't care about the response
+	// Read until end of response
+	var iac bool
+	for {
+		b := make([]byte, 1)
+		_, err := conn.Read(b)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
 
-// EnableEcho enables echo
-func EnableEcho(conn net.Conn) {
-	conn.Write([]byte{IAC, DO, ECHO})
+		if b[0] == IAC {
+			iac = true
+		}
+		if iac {
+			if b[0] == WONT {
+				// read next byte
+				b := make([]byte, 1)
+				_, err := conn.Read(b)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+				if b[0] == ECHO {
+					return errors.New("client refused echo")
+				}
+
+			}
+			if b[0] == DO {
+				// read next byte
+				b := make([]byte, 1)
+				_, err := conn.Read(b)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+				if b[0] == ECHO {
+					log.Println("client accepted echo")
+					return nil
+				}
+			}
+		}
+	}
 }
 
 // EnableLineMode disables line mode
-func EnableLineMode(conn net.Conn) {
+func EnableLineMode(conn net.Conn) error {
 	conn.Write([]byte{IAC, DO, LINEMODE})
-	conn.Write([]byte{IAC, WILL, ECHO})
-}
+	// We don't care about the response
+	// Read until end of response
+	var iac bool
+	for {
+		b := make([]byte, 1)
+		_, err := conn.Read(b)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
 
-// DisableLineMode disables line mode
-func DisableLineMode(conn net.Conn) {
-	conn.Write([]byte{IAC, DONT, LINEMODE})
-	conn.Write([]byte{IAC, WONT, ECHO})
+		if b[0] == IAC {
+			iac = true
+		}
+		if iac {
+			if b[0] == SB {
+				log.Println("Subnegotiation begun")
+				// Read until SE is read because we don't care about the response
+				for {
+					b := make([]byte, 1)
+					_, err := conn.Read(b)
+					if err != nil {
+						log.Println(err)
+						return err
+					}
+					if b[0] == SE {
+						log.Println("Subnegotiation ended")
+						return nil // Client accented linemode, and negotiated
+					}
+				}
+				iac = false
+			}
+			if b[0] == WONT {
+				// read next byte
+				b := make([]byte, 1)
+				_, err := conn.Read(b)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+				if b[0] == LINEMODE {
+					return errors.New("client refused linemode")
+				}
+			}
+			if b[0] == WILL {
+				// read next byte
+				b := make([]byte, 1)
+				_, err := conn.Read(b)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+				if b[0] == LINEMODE {
+					log.Println("client accented linemode")
+				}
+			}
+		}
+	}
 }

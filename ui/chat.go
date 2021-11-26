@@ -49,28 +49,28 @@ func NewChatWindow(x, y, w, h int, input, output chan string) *ChatWindow {
 	return cw
 }
 
-func (cw *ChatWindow) HandleInput(input string) {
+func (cw *ChatWindow) HandleInput(input Input) {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
 	if cw.GetActive() {
 		log.Println("ChatWindow Handling input")
 	}
 
-	if input == "up" {
+	if input.Data == "up" {
 		log.Println("ChatWindow Handling input up")
 	}
-	if input == "down" {
+	if input.Data == "down" {
 		log.Println("ChatWindow Handling input down")
 	}
-	if input == "left" {
+	if input.Data == "left" {
 		log.Println("ChatWindow Handling input left")
 	}
-	if input == "right" {
+	if input.Data == "right" {
 		log.Println("ChatWindow Handling input right")
 	}
 
 	// Send a console message to the ConsoleSend channel
-	message := ConsoleMessage{Message: input, Type: "chat"}
+	message := ConsoleMessage{Message: input.Data, Type: "chat"}
 	output, err := json.Marshal(message)
 	if err == nil {
 		log.Println("Sending message on cw.ConsoleSend")

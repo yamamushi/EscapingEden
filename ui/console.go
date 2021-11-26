@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -18,8 +17,6 @@ type Console struct {
 	LastSentOutput     string
 	mutex              sync.Mutex
 	Shutdown           bool
-	cursorReset        bool
-	backspaceReceived  int
 	consoleInitialized bool
 	initConsole        sync.Once
 
@@ -33,6 +30,10 @@ type Console struct {
 	ChatMessages     chan string
 	ToolboxMessages  chan string
 	PopupBoxMessages chan string
+
+	inputBuffer    string
+	escapeBuffer   string
+	escapeSequence bool
 }
 
 // NewConsole creates a new console with no windows.
@@ -73,7 +74,7 @@ func (c *Console) Init() {
 	c.SetActiveWindow(chatWindow) // Set our default active window to the login window, we will pass this to another
 	// window after we log in.
 
-	c.ConsoleCommands += c.ClearNotPrompt() //+ c.MoveCursorToTopLeft()
+	c.ConsoleCommands += c.ClearTerminal() + c.HideCursor() // + c.DrawPrompt() + c.MoveCursorToTopLeft()
 }
 
 func (c *Console) CaptureWindowMessages() {
@@ -187,7 +188,7 @@ func (c *Console) Draw() []byte {
 
 	if !c.consoleInitialized {
 		c.consoleInitialized = true
-		s = s + c.DrawPrompt() + c.ResetCursor()
+		//s = s + c.DrawPrompt()
 		return []byte(s)
 	}
 
@@ -195,24 +196,8 @@ func (c *Console) Draw() []byte {
 		if !window.GetHidden() {
 			window.UpdateContents()
 			s = s + c.DrawWindow(window)
-
-			//if window == c.Windows[len(c.Windows)-1] {
-			//	s = s + c.DrawPrompt()
-			//}
 		}
 	}
-	if c.cursorReset {
-		c.cursorReset = false
-		s = s + c.DrawPrompt()
-		s = s + c.ResetCursor()
-	}
-
-	s = s + c.RestoreCursor()
-
-	for i := 0; i < c.backspaceReceived; i++ {
-		s = s + "\b"
-	}
-	c.backspaceReceived = 0
 
 	// If the last output was not the same as the current output, we send it to the client and update the last output.
 	if c.LastSentOutput != s && s != "" {
@@ -224,40 +209,72 @@ func (c *Console) Draw() []byte {
 }
 
 // HandleInput accepts a string terminated by a newline and processes it.
-func (c *Console) HandleInput(input string) {
+func (c *Console) HandleInput(rawInput byte) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	c.cursorReset = true
-
-	// If input contains a newline remove it
-	input = strings.TrimRight(input, "\n")
-	input = strings.TrimRight(input, "\r")
-	input = strings.TrimRight(input, "\r\n")
-	/*
-		// If length of input is greater than 80
-		if len(input) > 80 {
-			c.GetChatWindow().ConsoleMessage("Input too long (Max 80 characters). Please try again.")
-			return
-		}
-	*/
-
-	log.Println("Input recieved: " + input)
-	if input == "" {
+	// Captures things like the arrow keys.
+	if rawInput == '\033' {
+		c.escapeBuffer = "\\033" // Just used for logging the escape sequence buffer, nothing else
+		c.escapeSequence = true  // Lets us know that the next few bytes are going to be related to the escape sequence
 		return
 	}
-	//if input == "quit" {
-	//	c.SetShutdown(true)
-	//	return
-	//}
 
-	for _, window := range c.Windows {
-		if window.GetActive() {
-			window.HandleInput(input)
-			log.Println("Input Handled on window: ", window.GetID())
+	// If we have an active escape sequence, we continue parsing it.
+	if c.escapeSequence {
+		// If we have a [, we know we are starting a new escape sequence.
+		if rawInput == '[' {
+			c.escapeBuffer += "["
 			return
 		}
+		// If our escape buffer has an escape sequence, we know we are still parsing it.
+		if c.escapeBuffer == "\\033[" {
+			c.escapeBuffer += string(rawInput)
+			switch rawInput {
+			case 'A':
+				log.Println("Up arrow pressed")
+			case 'B':
+				log.Println("Down arrow pressed")
+			case 'C':
+				log.Println("Right arrow pressed")
+			case 'D':
+				log.Println("Left arrow pressed")
+			default:
+				log.Println("Unknown escape sequence: ", c.escapeBuffer)
+			}
+			c.escapeBuffer = ""
+			c.escapeSequence = false
+			return
+		}
+		c.escapeBuffer += string(rawInput)
+		log.Println("Unknown escape sequence log: " + string(c.escapeBuffer))
+		c.escapeBuffer = ""
+		c.escapeSequence = false
+		return
 	}
+
+	// If we have a backspace, we remove the last character from the input buffer.
+	if rawInput == '\b' || rawInput == '\x7f' {
+		if len(c.inputBuffer) > 0 {
+			c.inputBuffer = c.inputBuffer[:len(c.inputBuffer)-1]
+		}
+		return
+	}
+
+	if rawInput == '\r' {
+		log.Println("Return Input Received")
+		for _, window := range c.Windows {
+			if window.GetActive() {
+				window.HandleInput(Input{Type: InputCharacter, Data: c.inputBuffer})
+				log.Println("Input Handled on window: ", window.GetID())
+				c.inputBuffer = ""
+				return
+			}
+		}
+		c.inputBuffer = ""
+		return
+	}
+	c.inputBuffer += string(rawInput)
 }
 
 // GetChatWindow returns the chat window.
@@ -289,11 +306,7 @@ func (c *Console) SetShutdown(status bool) {
 	c.Shutdown = status
 }
 
-func (c *Console) SetBackspaceReceived(count int) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	c.backspaceReceived = count
-}
+// DisableCursor disables the cursor.
 
 // Moves the cursor to the top left corner of the console
 func (c *Console) MoveCursorToTopLeft() string {
@@ -330,8 +343,8 @@ func (c *Console) ClearTerminal() string {
 func (c *Console) ClearNotPrompt() string {
 	var s string
 	// save cursor position
-	s = c.SaveCursor()
-	for i := 0; i < c.Height-1; i++ {
+	//s = c.SaveCursor()
+	for i := 0; i < c.Height; i++ {
 		// Move cursor to line i
 		s = s + "\033[" + strconv.Itoa(i+1) + ";0H"
 		// Clear line
@@ -340,20 +353,20 @@ func (c *Console) ClearNotPrompt() string {
 	return s
 }
 
-func (c *Console) ResetCursor() string {
-	// Move cursor to line c.Height, 2
-	output := c.DrawPrompt()
-	output += c.SaveCursor()
-
-	return output
-}
-
 func (c *Console) SaveCursor() string {
 	return "\033[s"
 }
 
 func (c *Console) RestoreCursor() string {
 	return "\033[u"
+}
+
+func (c *Console) HideCursor() string {
+	return "\033[?25l"
+}
+
+func (c *Console) ShowCursor() string {
+	return "\033[?25h"
 }
 
 // HardClear Terminal clears each line individually for height of console
@@ -427,12 +440,12 @@ func (c *Console) HandleMovement(dir string) {
 	// For the window ID
 	switch activeWindow.GetID() {
 	case CHATBOX:
-		activeWindow.HandleInput(dir)
+		activeWindow.HandleInput(Input{Type: InputDir, Data: dir})
 	case LOGINMENU:
-		activeWindow.HandleInput(dir)
+		activeWindow.HandleInput(Input{Type: InputDir, Data: dir})
 	case TOOLBOX:
-		activeWindow.HandleInput(dir)
+		activeWindow.HandleInput(Input{Type: InputDir, Data: dir})
 	case POPUPBOX:
-		activeWindow.HandleInput(dir)
+		activeWindow.HandleInput(Input{Type: InputDir, Data: dir})
 	}
 }

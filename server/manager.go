@@ -38,14 +38,11 @@ func (cm *ConnectionManager) HandleDisconnect(connection *Connection) {
 }
 
 func (cm *ConnectionManager) Run() {
-
 	go cm.MessageParser() // Launch our goroutine that listens for incoming messages
-
 	for {
 		cm.connectionMap.Range(func(key, value interface{}) bool {
 			// Send the message "Boo!" to the client
 			if conn, ok := value.(*Connection); ok {
-
 				// convert string to byte array
 				if conn.console != nil {
 					output := conn.console.Draw()
@@ -53,14 +50,15 @@ func (cm *ConnectionManager) Run() {
 						log.Println("Sending Console Draw")
 						conn.Write(output)
 					}
+					if conn.console.GetShutdown() {
+						log.Println("Client requested shutdown")
+						conn.Write([]byte("Goodbye!\n"))
+						cm.HandleDisconnect(conn)
+					}
 				}
 			}
-			// do something with key and/or value
 			return true // return true to continue iterating
 		})
-
-		// Sleep a random amount of seconds between 1 and 5
-		//time.Sleep(time.Duration(rand.Intn(5-1)+1) * time.Second)
 	}
 }
 
