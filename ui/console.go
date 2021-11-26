@@ -19,7 +19,7 @@ type Console struct {
 	mutex              sync.Mutex
 	Shutdown           bool
 	cursorReset        bool
-	backspaceReceived  bool
+	backspaceReceived  int
 	consoleInitialized bool
 	initConsole        sync.Once
 
@@ -29,9 +29,10 @@ type Console struct {
 	ReceiveMessages chan string
 
 	// Channels for communicating with windows
-	LoginMessages   chan string
-	ChatMessages    chan string
-	ToolboxMessages chan string
+	LoginMessages    chan string
+	ChatMessages     chan string
+	ToolboxMessages  chan string
+	PopupBoxMessages chan string
 }
 
 // NewConsole creates a new console with no windows.
@@ -42,10 +43,11 @@ func NewConsole(height int, width int, connectionID string, outputChannel chan s
 	loginMessages := make(chan string)
 	chatMessages := make(chan string)
 	toolboxMessages := make(chan string)
+	popupBoxMessage := make(chan string)
 
 	return &Console{Height: height, Width: width, ConnectionID: connectionID, SendMessages: outputChannel,
 		ReceiveMessages: receiver, WindowMessages: windowMessages, LoginMessages: loginMessages,
-		ChatMessages: chatMessages, ToolboxMessages: toolboxMessages}
+		ChatMessages: chatMessages, ToolboxMessages: toolboxMessages, PopupBoxMessages: popupBoxMessage}
 }
 
 func (c *Console) Init() {
@@ -54,8 +56,6 @@ func (c *Console) Init() {
 	// First we setup our login window
 	loginWindow := NewLoginWindow(0, 0, c.Width-50, c.Height-12, c.LoginMessages, c.WindowMessages)
 	c.AddWindow(loginWindow)
-	c.SetActiveWindow(loginWindow) // Set our default active window to the login window, we will pass this to another
-	// window after we log in.
 
 	// Next we setup our chat window
 	chatWindow := NewChatWindow(0, c.Height-10, c.Width-50, 10, c.ChatMessages, c.WindowMessages)
@@ -66,6 +66,12 @@ func (c *Console) Init() {
 	c.AddWindow(toolboxWindow)
 	go c.CaptureWindowMessages()
 	go c.CaptureManagerMessages()
+
+	popupBox := NewPopupBox(c.Width/2-40, c.Height/2-10, 80, 20, c.PopupBoxMessages, c.WindowMessages)
+	c.AddWindow(popupBox)
+
+	c.SetActiveWindow(chatWindow) // Set our default active window to the login window, we will pass this to another
+	// window after we log in.
 
 	c.ConsoleCommands += c.ClearNotPrompt() //+ c.MoveCursorToTopLeft()
 }
@@ -203,10 +209,10 @@ func (c *Console) Draw() []byte {
 
 	s = s + c.RestoreCursor()
 
-	if c.backspaceReceived {
-		c.backspaceReceived = false
+	for i := 0; i < c.backspaceReceived; i++ {
 		s = s + "\b"
 	}
+	c.backspaceReceived = 0
 
 	// If the last output was not the same as the current output, we send it to the client and update the last output.
 	if c.LastSentOutput != s && s != "" {
@@ -283,16 +289,10 @@ func (c *Console) SetShutdown(status bool) {
 	c.Shutdown = status
 }
 
-func (c *Console) SetBackspaceReceived() {
+func (c *Console) SetBackspaceReceived(count int) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	c.backspaceReceived = true
-}
-
-func (c *Console) UnsetBackspaceReceived() {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	c.backspaceReceived = false
+	c.backspaceReceived = count
 }
 
 // Moves the cursor to the top left corner of the console
@@ -409,5 +409,30 @@ func (c *Console) SetActiveWindow(window WindowType) {
 		} else {
 			w.SetActive(false)
 		}
+	}
+}
+
+func (c *Console) GetActiveWindow() WindowType {
+	for _, w := range c.Windows {
+		if w.GetActive() {
+			return w
+		}
+	}
+	return nil
+}
+
+func (c *Console) HandleMovement(dir string) {
+	// Get the active window
+	activeWindow := c.GetActiveWindow()
+	// For the window ID
+	switch activeWindow.GetID() {
+	case CHATBOX:
+		activeWindow.HandleInput(dir)
+	case LOGINMENU:
+		activeWindow.HandleInput(dir)
+	case TOOLBOX:
+		activeWindow.HandleInput(dir)
+	case POPUPBOX:
+		activeWindow.HandleInput(dir)
 	}
 }

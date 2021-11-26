@@ -22,6 +22,7 @@ const (
 	LOGINMENU  = 11
 	WORLDMAP   = 12
 	TOOLBOX    = 13
+	POPUPBOX   = 14
 )
 
 type WindowType interface {
@@ -51,6 +52,7 @@ type WindowType interface {
 	GetBorderBG() int
 
 	Error(string)
+	Quit()
 }
 
 type Window struct {
@@ -62,6 +64,7 @@ type Window struct {
 	StartY int // When window content is rendered, it is a 2D array, so this is the starting Y position of the content
 
 	Contents         string // The contents of the window
+	ContentStartPos  int    // The starting position of the content
 	LastSentContents string // The last contents sent to the client
 
 	Width    int  // The width of the Window
@@ -102,6 +105,11 @@ func (w *Window) HandleInput(input string) {
 
 func (w *Window) Error(err string) {
 	consoleMessage := &ConsoleMessage{Type: "error", Message: err}
+	w.ConsoleSend <- consoleMessage.String()
+}
+
+func (w *Window) Quit() {
+	consoleMessage := &ConsoleMessage{Type: "quit"}
 	w.ConsoleSend <- consoleMessage.String()
 }
 
@@ -248,6 +256,18 @@ func (w *Window) GetBorderBG() int {
 	return w.BorderBG
 }
 
+func (w *Window) IncreaseContentPos() {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+	w.ContentStartPos++
+}
+
+func (w *Window) DecreaseContentPos() {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+	w.ContentStartPos--
+}
+
 // MoveCursorTopLeft moves the cursor to the top left of the Window and returns as a string
 func (w *Window) MoveCursorTopLeft() string {
 	// set cursor to top left of window taking into account border
@@ -370,7 +390,7 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 
 	// append the last maxHeight lines to the output string
 	if len(lines) >= maxHeight {
-		for i := len(lines) - maxHeight; i < len(lines); i++ {
+		for i := len(lines) - maxHeight + w.ContentStartPos; i < len(lines); i++ {
 			output += lines[i]
 			// increment currentLine
 			currentLine++

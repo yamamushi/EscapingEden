@@ -39,7 +39,8 @@ const (
 type RegistrationState int
 
 const (
-	RegistrationUsername RegistrationState = iota
+	RegistrationMain RegistrationState = iota
+	RegistrationUsername
 	RegistrationPassword
 	RegistrationPasswordConfirm
 	RegistrationEmail
@@ -133,8 +134,14 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 	if !lw.GetActive() {
 		return
 	}
+	input = strings.ToLower(input)
 
-	input = strings.ToLower(input[:1])
+	if input != "l" && input != "r" && input != "q" && input != "login" && input != "register" && input != "quit" {
+		lw.Error("Invalid input received")
+		return
+	}
+
+	input = input[:1]
 
 	switch input {
 	case "l":
@@ -144,11 +151,10 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 	case "r":
 		log.Println("Register selected")
 		lw.windowState = LoginWindowRegister
-		lw.registrationState = RegistrationUsername
+		lw.registrationState = RegistrationMain
 	case "q":
 		log.Println("Quit selected")
-		consoleMessage := &ConsoleMessage{Type: "quit"}
-		lw.ConsoleSend <- consoleMessage.String()
+		lw.Quit()
 	}
 }
 
@@ -184,6 +190,8 @@ func (lw *LoginWindow) handleRegistrationInput(input string) {
 	}
 
 	switch lw.registrationState {
+	case RegistrationMain:
+		lw.registrationState = RegistrationUsername
 	case RegistrationUsername:
 		lw.credentials.Username = input
 		lw.registrationState = RegistrationPassword
@@ -216,5 +224,5 @@ func (lw *LoginWindow) drawRegistrationMenu() {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
 
-	lw.SetContents("Registration")
+	lw.SetContents("Welcome to Escaping Eden! You are about to embark upon a journey into ")
 }

@@ -56,6 +56,19 @@ func (cw *ChatWindow) HandleInput(input string) {
 		log.Println("ChatWindow Handling input")
 	}
 
+	if input == "up" {
+		log.Println("ChatWindow Handling input up")
+	}
+	if input == "down" {
+		log.Println("ChatWindow Handling input down")
+	}
+	if input == "left" {
+		log.Println("ChatWindow Handling input left")
+	}
+	if input == "right" {
+		log.Println("ChatWindow Handling input right")
+	}
+
 	// Send a console message to the ConsoleSend channel
 	message := ConsoleMessage{Message: input, Type: "chat"}
 	output, err := json.Marshal(message)

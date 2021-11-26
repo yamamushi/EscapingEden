@@ -29,10 +29,11 @@ const Escape = byte('\033')
 
 // Telnet Options
 const (
-	ECHO  = byte(1)
-	TTYPE = byte(24)
-	NAWS  = byte(31)
-	EOR   = byte(239)
+	ECHO     = byte(1)
+	TTYPE    = byte(24)
+	NAWS     = byte(31)
+	LINEMODE = byte(34)
+	EOR      = byte(239)
 )
 
 // RequestTerminalType sends the terminal type request
@@ -97,4 +98,16 @@ func DisableEcho(conn net.Conn) {
 // EnableEcho enables echo
 func EnableEcho(conn net.Conn) {
 	conn.Write([]byte{IAC, DO, ECHO})
+}
+
+// EnableLineMode disables line mode
+func EnableLineMode(conn net.Conn) {
+	conn.Write([]byte{IAC, DO, LINEMODE})
+	conn.Write([]byte{IAC, WILL, ECHO})
+}
+
+// DisableLineMode disables line mode
+func DisableLineMode(conn net.Conn) {
+	conn.Write([]byte{IAC, DONT, LINEMODE})
+	conn.Write([]byte{IAC, WONT, ECHO})
 }
