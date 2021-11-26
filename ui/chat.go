@@ -59,9 +59,11 @@ func (cw *ChatWindow) HandleInput(input Input) {
 	switch input.Type {
 	case InputUp:
 		log.Println("ChatWindow Up")
+		cw.DecreaseContentPos()
 		return
 	case InputDown:
 		log.Println("ChatWindow Down")
+		cw.IncreaseContentPos()
 		return
 	case InputLeft:
 		log.Println("ChatWindow Left")

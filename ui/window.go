@@ -423,8 +423,23 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 	currentLine := winY + 1
 
 	// append the last maxHeight lines to the output string
-	if len(lines) >= maxHeight {
-		for i := len(lines) - maxHeight + w.ContentStartPos; i < len(lines); i++ {
+	if len(lines) > maxHeight {
+		//if currentLine > maxHeight {
+		//	return output
+		//}
+
+		contentStartPos := 0
+		if len(lines)-maxHeight+w.ContentStartPos-1 < 0 {
+			contentStartPos = 0 - len(lines) + maxHeight + 1
+			w.ContentStartPos = 0 - len(lines) + maxHeight + 1
+		} else if len(lines)-maxHeight+w.ContentStartPos-1 > len(lines)-maxHeight-1 {
+			contentStartPos = 0
+			w.ContentStartPos = 0
+		} else {
+			contentStartPos = w.ContentStartPos
+		}
+		
+		for i := len(lines) - maxHeight + contentStartPos - 1; i < len(lines); i++ {
 			output += lines[i]
 			// increment currentLine
 			currentLine++
