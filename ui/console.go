@@ -31,9 +31,9 @@ type Console struct {
 	ToolboxMessages  chan string
 	PopupBoxMessages chan string
 
-	inputBuffer    string
 	escapeBuffer   string
 	escapeSequence bool
+	returnSequence bool
 }
 
 // NewConsole creates a new console with no windows.
@@ -55,11 +55,11 @@ func (c *Console) Init() {
 
 	c.consoleInitialized = false
 	// First we setup our login window
-	loginWindow := NewLoginWindow(0, 0, c.Width-50, c.Height-12, c.LoginMessages, c.WindowMessages)
+	loginWindow := NewLoginWindow(0, 0, c.Width-51, c.Height-13, c.LoginMessages, c.WindowMessages)
 	c.AddWindow(loginWindow)
 
 	// Next we setup our chat window
-	chatWindow := NewChatWindow(0, c.Height-10, c.Width-50, 10, c.ChatMessages, c.WindowMessages)
+	chatWindow := NewChatWindow(0, c.Height-10, c.Width-51, c.Height, c.ChatMessages, c.WindowMessages)
 	c.AddWindow(chatWindow)
 
 	// Then we add our toolbox last
@@ -212,6 +212,10 @@ func (c *Console) Draw() []byte {
 func (c *Console) HandleInput(rawInput byte) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	if rawInput == 0 {
+		// Ignore these null bytes
+		return
+	}
 
 	// Captures things like the arrow keys.
 	if rawInput == '\033' {
@@ -226,19 +230,18 @@ func (c *Console) HandleInput(rawInput byte) {
 		if rawInput == '[' {
 			c.escapeBuffer += "["
 			return
-		}
-		// If our escape buffer has an escape sequence, we know we are still parsing it.
-		if c.escapeBuffer == "\\033[" {
+		} else if c.escapeBuffer == "\\033[" {
+			// If our escape buffer has an escape sequence, we know we are still parsing it.
 			c.escapeBuffer += string(rawInput)
 			switch rawInput {
 			case 'A':
-				log.Println("Up arrow pressed")
+				c.InputToActiveWindow(Input{Type: InputUp})
 			case 'B':
-				log.Println("Down arrow pressed")
+				c.InputToActiveWindow(Input{Type: InputDown})
 			case 'C':
-				log.Println("Right arrow pressed")
+				c.InputToActiveWindow(Input{Type: InputRight})
 			case 'D':
-				log.Println("Left arrow pressed")
+				c.InputToActiveWindow(Input{Type: InputLeft})
 			default:
 				log.Println("Unknown escape sequence: ", c.escapeBuffer)
 			}
@@ -246,35 +249,39 @@ func (c *Console) HandleInput(rawInput byte) {
 			c.escapeSequence = false
 			return
 		}
-		c.escapeBuffer += string(rawInput)
-		log.Println("Unknown escape sequence log: " + string(c.escapeBuffer))
 		c.escapeBuffer = ""
 		c.escapeSequence = false
-		return
 	}
 
 	// If we have a backspace, we remove the last character from the input buffer.
 	if rawInput == '\b' || rawInput == '\x7f' {
-		if len(c.inputBuffer) > 0 {
-			c.inputBuffer = c.inputBuffer[:len(c.inputBuffer)-1]
-		}
+		c.InputToActiveWindow(Input{Type: InputBackspace})
+		return
+	}
+	if rawInput == '\r' {
+		c.InputToActiveWindow(Input{Type: InputReturn})
+		return
+	}
+	if rawInput == '\t' {
+		c.InputToActiveWindow(Input{Type: InputTab})
+		return
+	}
+	if rawInput == '\n' {
+		c.InputToActiveWindow(Input{Type: InputNewline})
 		return
 	}
 
-	if rawInput == '\r' {
-		log.Println("Return Input Received")
-		for _, window := range c.Windows {
-			if window.GetActive() {
-				window.HandleInput(Input{Type: InputCharacter, Data: c.inputBuffer})
-				log.Println("Input Handled on window: ", window.GetID())
-				c.inputBuffer = ""
-				return
-			}
+	c.InputToActiveWindow(Input{Type: InputCharacter, Data: string(rawInput)})
+}
+
+func (c *Console) InputToActiveWindow(input Input) {
+	for _, window := range c.Windows {
+		if window.GetActive() {
+			window.HandleInput(input)
+			log.Println("Input Handled on window: ", window.GetID())
+			return
 		}
-		c.inputBuffer = ""
-		return
 	}
-	c.inputBuffer += string(rawInput)
 }
 
 // GetChatWindow returns the chat window.
@@ -432,20 +439,4 @@ func (c *Console) GetActiveWindow() WindowType {
 		}
 	}
 	return nil
-}
-
-func (c *Console) HandleMovement(dir string) {
-	// Get the active window
-	activeWindow := c.GetActiveWindow()
-	// For the window ID
-	switch activeWindow.GetID() {
-	case CHATBOX:
-		activeWindow.HandleInput(Input{Type: InputDir, Data: dir})
-	case LOGINMENU:
-		activeWindow.HandleInput(Input{Type: InputDir, Data: dir})
-	case TOOLBOX:
-		activeWindow.HandleInput(Input{Type: InputDir, Data: dir})
-	case POPUPBOX:
-		activeWindow.HandleInput(Input{Type: InputDir, Data: dir})
-	}
 }

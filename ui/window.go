@@ -87,14 +87,14 @@ type Window struct {
 }
 
 // Draw returns a string of the Window's contents
-func (w *Window) Draw(X int, Y int, height, width int, startX, startY int) string {
+func (w *Window) Draw(X int, Y int, visibleHeight, visibleWidth int, startX, startY int) string {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 
 	output := w.MoveCursorTopLeft()
 
-	output += w.ParseContents(X, Y, height, width, startX, startY)
-	output += w.DrawBorder(X, Y, height, width)
+	output += w.ParseContents(X, Y, visibleHeight, visibleWidth, startX, startY)
+	output += w.DrawBorder(X, Y, visibleHeight+1, visibleWidth+1)
 
 	return output
 }
@@ -300,36 +300,70 @@ func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int
 	// Move cursor to top left corner of window
 	border := "\033[" + strconv.Itoa(winY) + ";" + strconv.Itoa(winX) + "H"
 	// Draw top left corner
-	border += "\u250c"
+	if w.Active {
+		border += "\033[32m" + "\u250c" + "\033[37m"
+	} else {
+		border += "\u250c"
+	}
 	for i := 0; i < visibleLength; i++ {
 		// Inserts a horizontal line
-		border += "\u2500"
+		if w.Active {
+			border += "\033[32m" + "\u2500" + "\033[37m"
+		} else {
+			border += "\u2500"
+		}
 	}
 	// insert the top right corner
-	border += "\u2510"
+	if w.Active {
+		border += "\033[32m" + "\u2510" + "\033[37m"
+	} else {
+		border += "\u2510"
+	}
 
 	// For visibleHeight draw a left and right border at each line
 	for i := 0; i < visibleHeight; i++ {
 		// Move cursor to left side of window
 		border += "\033[" + strconv.Itoa(winY+i+1) + ";" + strconv.Itoa(winX) + "H"
-		// Draw left border
-		border += "\u2502"
+		// Draw the left border
+		if w.Active {
+			border += "\033[32m" + "\u2502" + "\033[37m"
+		} else {
+			border += "\u2502"
+		}
 		// Move cursor to right side of window
 		border += "\033[" + strconv.Itoa(winY+i+1) + ";" + strconv.Itoa(winX+visibleLength+1) + "H"
 		// Draw right border
-		border += "\u2502"
+		if w.Active {
+			border += "\033[32m" + "\u2502" + "\033[37m"
+		} else {
+			border += "\u2502"
+		}
 	}
 
 	// Move cursor to bottom left corner of window
 	border += "\033[" + strconv.Itoa(winY+visibleHeight+1) + ";" + strconv.Itoa(winX) + "H"
-	// Draw bottom left corner
-	border += "\u2514"
+	if w.Active {
+		// Append color green
+		border += "\033[32m" + "\u2514" + "\033[37m"
+	} else {
+		border += "\u2514"
+	}
 	for i := 0; i < visibleLength; i++ {
 		// Inserts a horizontal line
-		border += "\u2500"
+		if w.Active {
+			// Append color green
+			border += "\033[32m" + "\u2500" + "\033[37m"
+		} else {
+			border += "\u2500"
+		}
 	}
 	// insert the bottom right corner
-	border += "\u2518"
+	if w.Active {
+		// Append color green
+		border += "\033[32m" + "\u2518" + "\033[37m"
+	} else {
+		border += "\u2518"
+	}
 
 	return border
 }

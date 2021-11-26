@@ -108,12 +108,12 @@ func (lw *LoginWindow) drawMenu() {
 	// First we are going to setup our default login screen
 	lw.SetContents("")
 
-	artConvert := NewArtConvert()
+	/*artConvert := NewArtConvert()
 	artWork, err := artConvert.OpenAt("./assets/ascii/menuIsland.txt", lw, 10, 10)
 	if err != nil {
 		log.Println(err)
-	}
-	output := artWork
+	}*/
+	output := ""
 
 	output += lw.PrintAt(10, 10, "Welcome to "+BoldText("Escaping Eden"))
 	output += lw.PrintAt(12, 10, "Please select a menu option from below")

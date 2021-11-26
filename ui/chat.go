@@ -56,18 +56,31 @@ func (cw *ChatWindow) HandleInput(input Input) {
 		log.Println("ChatWindow Handling input")
 	}
 
-	if input.Data == "up" {
-		log.Println("ChatWindow Handling input up")
+	switch input.Type {
+	case InputUp:
+		log.Println("ChatWindow Up")
+		return
+	case InputDown:
+		log.Println("ChatWindow Down")
+		return
+	case InputLeft:
+		log.Println("ChatWindow Left")
+		return
+	case InputRight:
+		log.Println("ChatWindow Right")
+		return
+	case InputNewline:
+		log.Println("ChatWindow Newline")
+		return
+	case InputBackspace:
+		log.Println("ChatWindow Backspace")
+		return
+	case InputReturn:
+		log.Println("ChatWindow Return")
+		return
 	}
-	if input.Data == "down" {
-		log.Println("ChatWindow Handling input down")
-	}
-	if input.Data == "left" {
-		log.Println("ChatWindow Handling input left")
-	}
-	if input.Data == "right" {
-		log.Println("ChatWindow Handling input right")
-	}
+
+	log.Println("Chatwindow Receive: ", input.Data)
 
 	// Send a console message to the ConsoleSend channel
 	message := ConsoleMessage{Message: input.Data, Type: "chat"}

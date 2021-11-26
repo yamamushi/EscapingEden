@@ -5,10 +5,15 @@ type InputType int
 const (
 	InputUnknown InputType = iota
 	InputCharacter
-	InputDir
+	InputUp
+	InputDown
+	InputLeft
+	InputRight
 	InputEscape
 	InputBackspace
 	InputTab
+	InputReturn
+	InputNewline
 )
 
 type Input struct {
