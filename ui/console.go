@@ -2,6 +2,8 @@ package ui
 
 import (
 	"encoding/json"
+	"github.com/yamamushi/EscapingEden/ui/console"
+	"github.com/yamamushi/EscapingEden/ui/window"
 	"log"
 	"strconv"
 	"sync"
@@ -12,10 +14,10 @@ type Console struct {
 	Height       int    // The height of the console
 	Width        int    // The width of the console
 
-	Windows            []WindowType // The list of windows that are currently in the console
+	Windows            []window.WindowType // The list of windows that are currently in the console
 	ConsoleCommands    string
 	LastSentOutput     string
-	LastActiveWindow   WindowType
+	LastActiveWindow   window.WindowType
 	mutex              sync.Mutex
 	Shutdown           bool
 	consoleInitialized bool
@@ -56,17 +58,17 @@ func (c *Console) Init() {
 
 	c.consoleInitialized = false
 	// First we setup our login window
-	loginWindow := NewLoginWindow(0, 0, c.Width-51, c.Height-13, c.Width, c.Height, c.LoginMessages, c.WindowMessages)
+	loginWindow := window.NewLoginWindow(0, 0, c.Width-51, c.Height-13, c.Width, c.Height, c.LoginMessages, c.WindowMessages)
 	loginWindow.Init()
 	c.AddWindow(loginWindow)
 
 	// Next we setup our chat window
-	chatWindow := NewChatWindow(0, c.Height-10, c.Width-51, c.Height, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
+	chatWindow := window.NewChatWindow(0, c.Height-10, c.Width-51, c.Height, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
 	chatWindow.Init()
 	c.AddWindow(chatWindow)
 
 	// Then we add our toolbox last
-	toolboxWindow := NewToolboxWindow(c.Width-48, 0, 50, c.Height, c.Width, c.Height, c.ToolboxMessages, c.WindowMessages)
+	toolboxWindow := window.NewToolboxWindow(c.Width-48, 0, 50, c.Height, c.Width, c.Height, c.ToolboxMessages, c.WindowMessages)
 	toolboxWindow.Init()
 	c.AddWindow(toolboxWindow)
 
@@ -84,7 +86,7 @@ func (c *Console) CaptureWindowMessages() {
 		select {
 		case message := <-c.WindowMessages:
 			log.Println("Client received window message")
-			consoleMessage := &ConsoleMessage{}
+			consoleMessage := &console.ConsoleMessage{}
 			err := json.Unmarshal([]byte(message), consoleMessage)
 			if err != nil {
 				log.Println("Error unmarshalling consoleMessage: ", err)
@@ -95,7 +97,7 @@ func (c *Console) CaptureWindowMessages() {
 			case "console":
 				switch consoleMessage.Message {
 				case "popup":
-					options := &PopupBoxConfig{}
+					options := &window.PopupBoxConfig{}
 					err := json.Unmarshal([]byte(consoleMessage.Options), options)
 					if err != nil {
 						log.Println("Error unmarshalling popup box options: ", err)
@@ -131,7 +133,7 @@ func (c *Console) CaptureManagerMessages() {
 		select {
 		case message := <-c.ReceiveMessages:
 			log.Println("Console received message from manager")
-			consoleMessage := &ConsoleMessage{}
+			consoleMessage := &console.ConsoleMessage{}
 			err := json.Unmarshal([]byte(message), consoleMessage)
 			if err != nil {
 				log.Println("Error unmarshalling consoleMessage: ", err)
@@ -175,7 +177,7 @@ func (c *Console) SetManagerReceiveChannel(ch chan string) {
 }
 
 // AddWindow adds a window to the console if it is not already in the console by ID.
-func (c *Console) AddWindow(w WindowType) {
+func (c *Console) AddWindow(w window.WindowType) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -262,13 +264,13 @@ func (c *Console) HandleInput(rawInput byte) {
 			c.escapeBuffer += string(rawInput)
 			switch rawInput {
 			case 'A':
-				c.InputToActiveWindow(Input{Type: InputUp})
+				c.InputToActiveWindow(window.Input{Type: window.InputUp})
 			case 'B':
-				c.InputToActiveWindow(Input{Type: InputDown})
+				c.InputToActiveWindow(window.Input{Type: window.InputDown})
 			case 'C':
-				c.InputToActiveWindow(Input{Type: InputRight})
+				c.InputToActiveWindow(window.Input{Type: window.InputRight})
 			case 'D':
-				c.InputToActiveWindow(Input{Type: InputLeft})
+				c.InputToActiveWindow(window.Input{Type: window.InputLeft})
 			default:
 				log.Println("Unknown escape sequence: ", c.escapeBuffer)
 			}
@@ -282,26 +284,26 @@ func (c *Console) HandleInput(rawInput byte) {
 
 	// If we have a backspace, we remove the last character from the input buffer.
 	if rawInput == '\b' || rawInput == '\x7f' {
-		c.InputToActiveWindow(Input{Type: InputBackspace})
+		c.InputToActiveWindow(window.Input{Type: window.InputBackspace})
 		return
 	}
 	if rawInput == '\r' {
-		c.InputToActiveWindow(Input{Type: InputReturn})
+		c.InputToActiveWindow(window.Input{Type: window.InputReturn})
 		return
 	}
 	if rawInput == '\t' {
-		c.InputToActiveWindow(Input{Type: InputTab})
+		c.InputToActiveWindow(window.Input{Type: window.InputTab})
 		return
 	}
 	if rawInput == '\n' {
-		c.InputToActiveWindow(Input{Type: InputNewline})
+		c.InputToActiveWindow(window.Input{Type: window.InputNewline})
 		return
 	}
 
-	c.InputToActiveWindow(Input{Type: InputCharacter, Data: string(rawInput)})
+	c.InputToActiveWindow(window.Input{Type: window.InputCharacter, Data: string(rawInput)})
 }
 
-func (c *Console) InputToActiveWindow(input Input) {
+func (c *Console) InputToActiveWindow(input window.Input) {
 	for _, window := range c.Windows {
 		if window.GetActive() {
 			window.HandleInput(input)
@@ -408,7 +410,7 @@ func (c *Console) ResetTerminal() string {
 }
 
 // GetWindowAttrs Takes window as an argument and returns the x,y position and visible height and length of the window
-func (c *Console) GetWindowAttrs(window WindowType) (X int, Y int, visibleLength int, visibleHeight int) {
+func (c *Console) GetWindowAttrs(window window.WindowType) (X int, Y int, visibleLength int, visibleHeight int) {
 	if (window.GetWidth() + window.GetX()) > c.Width-2 {
 		visibleLength = c.Width - window.GetX() - 2
 	} else {
@@ -424,7 +426,7 @@ func (c *Console) GetWindowAttrs(window WindowType) (X int, Y int, visibleLength
 }
 
 // DrawWindow takes a WindowType as an argument and draws the content of the window within the window border
-func (c *Console) DrawWindow(window WindowType) (content string) {
+func (c *Console) DrawWindow(window window.WindowType) (content string) {
 	// Get Window Attrs
 	winX, winY, visibleLength, visibleHeight := c.GetWindowAttrs(window)
 	// First we want to clear the window for any new content coming in
@@ -442,7 +444,7 @@ func (c *Console) DrawWindow(window WindowType) (content string) {
 }
 
 // SetActiveWindow sets the active window and sets all other windows to inactive
-func (c *Console) SetActiveWindow(window WindowType) {
+func (c *Console) SetActiveWindow(window window.WindowType) {
 	for _, w := range c.Windows {
 		if w.GetID() == window.GetID() {
 			log.Println("Active window set to: ", w.GetID())
@@ -453,7 +455,7 @@ func (c *Console) SetActiveWindow(window WindowType) {
 	}
 }
 
-func (c *Console) GetActiveWindow() WindowType {
+func (c *Console) GetActiveWindow() window.WindowType {
 	for _, w := range c.Windows {
 		if w.GetActive() {
 			return w
@@ -462,10 +464,10 @@ func (c *Console) GetActiveWindow() WindowType {
 	return nil
 }
 
-func (c *Console) OpenPopup(options *PopupBoxConfig) {
+func (c *Console) OpenPopup(options *window.PopupBoxConfig) {
 	//popupBox := NewPopupBox(c.Width/2-40, c.Height/2-10, 80, 20, c.PopupBoxMessages, c.WindowMessages)
 	log.Println(options)
-	popupBox := NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxMessages, c.WindowMessages)
+	popupBox := window.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxMessages, c.WindowMessages)
 	popupBox.Init()
 	popupBox.SetContents(options.Content)
 	c.AddWindow(popupBox)                    // Add the popup to the list of windows
@@ -476,7 +478,7 @@ func (c *Console) OpenPopup(options *PopupBoxConfig) {
 func (c *Console) ClosePopup() {
 	// Loop through windows and remove the popup
 	for _, w := range c.Windows {
-		if w.GetID() == POPUPBOX {
+		if w.GetID() == window.POPUPBOX {
 			c.RemoveWindow(w.GetID())
 			c.SetActiveWindow(c.LastActiveWindow)
 			break
@@ -484,7 +486,7 @@ func (c *Console) ClosePopup() {
 	}
 }
 
-func (c *Console) HandlePopupMessage(message *ConsoleMessage) {
+func (c *Console) HandlePopupMessage(message *console.ConsoleMessage) {
 	switch message.Message {
 	case "close":
 		c.ClosePopup()

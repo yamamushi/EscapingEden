@@ -47,7 +47,6 @@ func (cm *ConnectionManager) Run() {
 				if conn.console != nil {
 					output := conn.console.Draw()
 					if string(output) != "" {
-						log.Println("Sending Console Draw")
 						conn.Write(output)
 					}
 					if conn.console.GetShutdown() {

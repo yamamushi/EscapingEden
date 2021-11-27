@@ -1,6 +1,8 @@
-package ui
+package console
 
-import "strconv"
+import (
+	"strconv"
+)
 
 // These are functions used for appending color codes to strings
 // to make them print in different colors.

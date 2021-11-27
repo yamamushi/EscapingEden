@@ -1,7 +1,8 @@
-package ui
+package window
 
 import (
 	"encoding/json"
+	"github.com/yamamushi/EscapingEden/ui/console"
 	"log"
 	"sync"
 )
@@ -79,7 +80,7 @@ func (pb *PopupBox) HandleInput(input Input) {
 		return
 	case InputRight:
 		log.Println("PopupBox Handling input right - attempting to close popup")
-		message := ConsoleMessage{Type: "popupbox", Message: "close"}
+		message := console.ConsoleMessage{Type: "popupbox", Message: "close"}
 		pb.ConsoleSend <- message.String()
 		log.Println("PopupBox sent close message to console")
 	}

@@ -1,7 +1,8 @@
-package ui
+package window
 
 import (
 	"encoding/json"
+	"github.com/yamamushi/EscapingEden/ui/console"
 	"log"
 	"sync"
 )
@@ -88,7 +89,7 @@ func (cw *ChatWindow) HandleInput(input Input) {
 		log.Println("ChatWindow Return")
 		if cw.cwInputBuffer != "" {
 			// Send a console message to the ConsoleSend channel
-			message := ConsoleMessage{Message: cw.cwInputBuffer, Type: "chat"}
+			message := console.ConsoleMessage{Message: cw.cwInputBuffer, Type: "chat"}
 			output, err := json.Marshal(message)
 			if err == nil {
 				log.Println("Sending message on cw.ConsoleSend")
@@ -123,7 +124,7 @@ func (cw *ChatWindow) Listen() {
 		case msg := <-cw.ConsoleReceive:
 			log.Println("Chat window received message from console")
 
-			message := ConsoleMessage{}
+			message := console.ConsoleMessage{}
 			err := json.Unmarshal([]byte(msg), &message)
 			if err == nil {
 				cw.cwMutex.Lock()

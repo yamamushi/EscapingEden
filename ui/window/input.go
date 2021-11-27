@@ -1,4 +1,4 @@
-package ui
+package window
 
 type InputType int
 

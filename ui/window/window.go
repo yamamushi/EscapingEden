@@ -1,7 +1,8 @@
-package ui
+package window
 
 import (
 	"fmt"
+	"github.com/yamamushi/EscapingEden/ui/console"
 	"log"
 	"sync"
 )
@@ -31,7 +32,7 @@ type WindowType interface {
 	HandleInput(input Input)
 	Init()
 
-	HandleReceive(message ConsoleMessage)
+	HandleReceive(message console.ConsoleMessage)
 
 	DrawBorder(X, Y, height, width int)
 	UpdateContents()
@@ -101,8 +102,8 @@ type Window struct {
 
 	mutex               sync.Mutex
 	pmapMutex           sync.Mutex
-	pointMap            PointMap
-	lastSentContents    PointMap // The last contents sent to the client
+	pointMap            console.PointMap
+	lastSentContents    console.PointMap // The last contents sent to the client
 	pointMapInitialized bool
 }
 
@@ -115,8 +116,8 @@ func (w *Window) Draw(X int, Y int, visibleHeight, visibleWidth int, startX, sta
 }
 
 func (w *Window) Init() {
-	w.pointMap = NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
-	w.lastSentContents = NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.pointMap = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.lastSentContents = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
 	w.pointMapInitialized = true
 }
 
@@ -125,12 +126,12 @@ func (w *Window) HandleInput(input Input) {
 }
 
 func (w *Window) Error(err string) {
-	consoleMessage := &ConsoleMessage{Type: "error", Message: err}
+	consoleMessage := &console.ConsoleMessage{Type: "error", Message: err}
 	w.ConsoleSend <- consoleMessage.String()
 }
 
 func (w *Window) Quit() {
-	consoleMessage := &ConsoleMessage{Type: "quit"}
+	consoleMessage := &console.ConsoleMessage{Type: "quit"}
 	w.ConsoleSend <- consoleMessage.String()
 }
 
@@ -330,7 +331,7 @@ func (w *Window) MoveCursorTopLeft() string {
 	return fmt.Sprintf("\033[%d;%dH", w.Y+1, w.X+1)
 }
 
-func (w *Window) HandleReceive(message ConsoleMessage) {
+func (w *Window) HandleReceive(message console.ConsoleMessage) {
 	w.ConsoleReceive <- message.String()
 }
 
@@ -338,7 +339,7 @@ func (w *Window) RequestPopupFromConsole(x, y, width, height int, content string
 	log.Println("Requesting popup from console")
 	config := PopupConfig(x, y, width, height, content)
 	log.Println(config.String())
-	request := ConsoleMessage{Type: "console", Message: "popup", Options: config.String()}
+	request := console.ConsoleMessage{Type: "console", Message: "popup", Options: config.String()}
 	log.Println(request.String())
 	w.ConsoleSend <- request.String()
 }
@@ -578,11 +579,11 @@ func (w *Window) PrintAt(X int, Y int, text string, escapeCode string) {
 	if Y > len(w.pointMap[X])-1 {
 		return
 	}
-	
+
 	for i, character := range text {
 		//log.Println("inserting character:", string(character))
 		// For the point at X, Y+1, set the character to the character at the current index of the text string
-		w.pointMap[X+i][Y] = Point{X: X + i, Y: Y, Character: string(character), EscapeCode: escapeCode}
+		w.pointMap[X+i][Y] = console.Point{X: X + i, Y: Y, Character: string(character), EscapeCode: escapeCode}
 		//log.Println("pointMap:", X, Y+i, w.pointMap[X][Y+i].Character)
 	}
 }
@@ -596,7 +597,7 @@ func (w *Window) PrintCharAt(X int, Y int, text string, escapeCode string) {
 	if Y > len(w.pointMap[X])-1 {
 		return
 	}
-	w.pointMap[X][Y] = Point{X: X, Y: Y, Character: text, EscapeCode: escapeCode}
+	w.pointMap[X][Y] = console.Point{X: X, Y: Y, Character: text, EscapeCode: escapeCode}
 }
 
 func (w *Window) PointMapToString() string {

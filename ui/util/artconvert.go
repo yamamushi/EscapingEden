@@ -1,7 +1,9 @@
-package ui
+package util
 
 import (
 	"bufio"
+	"github.com/yamamushi/EscapingEden/ui/console"
+	"github.com/yamamushi/EscapingEden/ui/window"
 	"os"
 	"strconv"
 	"strings"
@@ -22,7 +24,7 @@ type AsciiArtFile struct {
 	Data     string
 }
 
-func (ac *ArtConvert) OpenAt(filename string, window WindowType, X, Y int) (string, error) {
+func (ac *ArtConvert) OpenAt(filename string, window window.WindowType, X, Y int) (string, error) {
 	af, err := ac.Open(filename)
 	if err != nil {
 		return "", err
@@ -49,7 +51,7 @@ func (ac *ArtConvert) Open(filename string) (*AsciiArtFile, error) {
 }
 
 // Move moves to X and Y relative to the window position
-func (ac *ArtConvert) Move(af *AsciiArtFile, window WindowType, X, Y int) string {
+func (ac *ArtConvert) Move(af *AsciiArtFile, window window.WindowType, X, Y int) string {
 	X = X + window.GetX()
 	Y = Y + window.GetY()
 	output := "\033[" + strconv.Itoa(X) + ";" + strconv.Itoa(Y) + "H"
@@ -60,6 +62,6 @@ func (ac *ArtConvert) Move(af *AsciiArtFile, window WindowType, X, Y int) string
 		output += line + "\n"
 	}
 	// Reset our output color always
-	output += ResetStyle()
+	output += console.ResetStyle()
 	return output
 }
