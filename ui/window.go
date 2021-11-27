@@ -68,9 +68,9 @@ type Window struct {
 	StartX int // When window content is rendered, it is a 2D array, so this is the starting X position of the content
 	StartY int // When window content is rendered, it is a 2D array, so this is the starting Y position of the content
 
-	Contents           string // The contents of the window
-	ContentStartPos    int    // The starting position of the content
-	LastSentContents   string // The last contents sent to the client
+	Contents           string     // The contents of the window
+	ContentStartPos    int        // The starting position of the content
+	LastSentContents   [][]string // The last contents sent to the client
 	ScrollingSupported bool
 	ScrollBufferHasNew bool // Indicates that the scroll buffer has new content
 
@@ -543,6 +543,7 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 
 		for i := 0; i < len(lines); i++ {
 			for num, character := range lines[i] {
+				log.Println(w.GetPointDifference(string(character), i, num))
 				output += string(character)
 				if num == len(lines[i])-1 {
 					if num < visibleLength {
@@ -573,4 +574,21 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 	}
 
 	return output
+}
+
+// Needs to be rewritten
+func (w *Window) GetPointDifference(input string, x, y int) string {
+	log.Println("GetPointDifference")
+	if len(w.LastSentContents) == 0 {
+		w.LastSentContents = make([][]string, 1024)
+		for i := range w.LastSentContents {
+			w.LastSentContents[i] = make([]string, 1024)
+		}
+	}
+
+	if w.LastSentContents[x][y] != input {
+		w.LastSentContents[x][y] = input
+		return input
+	}
+	return ""
 }
