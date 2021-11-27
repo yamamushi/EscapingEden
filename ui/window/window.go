@@ -35,10 +35,12 @@ type WindowType interface {
 	HandleReceive(message console.ConsoleMessage)
 
 	DrawBorder(X, Y, height, width int)
+	DrawContents(X, Y, visibleHeight, visibleWidth, startX, startY int)
 	UpdateContents()
 	SetContents(string)
-	PrintAt(X, Y int, text string, escaoeCode string)
+	PrintLn(X, Y int, text string, escaoeCode string)
 	PointMapToString() string
+	FlushLastSent()
 
 	GetID() int
 	GetX() int
@@ -112,7 +114,6 @@ func (w *Window) Draw(X int, Y int, visibleHeight, visibleWidth int, startX, sta
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 	w.DrawContents(X, Y, visibleHeight, visibleWidth, startX, startY)
-	w.DrawBorder(X, Y, visibleHeight+1, visibleWidth+1)
 }
 
 func (w *Window) Init() {
@@ -516,10 +517,12 @@ func (w *Window) DrawContents(winX int, winY int, visibleLength, visibleHeight i
 				break
 			}
 			// Print current line
-			w.PrintAt(winX+1, currentLine, lines[i], "")
+			w.PrintLn(winX+1, currentLine, lines[i], "")
 			// Fill the rest of the line with spaces
 			for j := len(lines[i]) + 1; j < visibleLength; j++ {
-				w.PrintCharAt(winX+j, currentLine, " ", "")
+				if w.GetCharAt(winX+j, currentLine) == "" {
+					w.PrintCharAt(winX+j, currentLine, " ", "")
+				}
 			}
 			// increment currentLine
 			currentLine++
@@ -553,14 +556,16 @@ func (w *Window) DrawContents(winX int, winY int, visibleLength, visibleHeight i
 		}
 
 		for i := 0; i < len(lines); i++ {
-			w.PrintAt(winX+1, currentLine, lines[i], "")
+			w.PrintLn(winX+1, currentLine, lines[i], "")
 
 			if i == len(lines)-1 {
 				for lineNumber := i; lineNumber < maxHeight; lineNumber++ {
 					// increment currentLine
 					currentLine++
 					for j := 0; j < visibleLength; j++ {
-						w.PrintAt(winX+j, currentLine, " ", "")
+						if w.GetCharAt(winX+j, currentLine) == "" {
+							w.PrintLn(winX+j, currentLine, " ", "")
+						}
 					}
 				}
 			}
@@ -570,7 +575,7 @@ func (w *Window) DrawContents(winX int, winY int, visibleLength, visibleHeight i
 	}
 }
 
-func (w *Window) PrintAt(X int, Y int, text string, escapeCode string) {
+func (w *Window) PrintLn(X int, Y int, text string, escapeCode string) {
 	w.pmapMutex.Lock()
 	defer w.pmapMutex.Unlock()
 	if X > len(w.pointMap)-1 {
@@ -600,6 +605,18 @@ func (w *Window) PrintCharAt(X int, Y int, text string, escapeCode string) {
 	w.pointMap[X][Y] = console.Point{X: X, Y: Y, Character: text, EscapeCode: escapeCode}
 }
 
+func (w *Window) GetCharAt(X, Y int) string {
+	w.pmapMutex.Lock()
+	defer w.pmapMutex.Unlock()
+	if X > len(w.pointMap)-1 {
+		return ""
+	}
+	if Y > len(w.pointMap[X])-1 {
+		return ""
+	}
+	return w.pointMap[X][Y].Print()
+}
+
 func (w *Window) PointMapToString() string {
 	w.pmapMutex.Lock()
 	defer w.pmapMutex.Unlock()
@@ -627,4 +644,16 @@ func (w *Window) ClearMap(winX int, winY int, visibleLength, visibleHeight int, 
 			w.PrintCharAt(i, j, " ", "")
 		}
 	}
+}
+
+func (w *Window) FlushLastSent() {
+	w.pmapMutex.Lock()
+	defer w.pmapMutex.Unlock()
+	w.lastSentContents = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+}
+
+func (w *Window) ResetWindowDrawings() {
+	w.SetContents("")
+	w.ClearMap(w.X, w.Y, w.Width, w.Height, 0, 0)
+	w.FlushLastSent()
 }

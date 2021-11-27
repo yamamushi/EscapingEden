@@ -78,8 +78,8 @@ func (pb *PopupBox) HandleInput(input Input) {
 		log.Println("PopupBox Down")
 		pb.IncreaseContentPos()
 		return
-	case InputRight:
-		log.Println("PopupBox Handling input right - attempting to close popup")
+	case InputReturn:
+		log.Println("PopupBox Handling input return - attempting to close popup")
 		message := console.ConsoleMessage{Type: "popupbox", Message: "close"}
 		pb.ConsoleSend <- message.String()
 		log.Println("PopupBox sent close message to console")
@@ -87,7 +87,95 @@ func (pb *PopupBox) HandleInput(input Input) {
 
 }
 
+// DrawBorder returns the border of a window using code page 437 characters as a string
+func (pb *PopupBox) DrawBorder(winX int, winY int, visibleLength, visibleHeight int) {
+	// Draw top border using code page 437 characters starting at position winX, winY
+
+	// Move cursor to top left corner of window
+	// Draw top left corner
+	if pb.Active {
+		pb.PrintCharAt(winX, winY, "\u250c", "\033[32m")
+
+	} else {
+		pb.PrintCharAt(winX, winY, "\u250c", "")
+	}
+
+	// Draw left border
+	for i := 1; i < visibleHeight+1; i++ {
+		// Inserts a vertical line
+		if pb.Active {
+			pb.PrintCharAt(winX, winY+i, "\u2502", "\033[32m")
+		} else {
+			pb.PrintCharAt(winX, winY+i, "\u2502", "")
+		}
+	}
+	// Draw bottom left corner
+	if pb.Active {
+		pb.PrintCharAt(winX, winY+visibleHeight+1, "\u2514", "\033[32m")
+	} else {
+		pb.PrintCharAt(winX, winY+visibleHeight+1, "\u2514", "")
+	}
+
+	// Draw top border
+	for i := 1; i < visibleLength; i++ {
+		// Inserts a horizontal line
+		if pb.Active {
+			pb.PrintCharAt(winX+i, winY, "\u2500", "\033[32m")
+		} else {
+			pb.PrintCharAt(winX+i, winY, "\u2500", "")
+		}
+	}
+
+	// Draw top right corner
+	if pb.Active {
+		pb.PrintCharAt(winX+visibleLength, winY, "\u2510", "\033[32m")
+	} else {
+		pb.PrintCharAt(winX+visibleLength, winY, "\u2510", "")
+	}
+
+	// Draw right border
+	for i := 1; i < visibleHeight+1; i++ {
+		// Inserts a vertical line
+		if pb.Active {
+			pb.PrintCharAt(winX+visibleLength, winY+i, "\u2502", "\033[32m")
+		} else {
+			pb.PrintCharAt(winX+visibleLength, winY+i, "\u2502", "")
+		}
+	}
+
+	// Draw bottom right corner
+	if pb.Active {
+		pb.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2518", "\033[32m")
+	} else {
+		pb.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2518", "")
+	}
+
+	// Draw bottom border
+	for i := 1; i < visibleLength; i++ {
+		// Inserts a horizontal line
+		if pb.Active {
+			pb.PrintCharAt(winX+i, winY+visibleHeight+1, "\u2500", "\033[32m")
+		} else {
+			pb.PrintCharAt(winX+i, winY+visibleHeight+1, "\u2500", "")
+		}
+	}
+
+	// Prints the world "Close" at the bottom center
+	if pb.Active {
+		var colorCode string
+		// set colorCode background to green
+		colorCode = console.RGBCode(0, 0, 0).FG()
+		colorCode += console.RGBCode(0, 255, 0).BG()
+
+		pb.PrintLn(winX+visibleLength/2-3, winY+visibleHeight+1, "Close", colorCode)
+	} else {
+		log.Println("Writing Close to window")
+		pb.PrintLn(winX+visibleLength/2-3, winY+visibleHeight+1, "Close", "")
+	}
+}
+
 func (pb *PopupBox) UpdateContents() {
 	pb.pbMutex.Lock()
 	defer pb.pbMutex.Unlock()
+
 }

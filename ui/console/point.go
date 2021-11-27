@@ -40,7 +40,7 @@ func NewPointMap(width, height int) PointMap {
 				X:          i,
 				Y:          j,
 				EscapeCode: "",
-				Character:  " ",
+				Character:  "",
 			}
 		}
 	}

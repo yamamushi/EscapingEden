@@ -34,9 +34,10 @@ type Console struct {
 	ToolboxMessages  chan string
 	PopupBoxMessages chan string
 
-	escapeBuffer   string
-	escapeSequence bool
-	returnSequence bool
+	escapeBuffer       string
+	escapeSequence     bool
+	returnSequence     bool
+	forceScreenRefresh bool
 }
 
 // NewConsole creates a new console with no windows.
@@ -58,12 +59,12 @@ func (c *Console) Init() {
 
 	c.consoleInitialized = false
 	// First we setup our login window
-	loginWindow := window.NewLoginWindow(0, 0, c.Width-51, c.Height-13, c.Width, c.Height, c.LoginMessages, c.WindowMessages)
+	loginWindow := window.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height, c.LoginMessages, c.WindowMessages)
 	loginWindow.Init()
 	c.AddWindow(loginWindow)
 
 	// Next we setup our chat window
-	chatWindow := window.NewChatWindow(0, c.Height-10, c.Width-51, c.Height, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
+	chatWindow := window.NewChatWindow(0, c.Height-10, c.Width-50, c.Height, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
 	chatWindow.Init()
 	c.AddWindow(chatWindow)
 
@@ -75,7 +76,7 @@ func (c *Console) Init() {
 	go c.CaptureWindowMessages()
 	go c.CaptureManagerMessages()
 
-	c.SetActiveWindow(chatWindow) // Set our default active window to the login window, we will pass this to another
+	c.SetActiveWindow(loginWindow) // Set our default active window to the login window, we will pass this to another
 	// window after we log in.
 
 	c.ConsoleCommands += c.HideCursor() + c.ResetTerminal() // + c.DrawPrompt() + c.MoveCursorToTopLeft()
@@ -210,10 +211,16 @@ func (c *Console) Draw() []byte {
 
 	var s string
 	//s = s + c.ConsoleCommands
-	c.ConsoleCommands = ""
+	//c.ConsoleCommands = ""
 
 	if !c.consoleInitialized {
 		c.consoleInitialized = true
+		return []byte(s)
+	}
+
+	if c.forceScreenRefresh {
+		c.forceScreenRefresh = false
+		s = s + c.ClearTerminal()
 		return []byte(s)
 	}
 
@@ -226,15 +233,17 @@ func (c *Console) Draw() []byte {
 		}
 	}
 
-	return []byte(s)
+	//return []byte(s)
 
 	// If the last output was not the same as the current output, we send it to the client and update the last output.
-	/*if c.LastSentOutput != s && s != "" {
+	if c.LastSentOutput != s && s != "" {
+		log.Println("Sending new output to client")
+		log.Println("Length:", len(s))
 		c.LastSentOutput = s
 		return []byte(s)
 	} else {
 		return []byte("")
-	}*/
+	}
 }
 
 // HandleInput accepts a string terminated by a newline and processes it.
@@ -243,6 +252,15 @@ func (c *Console) HandleInput(rawInput byte) {
 	defer c.mutex.Unlock()
 	if rawInput == 0 {
 		// Ignore these null bytes
+		return
+	}
+
+	if rawInput == 18 {
+		// ctrl-r to force a screen refresh
+		for _, w := range c.Windows {
+			w.FlushLastSent()
+		}
+		c.forceScreenRefresh = true
 		return
 	}
 
@@ -432,11 +450,19 @@ func (c *Console) DrawWindow(window window.WindowType) (content string) {
 	// First we want to clear the window for any new content coming in
 	window.ClearMap(winX, winY, visibleLength, visibleHeight, 0, 0)
 
+	// If this is the active window we're going to force redraw it every request
+	//if window.GetActive() {
+	//	window.FlushLastSent()
+	//}
+
 	// Now we want to check for any new content updates
 	window.UpdateContents()
 
 	// Draw the contents of the window
 	window.Draw(winX, winY, visibleLength, visibleHeight, 0, 0)
+
+	// Now we want to draw the window border
+	window.DrawBorder(winX, winY, visibleLength+1, visibleHeight+1)
 
 	// Now we get the window's content as a string from it's PointMap
 	content = window.PointMapToString()
@@ -445,14 +471,20 @@ func (c *Console) DrawWindow(window window.WindowType) (content string) {
 
 // SetActiveWindow sets the active window and sets all other windows to inactive
 func (c *Console) SetActiveWindow(window window.WindowType) {
-	for _, w := range c.Windows {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	for i, w := range c.Windows {
 		if w.GetID() == window.GetID() {
 			log.Println("Active window set to: ", w.GetID())
 			w.SetActive(true)
+			c.Windows = append(c.Windows[:i], c.Windows[i+1:]...)
+			c.Windows = append(c.Windows, window)
 		} else {
 			w.SetActive(false)
 		}
 	}
+
 }
 
 func (c *Console) GetActiveWindow() window.WindowType {
@@ -470,9 +502,11 @@ func (c *Console) OpenPopup(options *window.PopupBoxConfig) {
 	popupBox := window.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxMessages, c.WindowMessages)
 	popupBox.Init()
 	popupBox.SetContents(options.Content)
-	c.AddWindow(popupBox)                    // Add the popup to the list of windows
 	c.LastActiveWindow = c.GetActiveWindow() // Save the last active window
+	c.AddWindow(popupBox)                    // Add the popup to the list of windows
 	c.SetActiveWindow(popupBox)              // Set the popup as the active window
+	//popupBox.FlushLastSent()
+	popupBox.ClearMap(popupBox.X, popupBox.Y, options.Width, options.Height, 0, 0)
 }
 
 func (c *Console) ClosePopup() {
@@ -484,6 +518,8 @@ func (c *Console) ClosePopup() {
 			break
 		}
 	}
+	// When we close the popup, our window is all garbage so we're going to force a redraw on everything
+	c.ForceRedraw()
 }
 
 func (c *Console) HandlePopupMessage(message *console.ConsoleMessage) {
@@ -491,4 +527,14 @@ func (c *Console) HandlePopupMessage(message *console.ConsoleMessage) {
 	case "close":
 		c.ClosePopup()
 	}
+
+}
+
+func (c *Console) ForceRedraw() {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	for _, w := range c.Windows {
+		w.FlushLastSent()
+	}
+	c.forceScreenRefresh = true
 }

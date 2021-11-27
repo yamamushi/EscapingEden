@@ -1,6 +1,7 @@
 package window
 
 import (
+	"github.com/yamamushi/EscapingEden/ui/console"
 	"log"
 	"strings"
 	"sync"
@@ -13,6 +14,9 @@ type LoginWindow struct {
 	windowState       LoginWindowState
 	loginState        LoginState
 	registrationState RegistrationState
+
+	optionSelected     int
+	currentOptionCount int
 }
 
 type LoginCreds struct {
@@ -76,7 +80,6 @@ func NewLoginWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output c
 	lw.ConsoleReceive = input
 	lw.ConsoleSend = output
 	lw.windowState = LoginWindowMenu
-
 	lw.credentials = &LoginCreds{}
 	return lw
 }
@@ -88,7 +91,7 @@ func (lw *LoginWindow) HandleInput(input Input) {
 	case LoginWindowLogin:
 		lw.handleLoginInput(input.Data)
 	case LoginWindowRegister:
-		lw.handleRegistrationInput(input.Data)
+		lw.handleRegistrationInput(input)
 	}
 }
 
@@ -108,15 +111,20 @@ func (lw *LoginWindow) drawMenu() {
 	defer lw.lwMutex.Unlock()
 
 	// First we are going to setup our default login screen
-	lw.PrintAt(10, 10, "Welcome to Escaping Eden", "")
-	lw.PrintAt(10, 12, "Please select a menu option from below", "")
+	lw.PrintLn(lw.X+10, lw.Y+5, "Welcome to Escaping Eden!", "")
+	lw.PrintLn(lw.X+10, lw.Y+6, "Please select a menu option from below:", "")
 
-	lw.PrintAt(10, 14, "(", "")
-	lw.PrintAt(11, 14, "l", "\033[1m")
-	lw.PrintAt(12, 14, ")login", "")
+	lw.PrintLn(lw.X+11, lw.Y+8, "(", "")
+	lw.PrintLn(lw.X+12, lw.Y+8, "l", "\033[1m")
+	lw.PrintLn(lw.X+13, lw.Y+8, ")ogin", "")
 
-	lw.PrintAt(10, 15, "(r)register", "")
-	lw.PrintAt(10, 16, "(q)quit", "")
+	lw.PrintLn(lw.X+11, lw.Y+9, "(", "")
+	lw.PrintLn(lw.X+12, lw.Y+9, "r", "\033[1m")
+	lw.PrintLn(lw.X+13, lw.Y+9, ")egister", "")
+
+	lw.PrintLn(lw.X+11, lw.Y+10, "(", "")
+	lw.PrintLn(lw.X+12, lw.Y+10, "q", "\033[1m")
+	lw.PrintLn(lw.X+13, lw.Y+10, ")uit", "")
 	return
 }
 
@@ -141,13 +149,18 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 		log.Println("Login selected")
 		lw.windowState = LoginWindowLogin
 		lw.loginState = LoginUsername
+		lw.ResetWindowDrawings() // Whenever we switch to a different window state, we need to reset the drawings
+		return
 	case "r":
 		log.Println("Register selected")
 		lw.windowState = LoginWindowRegister
 		lw.registrationState = RegistrationMain
+		lw.ResetWindowDrawings()
+		return
 	case "q":
 		log.Println("Quit selected")
 		lw.Quit()
+		return
 	}
 }
 
@@ -174,31 +187,56 @@ func (lw *LoginWindow) handleLoginInput(input string) {
 	}
 }
 
-func (lw *LoginWindow) handleRegistrationInput(input string) {
+func (lw *LoginWindow) handleRegistrationInput(input Input) {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
 
 	if !lw.GetActive() {
 		return
 	}
+	log.Println("Handling registration input")
 
 	switch lw.registrationState {
 	case RegistrationMain:
+		switch input.Type {
+		case InputCharacter:
+			if input.Data == "r" {
+				log.Println("Opening rules popup")
+				lw.RequestPopupFromConsole(lw.ConsoleWidth/2-40, lw.ConsoleHeight/2-10, 100, 20, "This is a test of a really long string with a bunch of random content to see if the content buffer will scroll or not correctly")
+			}
+			return
+		case InputLeft:
+			log.Println("Left arrow pressed")
+			lw.optionSelected = 1
+			return
+		case InputRight:
+			log.Println("Right arrow pressed")
+			lw.optionSelected = 2
+			return
+		case InputReturn:
+			log.Println("Return pressed")
+			if lw.optionSelected == 1 {
+				lw.windowState = LoginWindowMenu
+			}
+			if lw.optionSelected == 2 {
+				lw.registrationState = RegistrationUsername
+			}
+			lw.optionSelected = 0
+			lw.ResetWindowDrawings() // Whenever we switch to a different window state, we need to reset the drawings
+			return
+		default:
+			return
+		}
 		lw.registrationState = RegistrationUsername
 	case RegistrationUsername:
-		lw.credentials.Username = input
 		lw.registrationState = RegistrationPassword
 	case RegistrationPassword:
-		lw.credentials.Hash = input
 		lw.registrationState = RegistrationPasswordConfirm
 	case RegistrationPasswordConfirm:
-		lw.credentials.Hash = input
 		lw.registrationState = RegistrationEmail
 	case RegistrationEmail:
-		lw.credentials.Hash = input
 		lw.registrationState = RegistrationDiscord
 	case RegistrationDiscord:
-		lw.credentials.Hash = input
 		lw.registrationState = RegistrationSubmit
 	case RegistrationSubmit:
 		lw.ConsoleSend <- "register:" + lw.credentials.Username + ":" + lw.credentials.Hash
@@ -218,4 +256,22 @@ func (lw *LoginWindow) drawRegistrationMenu() {
 	defer lw.lwMutex.Unlock()
 
 	lw.SetContents("Welcome to Escaping Eden! You are about to embark upon a journey into ")
+	//lw.PrintLn(lw.Y+2, lw.X+2, "Welcome to Escaping Eden! You are about to embark upon a journey into ", "")
+
+	// Bold the text for the back and continue buttons
+	if lw.optionSelected == 1 {
+		fg := console.RGBCode(0, 0, 0)
+		bg := console.RGBCode(255, 255, 255)
+		lw.PrintLn(lw.X+5, lw.Height+1, "<Back>", fg.FG()+bg.BG())
+	} else {
+		lw.PrintLn(lw.X+5, lw.Height+1, "<Back>", "\033[1m")
+	}
+	if lw.optionSelected == 2 {
+		fg := console.RGBCode(0, 0, 0)
+		bg := console.RGBCode(255, 255, 255)
+		lw.PrintLn(lw.X+lw.Width-15, lw.Height+1, "<Continue>", fg.FG()+bg.BG())
+	} else {
+		lw.PrintLn(lw.X+lw.Width-15, lw.Height+1, "<Continue>", "\033[1m")
+	}
+
 }
