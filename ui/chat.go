@@ -10,12 +10,13 @@ import (
 
 type ChatWindow struct {
 	Window
-	History      []string
-	HistoryIndex int
-	cwMutex      sync.Mutex
+	History       []string
+	HistoryIndex  int
+	cwMutex       sync.Mutex
+	cwInputBuffer string
 }
 
-func NewChatWindow(x, y, w, h int, input, output chan string) *ChatWindow {
+func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *ChatWindow {
 	cw := new(ChatWindow)
 	cw.ID = CHATBOX
 	// if x or y are less than 1 set them to 1
@@ -37,6 +38,8 @@ func NewChatWindow(x, y, w, h int, input, output chan string) *ChatWindow {
 	}
 	cw.Width = w
 	cw.Height = h
+	cw.ConsoleWidth = consoleWidth
+	cw.ConsoleHeight = consoleHeight
 	cw.Bordered = true
 
 	cw.ConsoleReceive = input
@@ -68,6 +71,7 @@ func (cw *ChatWindow) HandleInput(input Input) {
 		return
 	case InputLeft:
 		log.Println("ChatWindow Left")
+		cw.RequestPopupFromConsole(cw.ConsoleWidth/2-40, cw.ConsoleHeight/2-10, 150, 20, "This is a test of a really long string with a bunch of random content to see if the content buffer will scroll or not correctly")
 		return
 	case InputRight:
 		log.Println("ChatWindow Right")
@@ -77,24 +81,32 @@ func (cw *ChatWindow) HandleInput(input Input) {
 		return
 	case InputBackspace:
 		log.Println("ChatWindow Backspace")
+		// remove one character from the input buffer
+		cw.cwInputBuffer = cw.cwInputBuffer[:len(cw.cwInputBuffer)-1]
 		return
 	case InputReturn:
 		log.Println("ChatWindow Return")
+		if cw.cwInputBuffer != "" {
+			// Send a console message to the ConsoleSend channel
+			message := ConsoleMessage{Message: cw.cwInputBuffer, Type: "chat"}
+			output, err := json.Marshal(message)
+			if err == nil {
+				log.Println("Sending message on cw.ConsoleSend")
+				cw.ConsoleSend <- string(output)
+				log.Println("Message Sent")
+			} else {
+				log.Println(err.Error())
+			}
+			cw.cwInputBuffer = ""
+		} else {
+			log.Println("cw.cwInputBuffer is empty during InputReturn chat request")
+		}
 		return
 	}
 
 	log.Println("Chatwindow Receive: ", input.Data)
+	cw.cwInputBuffer += input.Data
 
-	// Send a console message to the ConsoleSend channel
-	message := ConsoleMessage{Message: input.Data, Type: "chat"}
-	output, err := json.Marshal(message)
-	if err == nil {
-		log.Println("Sending message on cw.ConsoleSend")
-		cw.ConsoleSend <- string(output)
-		log.Println("Message Sent")
-	} else {
-		log.Println(err.Error())
-	}
 }
 
 // ConsoleMessage is called by console to manually write a console message to the history

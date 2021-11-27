@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"sync"
 )
@@ -28,6 +29,8 @@ const (
 type WindowType interface {
 	Draw(X, Y, height, width, startX, startY int) string
 	HandleInput(input Input)
+
+	HandleReceive(message ConsoleMessage)
 
 	DrawBorder(X, Y, height, width int) string
 	UpdateContents()
@@ -71,8 +74,11 @@ type Window struct {
 	ScrollingSupported bool
 	ScrollBufferHasNew bool // Indicates that the scroll buffer has new content
 
-	Width    int  // The width of the Window
-	Height   int  // The height of the Window
+	Width         int // The width of the Window
+	Height        int // The height of the Window
+	ConsoleWidth  int // The width of the console
+	ConsoleHeight int // The height of the console
+
 	Active   bool // Is the Window active?
 	Hidden   bool // Is the Window hidden?
 	Bordered bool // Is the Window bordered?
@@ -292,6 +298,19 @@ func (w *Window) PrintAt(X int, Y int, text string) string {
 	return fmt.Sprintf("\033[%d;%dH%s", X+w.GetX(), Y+w.GetY(), text)
 }
 
+func (w *Window) HandleReceive(message ConsoleMessage) {
+	w.ConsoleReceive <- message.String()
+}
+
+func (w *Window) RequestPopupFromConsole(x, y, width, height int, content string) {
+	log.Println("Requesting popup from console")
+	config := PopupConfig(x, y, width, height, content)
+	log.Println(config.String())
+	request := ConsoleMessage{Type: "console", Message: "popup", Options: config.String()}
+	log.Println(request.String())
+	w.ConsoleSend <- request.String()
+}
+
 // CenterText takes a text string and outputs it at the center of the window
 func (w *Window) CenterText(text string, line int) string {
 	// get the length of the text
@@ -345,7 +364,7 @@ func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int
 		}
 
 		// Move cursor to the right side of the window
-		border += "\033[" + strconv.Itoa(winY+i+1) + ";" + strconv.Itoa(winX+visibleLength) + "H"
+		//border += "\033[" + strconv.Itoa(winY+i+1) + ";" + strconv.Itoa(winX+visibleLength) + "H"
 
 		// Move cursor to right side of window
 		border += "\033[" + strconv.Itoa(winY+i+1) + ";" + strconv.Itoa(winX+visibleLength+1) + "H"
@@ -498,6 +517,10 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 		output += "\033[" + strconv.Itoa(winY+1) + ";" + strconv.Itoa(winX+1) + "H"
 
 		for i := len(lines) - maxHeight + contentStartPos - 1; i < len(lines); i++ {
+			if currentLine > maxHeight+winY+1 {
+				break
+			}
+
 			output += lines[i]
 			// increment currentLine
 			currentLine++
@@ -519,7 +542,29 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 		}
 
 		for i := 0; i < len(lines); i++ {
-			output += lines[i]
+			for num, character := range lines[i] {
+				output += string(character)
+				if num == len(lines[i])-1 {
+					if num < visibleLength {
+						for j := num + 1; j < visibleLength; j++ {
+							output += " "
+						}
+					}
+				}
+			}
+
+			if i == len(lines)-1 {
+				for lineNumber := i; lineNumber < maxHeight; lineNumber++ {
+					// increment currentLine
+					currentLine++
+					// Move cursor down one line
+					output += "\033[" + strconv.Itoa(currentLine) + ";" + strconv.Itoa(winX+1) + "H"
+					for j := 0; j < visibleLength; j++ {
+						output += " "
+					}
+				}
+			}
+
 			// increment currentLine
 			currentLine++
 			// Move cursor down one line

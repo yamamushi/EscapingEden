@@ -11,7 +11,7 @@ type ToolboxWindow struct {
 	twMutex sync.Mutex
 }
 
-func NewToolboxWindow(x, y, w, h int, input, output chan string) *ToolboxWindow {
+func NewToolboxWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *ToolboxWindow {
 	lw := &ToolboxWindow{}
 	lw.ID = TOOLBOX
 	// if x or y are less than 1 set them to 1
@@ -33,6 +33,8 @@ func NewToolboxWindow(x, y, w, h int, input, output chan string) *ToolboxWindow 
 	}
 	lw.Width = w
 	lw.Height = h
+	lw.ConsoleWidth = consoleWidth
+	lw.ConsoleHeight = consoleHeight
 	lw.Bordered = true
 	lw.ConsoleReceive = input
 	lw.ConsoleSend = output

@@ -15,6 +15,7 @@ type Console struct {
 	Windows            []WindowType // The list of windows that are currently in the console
 	ConsoleCommands    string
 	LastSentOutput     string
+	LastActiveWindow   WindowType
 	mutex              sync.Mutex
 	Shutdown           bool
 	consoleInitialized bool
@@ -55,21 +56,18 @@ func (c *Console) Init() {
 
 	c.consoleInitialized = false
 	// First we setup our login window
-	loginWindow := NewLoginWindow(0, 0, c.Width-51, c.Height-13, c.LoginMessages, c.WindowMessages)
+	loginWindow := NewLoginWindow(0, 0, c.Width-51, c.Height-13, c.Width, c.Height, c.LoginMessages, c.WindowMessages)
 	c.AddWindow(loginWindow)
 
 	// Next we setup our chat window
-	chatWindow := NewChatWindow(0, c.Height-10, c.Width-51, c.Height, c.ChatMessages, c.WindowMessages)
+	chatWindow := NewChatWindow(0, c.Height-10, c.Width-51, c.Height, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
 	c.AddWindow(chatWindow)
 
 	// Then we add our toolbox last
-	toolboxWindow := NewToolboxWindow(c.Width-48, 0, 50, c.Height, c.ToolboxMessages, c.WindowMessages)
+	toolboxWindow := NewToolboxWindow(c.Width-48, 0, 50, c.Height, c.Width, c.Height, c.ToolboxMessages, c.WindowMessages)
 	c.AddWindow(toolboxWindow)
 	go c.CaptureWindowMessages()
 	go c.CaptureManagerMessages()
-
-	popupBox := NewPopupBox(c.Width/2-40, c.Height/2-10, 80, 20, c.PopupBoxMessages, c.WindowMessages)
-	c.AddWindow(popupBox)
 
 	c.SetActiveWindow(chatWindow) // Set our default active window to the login window, we will pass this to another
 	// window after we log in.
@@ -81,24 +79,45 @@ func (c *Console) CaptureWindowMessages() {
 	for {
 		select {
 		case message := <-c.WindowMessages:
-			c.mutex.Lock()
 			log.Println("Client received window message")
-
 			consoleMessage := &ConsoleMessage{}
 			err := json.Unmarshal([]byte(message), consoleMessage)
 			if err != nil {
 				log.Println("Error unmarshalling consoleMessage: ", err)
 				continue
 			}
+			log.Println("MessageType: ", consoleMessage.Type)
 			switch consoleMessage.Type {
+			case "console":
+				switch consoleMessage.Message {
+				case "popup":
+					options := &PopupBoxConfig{}
+					err := json.Unmarshal([]byte(consoleMessage.Options), options)
+					if err != nil {
+						log.Println("Error unmarshalling popup box options: ", err)
+						continue
+					} else {
+						log.Println("Popup box options: ", options.String())
+						c.OpenPopup(options)
+					}
+				}
+			case "popupbox":
+				log.Println("Popup box message: ", consoleMessage.Message)
+				c.HandlePopupMessage(consoleMessage)
+				continue
 			case "error":
+				log.Println("Error message: ", consoleMessage.Message)
 				consoleMessage.RecipientID = c.ConnectionID
+				c.SendMessages <- consoleMessage.String()
 			case "quit":
+				log.Println("Sending Quit request to ConnectionManager")
 				consoleMessage.RecipientID = c.ConnectionID
+				c.SendMessages <- consoleMessage.String()
+			case "chat":
+				log.Println("Chat message: ", consoleMessage.Message)
+				consoleMessage.SenderID = c.ConnectionID
+				c.SendMessages <- consoleMessage.String()
 			}
-			consoleMessage.SenderID = c.ConnectionID
-			c.SendMessages <- consoleMessage.String()
-			c.mutex.Unlock()
 		}
 	}
 }
@@ -284,19 +303,6 @@ func (c *Console) InputToActiveWindow(input Input) {
 	}
 }
 
-// GetChatWindow returns the chat window.
-func (c *Console) GetChatWindow() *ChatWindow {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
-	for _, window := range c.Windows {
-		if window.GetID() == 0 {
-			return window.(*ChatWindow)
-		}
-	}
-	return nil
-}
-
 // GetShutdown returns the shutdown status of the console.
 func (c *Console) GetShutdown() bool {
 	c.mutex.Lock()
@@ -439,4 +445,32 @@ func (c *Console) GetActiveWindow() WindowType {
 		}
 	}
 	return nil
+}
+
+func (c *Console) OpenPopup(options *PopupBoxConfig) {
+	//popupBox := NewPopupBox(c.Width/2-40, c.Height/2-10, 80, 20, c.PopupBoxMessages, c.WindowMessages)
+	log.Println(options)
+	popupBox := NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxMessages, c.WindowMessages)
+	popupBox.SetContents(options.Content)
+	c.AddWindow(popupBox)                    // Add the popup to the list of windows
+	c.LastActiveWindow = c.GetActiveWindow() // Save the last active window
+	c.SetActiveWindow(popupBox)              // Set the popup as the active window
+}
+
+func (c *Console) ClosePopup() {
+	// Loop through windows and remove the popup
+	for _, w := range c.Windows {
+		if w.GetID() == POPUPBOX {
+			c.RemoveWindow(w.GetID())
+			c.SetActiveWindow(c.LastActiveWindow)
+			break
+		}
+	}
+}
+
+func (c *Console) HandlePopupMessage(message *ConsoleMessage) {
+	switch message.Message {
+	case "close":
+		c.ClosePopup()
+	}
 }

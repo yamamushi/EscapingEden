@@ -48,7 +48,7 @@ const (
 	RegistrationSubmit
 )
 
-func NewLoginWindow(x, y, w, h int, input, output chan string) *LoginWindow {
+func NewLoginWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *LoginWindow {
 	lw := &LoginWindow{}
 	lw.ID = LOGINMENU
 	// if x or y are less than 1 set them to 1
@@ -70,6 +70,8 @@ func NewLoginWindow(x, y, w, h int, input, output chan string) *LoginWindow {
 	}
 	lw.Width = w
 	lw.Height = h
+	lw.ConsoleWidth = consoleWidth
+	lw.ConsoleHeight = consoleHeight
 	lw.Bordered = true
 	lw.ConsoleReceive = input
 	lw.ConsoleSend = output
