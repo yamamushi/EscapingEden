@@ -62,6 +62,9 @@ func (c *Connection) Handle() {
 		c.manager.HandleDisconnect(c)
 		return
 	}
+	c.conn.Write([]byte("\033[2J"))
+	c.conn.Write([]byte("\033[?25l"))
+
 	c.console = ui.NewConsole(w, h, c.ID, c.manager.CMReceiveMessages)
 	log.Println("Initializing Console")
 	c.console.Init()

@@ -130,14 +130,14 @@ func (cw *ChatWindow) Listen() {
 				cw.History = append(cw.History, message.Message)
 				// We know if our starting position is less than 0, and we append a new message, then there is
 				// Content in the scroll buffer that has not been displayed yet.
-				if cw.ContentStartPos < 0 {
+				if cw.GetContentStartPos() < 0 {
 					cw.DecreaseContentPos()
-					cw.ScrollBufferHasNew = true
+					cw.SetScrollBufferNew(true)
 				} else {
-					cw.ScrollBufferHasNew = false
+					cw.SetScrollBufferNew(false)
 				}
 
-				log.Println("content start pos: ", cw.ContentStartPos)
+				log.Println("content start pos: ", cw.GetContentStartPos())
 				cw.cwMutex.Unlock()
 			} else {
 				log.Println(err.Error())

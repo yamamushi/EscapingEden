@@ -57,22 +57,26 @@ func (c *Console) Init() {
 	c.consoleInitialized = false
 	// First we setup our login window
 	loginWindow := NewLoginWindow(0, 0, c.Width-51, c.Height-13, c.Width, c.Height, c.LoginMessages, c.WindowMessages)
+	loginWindow.Init()
 	c.AddWindow(loginWindow)
 
 	// Next we setup our chat window
 	chatWindow := NewChatWindow(0, c.Height-10, c.Width-51, c.Height, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
+	chatWindow.Init()
 	c.AddWindow(chatWindow)
 
 	// Then we add our toolbox last
 	toolboxWindow := NewToolboxWindow(c.Width-48, 0, 50, c.Height, c.Width, c.Height, c.ToolboxMessages, c.WindowMessages)
+	toolboxWindow.Init()
 	c.AddWindow(toolboxWindow)
+
 	go c.CaptureWindowMessages()
 	go c.CaptureManagerMessages()
 
 	c.SetActiveWindow(chatWindow) // Set our default active window to the login window, we will pass this to another
 	// window after we log in.
 
-	c.ConsoleCommands += c.ClearTerminal() + c.HideCursor() // + c.DrawPrompt() + c.MoveCursorToTopLeft()
+	c.ConsoleCommands += c.HideCursor() + c.ResetTerminal() // + c.DrawPrompt() + c.MoveCursorToTopLeft()
 }
 
 func (c *Console) CaptureWindowMessages() {
@@ -140,11 +144,11 @@ func (c *Console) CaptureManagerMessages() {
 				c.ChatMessages <- message
 			case "error":
 				log.Println("Error message received from manager")
-				consoleMessage.Message = BoldText("Error: ") + consoleMessage.Message
+				consoleMessage.Message = "Error: " + consoleMessage.Message
 				c.ChatMessages <- consoleMessage.String()
 			case "broadcast":
 				log.Println("Broadcast message received from manager")
-				consoleMessage.Message = BoldText("Server Message: ") + consoleMessage.Message
+				consoleMessage.Message = "Server Message: " + consoleMessage.Message
 				c.ChatMessages <- consoleMessage.String()
 			case "quit":
 				log.Println("Quit message received from manager")
@@ -203,28 +207,32 @@ func (c *Console) Draw() []byte {
 	defer c.mutex.Unlock()
 
 	var s string
-	s = s + c.ConsoleCommands
+	//s = s + c.ConsoleCommands
+	c.ConsoleCommands = ""
 
 	if !c.consoleInitialized {
 		c.consoleInitialized = true
-		//s = s + c.DrawPrompt()
 		return []byte(s)
 	}
 
 	for _, window := range c.Windows {
 		if !window.GetHidden() {
-			window.UpdateContents()
-			s = s + c.DrawWindow(window)
+			windowDraw := c.DrawWindow(window)
+			if windowDraw != "" {
+				s = s + windowDraw
+			}
 		}
 	}
 
+	return []byte(s)
+
 	// If the last output was not the same as the current output, we send it to the client and update the last output.
-	if c.LastSentOutput != s && s != "" {
+	/*if c.LastSentOutput != s && s != "" {
 		c.LastSentOutput = s
 		return []byte(s)
 	} else {
 		return []byte("")
-	}
+	}*/
 }
 
 // HandleInput accepts a string terminated by a newline and processes it.
@@ -419,10 +427,17 @@ func (c *Console) GetWindowAttrs(window WindowType) (X int, Y int, visibleLength
 func (c *Console) DrawWindow(window WindowType) (content string) {
 	// Get Window Attrs
 	winX, winY, visibleLength, visibleHeight := c.GetWindowAttrs(window)
+	// First we want to clear the window for any new content coming in
+	window.ClearMap(winX, winY, visibleLength, visibleHeight, 0, 0)
 
-	// Draw content of window
-	content += window.Draw(winX, winY, visibleLength, visibleHeight, 0, 0)
+	// Now we want to check for any new content updates
+	window.UpdateContents()
 
+	// Draw the contents of the window
+	window.Draw(winX, winY, visibleLength, visibleHeight, 0, 0)
+
+	// Now we get the window's content as a string from it's PointMap
+	content = window.PointMapToString()
 	return content
 }
 
@@ -451,6 +466,7 @@ func (c *Console) OpenPopup(options *PopupBoxConfig) {
 	//popupBox := NewPopupBox(c.Width/2-40, c.Height/2-10, 80, 20, c.PopupBoxMessages, c.WindowMessages)
 	log.Println(options)
 	popupBox := NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxMessages, c.WindowMessages)
+	popupBox.Init()
 	popupBox.SetContents(options.Content)
 	c.AddWindow(popupBox)                    // Add the popup to the list of windows
 	c.LastActiveWindow = c.GetActiveWindow() // Save the last active window

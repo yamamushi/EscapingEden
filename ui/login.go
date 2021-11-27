@@ -108,24 +108,15 @@ func (lw *LoginWindow) drawMenu() {
 	defer lw.lwMutex.Unlock()
 
 	// First we are going to setup our default login screen
-	lw.SetContents("")
+	lw.PrintAt(10, 10, "Welcome to Escaping Eden", "")
+	lw.PrintAt(10, 12, "Please select a menu option from below", "")
 
-	/*artConvert := NewArtConvert()
-	artWork, err := artConvert.OpenAt("./assets/ascii/menuIsland.txt", lw, 10, 10)
-	if err != nil {
-		log.Println(err)
-	}*/
-	output := ""
+	lw.PrintAt(10, 14, "(", "")
+	lw.PrintAt(11, 14, "l", "\033[1m")
+	lw.PrintAt(12, 14, ")login", "")
 
-	output += lw.PrintAt(10, 10, "Welcome to "+BoldText("Escaping Eden"))
-	output += lw.PrintAt(12, 10, "Please select a menu option from below")
-
-	output += lw.PrintAt(14, 10, "("+BoldText("l")+")login")
-	output += lw.PrintAt(15, 10, "("+BoldText("r")+")register")
-	output += lw.PrintAt(16, 10, "("+BoldText("q")+")quit")
-
-	output += ResetStyle()
-	lw.SetContents(output)
+	lw.PrintAt(10, 15, "(r)register", "")
+	lw.PrintAt(10, 16, "(q)quit", "")
 	return
 }
 

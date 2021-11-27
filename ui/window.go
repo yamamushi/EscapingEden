@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"sync"
 )
 
@@ -27,15 +26,18 @@ const (
 )
 
 type WindowType interface {
-	Draw(X, Y, height, width, startX, startY int) string
+	ClearMap(X, Y, height, width, startX, startY int)
+	Draw(X, Y, height, width, startX, startY int)
 	HandleInput(input Input)
+	Init()
 
 	HandleReceive(message ConsoleMessage)
 
-	DrawBorder(X, Y, height, width int) string
+	DrawBorder(X, Y, height, width int)
 	UpdateContents()
 	SetContents(string)
-	PrintAt(X, Y int, text string) string
+	PrintAt(X, Y int, text string, escaoeCode string)
+	PointMapToString() string
 
 	GetID() int
 	GetX() int
@@ -54,7 +56,10 @@ type WindowType interface {
 	GetBorderFG() int
 	GetBorderBG() int
 
+	CheckScrollBufferNew() bool
+	SetScrollBufferNew(bool)
 	SupportsScrolling() bool
+	GetContentStartPos() int
 
 	Error(string)
 	Quit()
@@ -68,9 +73,8 @@ type Window struct {
 	StartX int // When window content is rendered, it is a 2D array, so this is the starting X position of the content
 	StartY int // When window content is rendered, it is a 2D array, so this is the starting Y position of the content
 
-	Contents           string     // The contents of the window
-	ContentStartPos    int        // The starting position of the content
-	LastSentContents   [][]string // The last contents sent to the client
+	Contents           string // The contents of the window
+	ContentStartPos    int    // The starting position of the content
 	ScrollingSupported bool
 	ScrollBufferHasNew bool // Indicates that the scroll buffer has new content
 
@@ -95,20 +99,25 @@ type Window struct {
 
 	DirectionInput InputType // The last direction input from the user
 
-	mutex sync.Mutex
+	mutex               sync.Mutex
+	pmapMutex           sync.Mutex
+	pointMap            PointMap
+	lastSentContents    PointMap // The last contents sent to the client
+	pointMapInitialized bool
 }
 
 // Draw returns a string of the Window's contents
-func (w *Window) Draw(X int, Y int, visibleHeight, visibleWidth int, startX, startY int) string {
+func (w *Window) Draw(X int, Y int, visibleHeight, visibleWidth int, startX, startY int) {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
+	w.DrawContents(X, Y, visibleHeight, visibleWidth, startX, startY)
+	w.DrawBorder(X, Y, visibleHeight+1, visibleWidth+1)
+}
 
-	output := w.MoveCursorTopLeft()
-
-	output += w.ParseContents(X, Y, visibleHeight, visibleWidth, startX, startY)
-	output += w.DrawBorder(X, Y, visibleHeight+1, visibleWidth+1)
-
-	return output
+func (w *Window) Init() {
+	w.pointMap = NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.lastSentContents = NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.pointMapInitialized = true
 }
 
 func (w *Window) HandleInput(input Input) {
@@ -154,6 +163,20 @@ func (w *Window) GetX() int {
 	return w.X
 }
 
+func (w *Window) CheckScrollBufferNew() bool {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	return w.ScrollBufferHasNew
+}
+
+func (w *Window) SetScrollBufferNew(new bool) {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	w.ScrollBufferHasNew = new
+}
+
 func (w *Window) GetY() int {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
@@ -194,6 +217,20 @@ func (w *Window) GetHeight() int {
 	defer w.mutex.Unlock()
 
 	return w.Height
+}
+
+func (w *Window) GetContentStartPos() int {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	return w.ContentStartPos
+}
+
+func (w *Window) SetContentStartPos(pos int) {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	w.ContentStartPos = pos
 }
 
 func (w *Window) GetContents() string {
@@ -293,11 +330,6 @@ func (w *Window) MoveCursorTopLeft() string {
 	return fmt.Sprintf("\033[%d;%dH", w.Y+1, w.X+1)
 }
 
-func (w *Window) PrintAt(X int, Y int, text string) string {
-	// set cursor to X and Y
-	return fmt.Sprintf("\033[%d;%dH%s", X+w.GetX(), Y+w.GetY(), text)
-}
-
 func (w *Window) HandleReceive(message ConsoleMessage) {
 	w.ConsoleReceive <- message.String()
 }
@@ -326,82 +358,77 @@ func (w *Window) CenterText(text string, line int) string {
 // DrawBorder draws the Window's border
 
 // DrawBorder returns the border of a window using code page 437 characters as a string
-func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int) string {
+func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int) {
 	// Draw top border using code page 437 characters starting at position winX, winY
 
 	// Move cursor to top left corner of window
-	border := "\033[" + strconv.Itoa(winY) + ";" + strconv.Itoa(winX) + "H"
 	// Draw top left corner
 	if w.Active {
-		border += "\033[32m" + "\u250c" + "\033[37m"
+		w.PrintCharAt(winX, winY, "\u250c", "\033[32m")
+
 	} else {
-		border += "\u250c"
+		w.PrintCharAt(winX, winY, "\u250c", "")
 	}
-	for i := 0; i < visibleLength; i++ {
+
+	// Draw left border
+	for i := 1; i < visibleHeight+1; i++ {
+		// Inserts a vertical line
+		if w.Active {
+			w.PrintCharAt(winX, winY+i, "\u2502", "\033[32m")
+		} else {
+			w.PrintCharAt(winX, winY+i, "\u2502", "")
+		}
+	}
+	// Draw bottom left corner
+	if w.Active {
+		w.PrintCharAt(winX, winY+visibleHeight+1, "\u2514", "\033[32m")
+	} else {
+		w.PrintCharAt(winX, winY+visibleHeight+1, "\u2514", "")
+	}
+
+	// Draw top border
+	for i := 1; i < visibleLength; i++ {
 		// Inserts a horizontal line
 		if w.Active {
-			border += "\033[32m" + "\u2500" + "\033[37m"
+			w.PrintCharAt(winX+i, winY, "\u2500", "\033[32m")
 		} else {
-			border += "\u2500"
+			w.PrintCharAt(winX+i, winY, "\u2500", "")
 		}
 	}
-	// insert the top right corner
+
+	// Draw top right corner
 	if w.Active {
-		border += "\033[32m" + "\u2510" + "\033[37m"
+		w.PrintCharAt(winX+visibleLength, winY, "\u2510", "\033[32m")
 	} else {
-		border += "\u2510"
+		w.PrintCharAt(winX+visibleLength, winY, "\u2510", "")
 	}
 
-	// For visibleHeight draw a left and right border at each line
-	for i := 0; i < visibleHeight; i++ {
-		// Move cursor to left side of window
-		border += "\033[" + strconv.Itoa(winY+i+1) + ";" + strconv.Itoa(winX) + "H"
-		// Draw the left border
+	// Draw right border
+	for i := 1; i < visibleHeight+1; i++ {
+		// Inserts a vertical line
 		if w.Active {
-			border += "\033[32m" + "\u2502" + "\033[37m"
+			w.PrintCharAt(winX+visibleLength, winY+i, "\u2502", "\033[32m")
 		} else {
-			border += "\u2502"
-		}
-
-		// Move cursor to the right side of the window
-		//border += "\033[" + strconv.Itoa(winY+i+1) + ";" + strconv.Itoa(winX+visibleLength) + "H"
-
-		// Move cursor to right side of window
-		border += "\033[" + strconv.Itoa(winY+i+1) + ";" + strconv.Itoa(winX+visibleLength+1) + "H"
-		// Draw right border
-		if w.Active {
-			border += "\033[32m" + "\u2502" + "\033[37m"
-		} else {
-			border += "\u2502"
+			w.PrintCharAt(winX+visibleLength, winY+i, "\u2502", "")
 		}
 	}
 
-	// Move cursor to bottom left corner of window
-	border += "\033[" + strconv.Itoa(winY+visibleHeight+1) + ";" + strconv.Itoa(winX) + "H"
+	// Draw bottom right corner
 	if w.Active {
-		// Append color green
-		border += "\033[32m" + "\u2514" + "\033[37m"
+		w.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2518", "\033[32m")
 	} else {
-		border += "\u2514"
+		w.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2518", "")
 	}
-	for i := 0; i < visibleLength; i++ {
+
+	// Draw bottom border
+	for i := 1; i < visibleLength; i++ {
 		// Inserts a horizontal line
 		if w.Active {
-			// Append color green
-			border += "\033[32m" + "\u2500" + "\033[37m"
+			w.PrintCharAt(winX+i, winY+visibleHeight+1, "\u2500", "\033[32m")
 		} else {
-			border += "\u2500"
+			w.PrintCharAt(winX+i, winY+visibleHeight+1, "\u2500", "")
 		}
 	}
-	// insert the bottom right corner
-	if w.Active {
-		// Append color green
-		border += "\033[32m" + "\u2518" + "\033[37m"
-	} else {
-		border += "\u2518"
-	}
-
-	return border
 }
 
 func (w *Window) ContentToLines(winX int, winY int, visibleLength int) ([]string, int) {
@@ -451,24 +478,13 @@ func (w *Window) ContentToLines(winX int, winY int, visibleLength int) ([]string
 }
 
 // Parse contents reads a string one character at a time, placing it within the bounds of the window and returns the string
-func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight int, startX, startY int) string {
-	// Parse contents of window into a string
-
+func (w *Window) DrawContents(winX int, winY int, visibleLength, visibleHeight int, startX, startY int) {
 	// maxHeight is the maximum height of the window subtracting the border
 	maxHeight := visibleHeight
 	lines, _ := w.ContentToLines(winX, winY, visibleLength)
-
-	// Move cursor to top left corner of window accounting for the border
-	// and the visible length and height of the window
-	output := ""
 	currentLine := winY + 1
 
-	// append the last maxHeight lines to the output string
 	if len(lines) > maxHeight {
-		//if currentLine > maxHeight {
-		//	return output
-		//}
-
 		if w.ScrollingSupported {
 			if w.DirectionInput == InputUp {
 				w.ContentStartPos++
@@ -494,39 +510,33 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 			contentStartPos = w.ContentStartPos
 		}
 
-		if len(lines)-maxHeight+contentStartPos-1 > 0 {
-			// Move cursor to the top right corner of the window
-			output += "\033[" + strconv.Itoa(winY+1) + ";" + strconv.Itoa(winX+visibleLength+1) + "H"
-			// draw an up arrow in grey
-			output += "\033[37m" + "\u2191" + "\033[37m"
-		}
-		if len(lines)-maxHeight+contentStartPos-1 < len(lines)-maxHeight-1 {
-			// Move cursor to the bottom right corner of the window
-			output += "\033[" + strconv.Itoa(winY+visibleHeight+1) + ";" + strconv.Itoa(winX+visibleLength+1) + "H"
-
-			if w.ScrollBufferHasNew {
-				// draw a down arrow in red
-				output += "\033[31m" + "\u2193" + "\033[37m"
-			} else {
-				// draw a down arrow in grey
-				output += "\033[37m" + "\u2193" + "\033[37m"
-			}
-		}
-
-		// Return cursor to top left
-		output += "\033[" + strconv.Itoa(winY+1) + ";" + strconv.Itoa(winX+1) + "H"
-
 		for i := len(lines) - maxHeight + contentStartPos - 1; i < len(lines); i++ {
 			if currentLine > maxHeight+winY+1 {
 				break
 			}
-
-			output += lines[i]
+			// Print current line
+			w.PrintAt(winX+1, currentLine, lines[i], "")
+			// Fill the rest of the line with spaces
+			for j := len(lines[i]) + 1; j < visibleLength; j++ {
+				w.PrintCharAt(winX+j, currentLine, " ", "")
+			}
 			// increment currentLine
 			currentLine++
-			// Move cursor down one line
-			output += "\033[" + strconv.Itoa(currentLine) + ";" + strconv.Itoa(winX+1) + "H"
+		}
 
+		// Draw our arrows last
+		if len(lines)-maxHeight+contentStartPos-1 > 0 {
+			// draw an up arrow in grey
+			w.PrintCharAt(winX+visibleLength, winY+1, "\u2191", "\033[37m")
+		}
+		if len(lines)-maxHeight+contentStartPos-1 < len(lines)-maxHeight-1 {
+			if w.ScrollBufferHasNew {
+				// Draw down arrow in red if there is new content
+				w.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2193", "\033[31m")
+			} else {
+				// Draw down arrow in grey if there is no new content
+				w.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2193", "\033[37m")
+			}
 		}
 	} else {
 		if w.ScrollingSupported {
@@ -542,53 +552,78 @@ func (w *Window) ParseContents(winX int, winY int, visibleLength, visibleHeight 
 		}
 
 		for i := 0; i < len(lines); i++ {
-			for num, character := range lines[i] {
-				log.Println(w.GetPointDifference(string(character), i, num))
-				output += string(character)
-				if num == len(lines[i])-1 {
-					if num < visibleLength {
-						for j := num + 1; j < visibleLength; j++ {
-							output += " "
-						}
-					}
-				}
-			}
+			w.PrintAt(winX+1, currentLine, lines[i], "")
 
 			if i == len(lines)-1 {
 				for lineNumber := i; lineNumber < maxHeight; lineNumber++ {
 					// increment currentLine
 					currentLine++
-					// Move cursor down one line
-					output += "\033[" + strconv.Itoa(currentLine) + ";" + strconv.Itoa(winX+1) + "H"
 					for j := 0; j < visibleLength; j++ {
-						output += " "
+						w.PrintAt(winX+j, currentLine, " ", "")
 					}
 				}
 			}
-
 			// increment currentLine
 			currentLine++
-			// Move cursor down one line
-			output += "\033[" + strconv.Itoa(currentLine) + ";" + strconv.Itoa(winX+1) + "H"
 		}
 	}
+}
 
+func (w *Window) PrintAt(X int, Y int, text string, escapeCode string) {
+	w.pmapMutex.Lock()
+	defer w.pmapMutex.Unlock()
+	if X > len(w.pointMap)-1 {
+		return
+	}
+	if Y > len(w.pointMap[X])-1 {
+		return
+	}
+	
+	for i, character := range text {
+		//log.Println("inserting character:", string(character))
+		// For the point at X, Y+1, set the character to the character at the current index of the text string
+		w.pointMap[X+i][Y] = Point{X: X + i, Y: Y, Character: string(character), EscapeCode: escapeCode}
+		//log.Println("pointMap:", X, Y+i, w.pointMap[X][Y+i].Character)
+	}
+}
+
+func (w *Window) PrintCharAt(X int, Y int, text string, escapeCode string) {
+	w.pmapMutex.Lock()
+	defer w.pmapMutex.Unlock()
+	if X > len(w.pointMap)-1 {
+		return
+	}
+	if Y > len(w.pointMap[X])-1 {
+		return
+	}
+	w.pointMap[X][Y] = Point{X: X, Y: Y, Character: text, EscapeCode: escapeCode}
+}
+
+func (w *Window) PointMapToString() string {
+	w.pmapMutex.Lock()
+	defer w.pmapMutex.Unlock()
+
+	// iterate through entire w.pointMap and print out the character at each point
+	output := ""
+
+	for x := 0; x < len(w.pointMap); x++ {
+		for y := 0; y < len(w.pointMap[x]); y++ {
+			if w.pointMap[x][y].Character != "" || w.pointMap[x][y].EscapeCode != "" {
+				if w.lastSentContents[x][y].Print() != w.pointMap[x][y].Print() {
+					output += w.pointMap[x][y].Print()
+					w.lastSentContents[x][y] = w.pointMap[x][y]
+				}
+			}
+		}
+	}
 	return output
 }
 
-// Needs to be rewritten
-func (w *Window) GetPointDifference(input string, x, y int) string {
-	log.Println("GetPointDifference")
-	if len(w.LastSentContents) == 0 {
-		w.LastSentContents = make([][]string, 1024)
-		for i := range w.LastSentContents {
-			w.LastSentContents[i] = make([]string, 1024)
+func (w *Window) ClearMap(winX int, winY int, visibleLength, visibleHeight int, startX, startY int) {
+	// First clear the window before we redraw it
+	for i := winX; i < visibleLength+2; i++ {
+		for j := winY; j < visibleHeight+2; j++ {
+			w.PrintCharAt(i, j, " ", "")
 		}
 	}
-
-	if w.LastSentContents[x][y] != input {
-		w.LastSentContents[x][y] = input
-		return input
-	}
-	return ""
 }
