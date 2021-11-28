@@ -627,6 +627,7 @@ func (w *Window) PointMapToString() string {
 	lastSentChar := ""
 	lastSentEscape := ""
 	lastY := 0
+	lastX := 0
 	bufferCount := 0
 
 	for y := 0; y < len(w.pointMap[0]); y++ {
@@ -638,8 +639,11 @@ func (w *Window) PointMapToString() string {
 					pointMapEscape := w.pointMap[x][y].EscapeCode
 					// If this character is the last one sent, then we increase the buffer count
 					// and repeat
-					if pointMapChar == lastSentChar && pointMapEscape == lastSentEscape && y == lastY && pointMapChar != "\u2502" {
+					if pointMapChar == lastSentChar && pointMapEscape == lastSentEscape &&
+						y == lastY && (x)-lastX == 1 {
+						log.Println(pointMapChar)
 						bufferCount++
+						lastX = x
 					} else {
 						// If we reached a new character, and the buffer count is greater than 0
 						// We need to print the repeated last character bufferCount times
@@ -654,6 +658,7 @@ func (w *Window) PointMapToString() string {
 							lastSentChar = pointMapChar
 							lastSentEscape = pointMapEscape
 							lastY = w.pointMap[x][y].Y
+							lastX = w.pointMap[x][y].X
 							bufferCount = 0
 						}
 						// Now that we have dealt with the buffer count, we can print the new character

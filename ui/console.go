@@ -76,7 +76,7 @@ func (c *Console) Init() {
 	go c.CaptureWindowMessages()
 	go c.CaptureManagerMessages()
 
-	c.SetActiveWindow(chatWindow) // Set our default active window to the login window, we will pass this to another
+	c.SetActiveWindow(loginWindow) // Set our default active window to the login window, we will pass this to another
 	// window after we log in.
 
 	c.ConsoleCommands += c.HideCursor() + c.ResetTerminal() // + c.DrawPrompt() + c.MoveCursorToTopLeft()
