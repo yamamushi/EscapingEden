@@ -16,6 +16,15 @@ type Connection struct {
 	mutex   sync.Mutex
 	console *ui.Console
 	manager *ConnectionManager
+
+	// These are for working with IAC commands coming into the handler
+	iacBuffer              string
+	iacActive              bool
+	iacSubnegotationActive bool
+	iacResizeActive        bool
+	iacParamIndex          int
+	iacWindowResizeX       int
+	iacWindowResizeY       int
 }
 
 // NewConnection creates a new connection
@@ -81,6 +90,77 @@ func (c *Connection) Handle() {
 			c.manager.HandleDisconnect(c)
 			return
 		}
+
+		if readByte == IAC {
+			log.Println("IAC received")
+			c.iacActive = true
+			continue
+		}
+		if c.iacActive {
+			c.HandleIAC(readByte)
+			continue
+		}
+
 		c.console.HandleInput(readByte)
+	}
+}
+
+func (c *Connection) HandleIAC(readByte byte) {
+	log.Println("Byte: ", readByte)
+
+	if c.iacActive {
+		if readByte == 0 {
+			// We don't care about null bytes, just ignore them
+			// And a window resize shouldn't be sending a null byte like this
+			// We should probably handle this better later
+			// But for now, just ignore it
+			return
+		}
+		if readByte == 250 {
+			log.Println("IAC subnegotiation received")
+			c.iacSubnegotationActive = true
+			return
+		}
+		if c.iacSubnegotationActive {
+			if readByte == 31 && !c.iacResizeActive {
+				log.Println("IAC Window resize received")
+				c.iacResizeActive = true
+				return
+			}
+			if c.iacResizeActive {
+				if c.iacParamIndex == 0 {
+					c.iacParamIndex = 1
+					c.iacWindowResizeX = int(readByte)
+					return
+				}
+				if c.iacParamIndex == 1 {
+					c.iacParamIndex = 0
+					c.iacWindowResizeY = int(readByte)
+					c.iacResizeActive = false
+					log.Println("IAC Window resize received: ", c.iacWindowResizeX, c.iacWindowResizeY)
+					return
+				}
+			}
+			if readByte == 240 {
+				// Only when we receive the final SE bit are we done with the subnegotiation
+				c.iacSubnegotationActive = false
+				c.iacActive = false
+				c.iacResizeActive = false
+				c.iacParamIndex = 0
+				//if c.iacWindowResizeX
+				if c.iacWindowResizeX > 0 && c.iacWindowResizeY > 0 {
+					c.console.HandleResize(c.iacWindowResizeX, c.iacWindowResizeY)
+				}
+				c.iacWindowResizeX = 0
+				c.iacWindowResizeY = 0
+				log.Println("IAC subnegotiation complete")
+
+				return
+			}
+		}
+
+		log.Println("Unhandled IAC command received: ", int(readByte))
+		log.Println("If you're reading this, you're about to see garbage get sent to your windows.")
+		c.iacActive = false
 	}
 }

@@ -49,6 +49,7 @@ type WindowType interface {
 	GetID() int
 	GetX() int
 	GetY() int
+	UpdateParams(x, y, height, width, consoleWidth, consoleHeight int)
 	GetStartX() int
 	GetStartY() int
 	GetWidth() int
@@ -586,10 +587,10 @@ func (w *Window) PrintLn(X int, Y int, text string, escapeCode string) {
 func (w *Window) PrintChar(X int, Y int, text string, escapeCode string) {
 	w.pmapMutex.Lock()
 	defer w.pmapMutex.Unlock()
-	if X > len(w.pointMap)-1 {
+	if X > len(w.pointMap)-1 || X < 0 {
 		return
 	}
-	if Y > len(w.pointMap[X])-1 {
+	if Y > len(w.pointMap[X])-1 || Y < 0 {
 		return
 	}
 	w.pointMap[X][Y] = console.Point{X: X, Y: Y, Character: text, EscapeCode: escapeCode}
@@ -713,4 +714,52 @@ func (w *Window) ForceConsoleRefresh() {
 	w.ResetWindowDrawings()
 	message := &console.ConsoleMessage{Type: "console", Message: "refresh", WindowID: w.GetID()}
 	w.ConsoleSend <- message.String()
+}
+
+func (w *Window) UpdateParams(x, y, width, height, consoleWidth, consoleHeight int) {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+	w.pmapMutex.Lock()
+	defer w.pmapMutex.Unlock()
+
+	// This function can probably also be used later for window moving
+
+	// if x or y are less than 1 set them to 1
+	if x < 1 {
+		x = 1
+	}
+	if y < 1 {
+		y = 1
+	}
+	w.X = x
+	w.Y = y
+
+	// if w or h are less than 1 set them to 1
+	if width < 1 {
+		width = 1
+	}
+	if height < 1 {
+		height = 1
+	}
+	w.Width = width
+	w.Height = height
+	w.ConsoleWidth = consoleWidth
+	w.ConsoleHeight = consoleHeight
+
+	w.pointMap = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.lastSentContents = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.pointMapInitialized = true
+
+	for i := w.Y + 1; i < w.Y+w.Height+1; i++ {
+		for j := w.X + 1; j < w.X+w.Width; j++ {
+			if j > len(w.pointMap)-1 {
+				return
+			}
+			if i > len(w.pointMap[i])-1 {
+				return
+			}
+			w.pointMap[j][i] = console.Point{X: j, Y: i, Character: " ", EscapeCode: ""}
+		}
+	}
+	w.lastSentContents = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
 }

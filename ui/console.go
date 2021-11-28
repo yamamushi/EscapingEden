@@ -40,6 +40,7 @@ type Console struct {
 	forceScreenRefresh bool
 	abortSend          bool
 	abortSync          sync.Mutex
+	resizeActive       bool
 }
 
 // NewConsole creates a new console with no windows.
@@ -235,6 +236,12 @@ func (c *Console) Draw() []byte {
 		c.forceScreenRefresh = false
 		s = s + c.ClearTerminal()
 		return []byte(s)
+	} else if c.resizeActive {
+		log.Println("Handling resize in buffer")
+		for _, w := range c.Windows {
+			w.FlushLastSent()
+		}
+		c.resizeActive = false
 	}
 
 	//log.Println("Drawing console")
@@ -273,6 +280,8 @@ func (c *Console) HandleInput(rawInput byte) {
 		// Ignore these null bytes
 		return
 	}
+
+	//log.Println("Console received input: ", string(rawInput))
 
 	if rawInput == 18 {
 		// ctrl-r to force a screen refresh
@@ -624,4 +633,26 @@ func (c *Console) SetActiveWindowNoThread(window window.WindowType) {
 			w.SetActive(false)
 		}
 	}
+}
+
+func (c *Console) HandleResize(newWidth, newHeight int) {
+	c.mutex.Lock()
+	c.mutex.Unlock()
+
+	c.Width = newWidth
+	c.Height = newHeight
+	for _, w := range c.Windows {
+		switch w.GetID() {
+		case window.CHATBOX:
+			w.UpdateParams(0, c.Height-10, c.Width-50, 9, c.Width, c.Height)
+		case window.LOGINMENU:
+			w.UpdateParams(0, 0, c.Width-50, c.Height-13, c.Width, c.Height)
+		case window.TOOLBOX:
+			w.UpdateParams(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height)
+		}
+
+	}
+	c.forceScreenRefresh = true
+	c.resizeActive = true
+	c.abortSend = true
 }

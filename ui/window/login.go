@@ -110,6 +110,8 @@ func (lw *LoginWindow) UpdateContents() {
 func (lw *LoginWindow) drawMenu() {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
+	lw.mutex.Lock()
+	defer lw.mutex.Unlock()
 	//lw.FlushLastSent()
 
 	// First we are going to setup our default login screen
@@ -136,7 +138,7 @@ func (lw *LoginWindow) drawMenu() {
 			for x, point := range line {
 				printX := x + lw.Width - artFile.Width
 				printY := y + lw.Height - artFile.Height + 3
-				if printX < lw.Width && printY < lw.Height+3 {
+				if printX < lw.Width && printY < lw.Height+3 && printY < lw.ConsoleHeight && printX < lw.ConsoleWidth {
 					lw.PrintChar(printX, printY, point.Character, point.EscapeCode)
 				}
 			}
