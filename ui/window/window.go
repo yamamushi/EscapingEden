@@ -525,7 +525,16 @@ func (w *Window) DrawContents(winX int, winY int) {
 				break
 			}
 			// Print current line
-			w.PrintLn(winX+1, currentLine, lines[i], "")
+			for j, char := range lines[i] {
+				if j+winX+1 > w.X+w.Width-1 {
+					break
+				}
+				if w.GetCharAt(j+winX+1, currentLine) == " " || w.GetCharAt(j+winX+1, currentLine) == "" {
+					w.PrintChar(j+winX+1, currentLine, string(char), "")
+				}
+			}
+
+			//w.PrintLn(winX+1, currentLine, lines[i], "")
 			// increment currentLine
 			currentLine++
 		}
@@ -558,8 +567,16 @@ func (w *Window) DrawContents(winX int, winY int) {
 		}
 
 		for i := 0; i < len(lines); i++ {
-			w.PrintLn(winX+1, currentLine, lines[i], "")
-			// increment currentLine
+
+			for j, char := range lines[i] {
+				if j+winX+1 > w.X+w.Width-1 {
+					break
+				}
+				if w.GetCharAt(j+winX+1, currentLine) == " " || w.GetCharAt(j+winX+1, currentLine) == "" {
+					w.PrintChar(j+winX+1, currentLine, string(char), "")
+				}
+				//w.PrintChar(i+winX+1, currentLine, string(char), "")
+			} // increment currentLine
 			currentLine++
 		}
 	}

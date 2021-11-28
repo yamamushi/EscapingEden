@@ -39,26 +39,6 @@ func (cm *ConnectionManager) HandleDisconnect(connection *Connection) {
 
 func (cm *ConnectionManager) Run() {
 	go cm.MessageParser() // Launch our goroutine that listens for incoming messages
-	for {
-		cm.connectionMap.Range(func(key, value interface{}) bool {
-			// Send the message "Boo!" to the client
-			if conn, ok := value.(*Connection); ok {
-				// convert string to byte array
-				if conn.console != nil {
-					output := conn.console.Draw()
-					if string(output) != "" {
-						conn.Write(output)
-					}
-					if conn.console.GetShutdown() {
-						log.Println("Client requested shutdown")
-						conn.Write([]byte("Goodbye!\n"))
-						cm.HandleDisconnect(conn)
-					}
-				}
-			}
-			return true // return true to continue iterating
-		})
-	}
 }
 
 // Non blocking check for messages

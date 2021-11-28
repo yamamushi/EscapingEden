@@ -9,6 +9,11 @@ import (
 	"sync"
 )
 
+var (
+	minWidth  = 155
+	minHeight = 30
+)
+
 type Console struct {
 	ConnectionID string // The ID of the connection using this console
 	Height       int    // The height of the console
@@ -226,6 +231,19 @@ func (c *Console) Draw() []byte {
 	var s string
 	//s = s + c.ConsoleCommands
 	//c.ConsoleCommands = ""
+	if !c.IsConsoleValidSize() {
+		s = s + "\033[2J"
+		s = s + "Invalid console size, Escaping Eden requires a terminal size of" + strconv.Itoa(minWidth) + "x" + strconv.Itoa(minHeight) + "or greater.\r\n"
+		s = s + "Please resize your terminal, or press q to disconnect.\n"
+		s = s + "If your terminal is empty after resizing, you can press ctrl-r to force a screen refresh.\n"
+
+		if c.LastSentOutput != s {
+			c.LastSentOutput = s
+			return []byte(s)
+		} else {
+			return []byte("")
+		}
+	}
 
 	if !c.consoleInitialized {
 		c.consoleInitialized = true
@@ -276,6 +294,14 @@ func (c *Console) Draw() []byte {
 func (c *Console) HandleInput(rawInput byte) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	if !c.IsConsoleValidSize() {
+		// If the console isn't valid we don't want to accept any input
+		// However if we recieve the letter q, we will exit the program
+		if rawInput == 'q' {
+			c.Shutdown = true
+		}
+		return
+	}
 	if rawInput == 0 {
 		// Ignore these null bytes
 		return
@@ -286,7 +312,7 @@ func (c *Console) HandleInput(rawInput byte) {
 	if rawInput == 18 {
 		// ctrl-r to force a screen refresh
 		for _, w := range c.Windows {
-			w.FlushLastSent()
+			w.ResetWindowDrawings()
 		}
 		c.forceScreenRefresh = true
 		return
@@ -655,4 +681,8 @@ func (c *Console) HandleResize(newWidth, newHeight int) {
 	c.forceScreenRefresh = true
 	c.resizeActive = true
 	c.abortSend = true
+}
+
+func (c *Console) IsConsoleValidSize() bool {
+	return c.Width > minWidth && c.Height > minHeight
 }

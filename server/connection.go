@@ -6,7 +6,6 @@ import (
 	"log"
 	"net"
 	"sync"
-	"time"
 )
 
 // Connection is a connection to a client in case we need to store any extra details later
@@ -38,22 +37,16 @@ func NewConnection(conn net.Conn, id string, manager *ConnectionManager) *Connec
 	return connection
 }
 
-func (c *Connection) Write(msg []byte) {
+func (c *Connection) Write(msg []byte) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	if c.console.GetShutdown() {
-		log.Println("Client requested shutdown")
-		c.conn.Write([]byte("Goodbye!\n"))
-		c.conn.Close()
-		c.manager.HandleDisconnect(c)
-		return
-	}
-
 	_, err := c.conn.Write(msg)
 	if err != nil {
-		log.Println(err)
+		//log.Println(err)
+		return err
 	}
+	return nil
 }
 
 // handleConnection handles a single connection
@@ -77,8 +70,9 @@ func (c *Connection) Handle() {
 	c.console = ui.NewConsole(w, h, c.ID, c.manager.CMReceiveMessages)
 	log.Println("Initializing Console")
 	c.console.Init()
+	go c.UpdateHandler()
 	log.Println("Console Initialized")
-	time.Sleep(time.Second * 1)
+	//time.Sleep(time.Second * 1)
 
 	reader := bufio.NewReader(c.conn)
 
@@ -102,6 +96,29 @@ func (c *Connection) Handle() {
 		}
 
 		c.console.HandleInput(readByte)
+	}
+}
+
+func (c *Connection) UpdateHandler() {
+	for {
+		if c.console.GetShutdown() {
+			log.Println("Client requested shutdown")
+			c.conn.Write([]byte("Goodbye!\n"))
+			c.conn.Close()
+			c.manager.HandleDisconnect(c)
+			return
+		}
+
+		output := c.console.Draw()
+		if len(output) > 0 {
+			err := c.Write(output)
+			if err != nil {
+				log.Println("Client disconnected")
+				c.conn.Close()
+				c.manager.HandleDisconnect(c)
+				return
+			}
+		}
 	}
 }
 

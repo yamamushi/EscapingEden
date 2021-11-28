@@ -138,7 +138,7 @@ func (lw *LoginWindow) drawMenu() {
 			for x, point := range line {
 				printX := x + lw.Width - artFile.Width
 				printY := y + lw.Height - artFile.Height + 3
-				if printX < lw.Width && printY < lw.Height+3 && printY < lw.ConsoleHeight && printX < lw.ConsoleWidth {
+				if printX < lw.Width+1 && printY < lw.Height+3 && printY < lw.ConsoleHeight && printX < lw.ConsoleWidth {
 					lw.PrintChar(printX, printY, point.Character, point.EscapeCode)
 				}
 			}
@@ -284,9 +284,17 @@ func (lw *LoginWindow) drawRegistrationMenu() {
 		lw.Error("Error opening rules file:" + err.Error())
 		return
 	}
-	lw.PrintChar(lw.X+434, lw.Y+5, "r", "\033[1m")
-
+	// This isn't pretty but it works
+	// Perhaps in the future we can have embedded text file reading
+	// Technically we could pull this off with the art reader too
+	// But that's a bit more overkill for this
+	lw.PrintChar(lw.X+43, lw.Y+5, "r", "\033[1m")
+	lw.PrintLn(lw.X+45, lw.Y+8, "ctrl-r", "\033[1m")
+	lw.PrintChar(lw.X+20, lw.Y+7, "b", "\033[1m")
+	lw.PrintChar(lw.X+2, lw.Y+11, "d", "\033[1m")
 	lw.SetContents(content)
+
+	// We eventually want to embed all of this in an easier to use way
 	lw.PrintLn(lw.X+1, lw.Y+lw.Height-2, "When you are ready, and have agreed to the [r]ules, please select <Continue> below.", "")
 	lw.PrintLn(lw.X+67, lw.Y+lw.Height-2, "<Continue>", "\033[1m")
 	lw.PrintChar(lw.X+45, lw.Y+lw.Height-2, "r", "\033[1m")
