@@ -6,6 +6,7 @@ type ManagerMessage struct {
 	Options     string `json:"options"`
 	SenderID    string `json:"sender_id"`
 	RecipientID string `json:"recipient_id"`
+	WindowID    int    `json:"window_id"`
 }
 
 // MessageType is the type of message

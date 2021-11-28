@@ -38,6 +38,8 @@ type Console struct {
 	escapeSequence     bool
 	returnSequence     bool
 	forceScreenRefresh bool
+	abortSend          bool
+	abortSync          sync.Mutex
 }
 
 // NewConsole creates a new console with no windows.
@@ -64,12 +66,12 @@ func (c *Console) Init() {
 	c.AddWindow(loginWindow)
 
 	// Next we setup our chat window
-	chatWindow := window.NewChatWindow(0, c.Height-10, c.Width-50, c.Height, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
+	chatWindow := window.NewChatWindow(0, c.Height-10, c.Width-50, 9, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
 	chatWindow.Init()
 	c.AddWindow(chatWindow)
 
 	// Then we add our toolbox last
-	toolboxWindow := window.NewToolboxWindow(c.Width-48, 0, 50, c.Height, c.Width, c.Height, c.ToolboxMessages, c.WindowMessages)
+	toolboxWindow := window.NewToolboxWindow(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height, c.ToolboxMessages, c.WindowMessages)
 	toolboxWindow.Init()
 	c.AddWindow(toolboxWindow)
 
@@ -96,6 +98,7 @@ func (c *Console) CaptureWindowMessages() {
 			log.Println("MessageType: ", consoleMessage.Type)
 			switch consoleMessage.Type {
 			case "console":
+				log.Println("Received console message")
 				switch consoleMessage.Message {
 				case "popup":
 					options := &window.PopupBoxConfig{}
@@ -107,7 +110,14 @@ func (c *Console) CaptureWindowMessages() {
 						log.Println("Popup box options: ", options.String())
 						c.OpenPopup(options)
 					}
+				case "refresh":
+					log.Println("Refresh message received")
+					//if !c.IsPopupOpen() {
+					c.AbortSend()
+					c.ForceRedraw()
+					//}
 				}
+
 			case "popupbox":
 				log.Println("Popup box message: ", consoleMessage.Message)
 				c.HandlePopupMessage(consoleMessage)
@@ -227,8 +237,10 @@ func (c *Console) Draw() []byte {
 		return []byte(s)
 	}
 
+	//log.Println("Drawing console")
 	for _, window := range c.Windows {
 		if !window.GetHidden() {
+			//log.Println("Drawing window: ", window.GetID())
 			windowDraw := c.DrawWindow(window)
 			if windowDraw != "" {
 				s = s + windowDraw
@@ -237,13 +249,18 @@ func (c *Console) Draw() []byte {
 	}
 
 	//return []byte(s)
-
+	// We do a last minute check for aborting sending messages
+	// This is useful when a screen has asked for a screen refresh
+	// And we don't want to send data that is going to get overwritten immediately
+	c.abortSync.Lock()
+	defer c.abortSync.Unlock()
 	// If the last output was not the same as the current output, we send it to the client and update the last output.
-	if c.LastSentOutput != s && s != "" {
+	if c.LastSentOutput != s && s != "" && !c.abortSend {
 		log.Println("Sending new output to client, length:", len(s))
 		c.LastSentOutput = s
 		return []byte(s)
 	} else {
+		c.abortSend = false
 		return []byte("")
 	}
 }
@@ -312,7 +329,14 @@ func (c *Console) HandleInput(rawInput byte) {
 		return
 	}
 	if rawInput == '\t' {
-		c.InputToActiveWindow(window.Input{Type: window.InputTab})
+		if !c.IsPopupOpen() {
+			c.SetNextActiveWindow()
+			for _, w := range c.Windows {
+				w.ResetWindowDrawings()
+				//w.FlushLastSent()
+			}
+			c.forceScreenRefresh = true
+		}
 		return
 	}
 	if rawInput == '\n' {
@@ -462,10 +486,10 @@ func (c *Console) DrawWindow(window window.WindowType) (content string) {
 	window.UpdateContents()
 
 	// Draw the contents of the window
-	window.Draw(winX, winY, visibleLength, visibleHeight, 0, 0)
+	window.Draw(winX, winY)
 
 	// Now we want to draw the window border
-	window.DrawBorder(winX, winY, visibleLength+1, visibleHeight+1)
+	window.DrawBorder(winX, winY)
 
 	// Now we get the window's content as a string from it's PointMap
 	content = window.PointMapToString()
@@ -483,11 +507,11 @@ func (c *Console) SetActiveWindow(window window.WindowType) {
 			w.SetActive(true)
 			c.Windows = append(c.Windows[:i], c.Windows[i+1:]...)
 			c.Windows = append(c.Windows, window)
+			log.Println("Active Window: ", c.Windows[len(c.Windows)-1].GetID())
 		} else {
 			w.SetActive(false)
 		}
 	}
-
 }
 
 func (c *Console) GetActiveWindow() window.WindowType {
@@ -509,7 +533,7 @@ func (c *Console) OpenPopup(options *window.PopupBoxConfig) {
 	c.AddWindow(popupBox)                    // Add the popup to the list of windows
 	c.SetActiveWindow(popupBox)              // Set the popup as the active window
 	//popupBox.FlushLastSent()
-	popupBox.ClearMap(popupBox.X, popupBox.Y, options.Width, options.Height, 0, 0)
+	popupBox.FlushLastSent()
 }
 
 func (c *Console) ClosePopup() {
@@ -530,14 +554,74 @@ func (c *Console) HandlePopupMessage(message *console.ConsoleMessage) {
 	case "close":
 		c.ClosePopup()
 	}
+}
 
+func (c *Console) IsPopupOpen() bool {
+	for _, w := range c.Windows {
+		if w.GetID() == window.POPUPBOX {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *Console) ForceRedraw() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	log.Println("Forcing redraw")
 	for _, w := range c.Windows {
 		w.FlushLastSent()
 	}
 	c.forceScreenRefresh = true
+}
+
+func (c *Console) ForceRedrawOn(windowType window.WindowID) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	log.Println("Forcing redraw on: ", windowType)
+	for _, w := range c.Windows {
+		if w.GetID() == int(windowType) {
+			log.Println("Flushing: ", w.GetID())
+			w.FlushLastSent()
+		}
+	}
+	//c.forceScreenRefresh = true
+}
+
+func (c *Console) AbortSend() {
+	c.abortSync.Lock()
+	defer c.abortSync.Unlock()
+	c.abortSend = true
+}
+
+func (c *Console) SetNextActiveWindow() {
+	// Set the active window to the first one in the list, because we know the last one is
+	// Always the active one
+	c.SetActiveWindowNoThread(c.Windows[0])
+}
+
+func (c *Console) SetPrevActiveWindow() {
+	// Set the active window to the second to last one in the last, because the last one is always
+	// Always the active one
+
+	// If the index is less than 2, then we only have one window in the list
+	// In which case we don't want to do anything
+	if len(c.Windows) < 2 {
+		return
+	}
+	c.SetActiveWindowNoThread(c.Windows[len(c.Windows)-2])
+}
+
+// SetActiveWindowNoThread sets the active window and sets all other windows to inactive without locking
+func (c *Console) SetActiveWindowNoThread(window window.WindowType) {
+	for i, w := range c.Windows {
+		if w.GetID() == window.GetID() {
+			log.Println("Active window set to: ", w.GetID())
+			w.SetActive(true)
+			c.Windows = append(c.Windows[:i], c.Windows[i+1:]...)
+			c.Windows = append(c.Windows, window)
+		} else {
+			w.SetActive(false)
+		}
+	}
 }

@@ -8,40 +8,43 @@ import (
 	"sync"
 )
 
+type WindowID int
+
 const (
 	// Some default window ID's that are used by the console
-	DEBUGBOX   = 0
-	CONSOLE    = 1
-	CHATBOX    = 2
-	INVENTORY  = 3
-	MINIMAP    = 4
-	PLAYERINFO = 5
-	PLAYERLIST = 6
-	STATUS     = 7
-	TARGET     = 8
-	TARGETINFO = 9
-	TARGETLIST = 10
-	LOGINMENU  = 11
-	WORLDMAP   = 12
-	TOOLBOX    = 13
-	POPUPBOX   = 14
+	DEBUGBOX   WindowID = 0
+	CONSOLE             = 1
+	CHATBOX             = 2
+	INVENTORY           = 3
+	MINIMAP             = 4
+	PLAYERINFO          = 5
+	PLAYERLIST          = 6
+	STATUS              = 7
+	TARGET              = 8
+	TARGETINFO          = 9
+	TARGETLIST          = 10
+	LOGINMENU           = 11
+	WORLDMAP            = 12
+	TOOLBOX             = 13
+	POPUPBOX            = 14
 )
 
 type WindowType interface {
 	ClearMap(X, Y, height, width, startX, startY int)
-	Draw(X, Y, height, width, startX, startY int)
+	Draw(X, Y int)
 	HandleInput(input Input)
 	Init()
 
 	HandleReceive(message console.ConsoleMessage)
 
-	DrawBorder(X, Y, height, width int)
-	DrawContents(X, Y, visibleHeight, visibleWidth, startX, startY int)
+	DrawBorder(X, Y int)
+	DrawContents(X, Y int)
 	UpdateContents()
 	SetContents(string)
 	PrintLn(X, Y int, text string, escaoeCode string)
 	PointMapToString() string
 	FlushLastSent()
+	ResetWindowDrawings()
 
 	GetID() int
 	GetX() int
@@ -111,10 +114,10 @@ type Window struct {
 }
 
 // Draw returns a string of the Window's contents
-func (w *Window) Draw(X int, Y int, visibleHeight, visibleWidth int, startX, startY int) {
+func (w *Window) Draw(X int, Y int) {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
-	w.DrawContents(X, Y, visibleHeight, visibleWidth, startX, startY)
+	w.DrawContents(X, Y)
 }
 
 func (w *Window) Init() {
@@ -361,7 +364,7 @@ func (w *Window) CenterText(text string, line int) string {
 // DrawBorder draws the Window's border
 
 // DrawBorder returns the border of a window using code page 437 characters as a string
-func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int) {
+func (w *Window) DrawBorder(winX int, winY int) {
 	// Draw top border using code page 437 characters starting at position winX, winY
 
 	// Move cursor to top left corner of window
@@ -374,7 +377,7 @@ func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int
 	}
 
 	// Draw left border
-	for i := 1; i < visibleHeight+1; i++ {
+	for i := 1; i < w.Height+1; i++ {
 		// Inserts a vertical line
 		if w.Active {
 			w.PrintChar(winX, winY+i, "\u2502", "\033[32m")
@@ -384,13 +387,13 @@ func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int
 	}
 	// Draw bottom left corner
 	if w.Active {
-		w.PrintChar(winX, winY+visibleHeight+1, "\u2514", "\033[32m")
+		w.PrintChar(winX, winY+w.Height+1, "\u2514", "\033[32m")
 	} else {
-		w.PrintChar(winX, winY+visibleHeight+1, "\u2514", "")
+		w.PrintChar(winX, winY+w.Height+1, "\u2514", "")
 	}
 
 	// Draw top border
-	for i := 1; i < visibleLength; i++ {
+	for i := 1; i < w.Width; i++ {
 		// Inserts a horizontal line
 		if w.Active {
 			w.PrintChar(winX+i, winY, "\u2500", "\033[32m")
@@ -401,40 +404,41 @@ func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int
 
 	// Draw top right corner
 	if w.Active {
-		w.PrintChar(winX+visibleLength, winY, "\u2510", "\033[32m")
+		w.PrintChar(winX+w.Width, winY, "\u2510", "\033[32m")
 	} else {
-		w.PrintChar(winX+visibleLength, winY, "\u2510", "")
+		w.PrintChar(winX+w.Width, winY, "\u2510", "")
 	}
 
 	// Draw right border
-	for i := 1; i < visibleHeight+1; i++ {
+	for i := 1; i < w.Height+1; i++ {
 		// Inserts a vertical line
 		if w.Active {
-			w.PrintChar(winX+visibleLength, winY+i, "\u2502", "\033[32m")
+			w.PrintChar(winX+w.Width, winY+i, "\u2502", "\033[32m")
 		} else {
-			w.PrintChar(winX+visibleLength, winY+i, "\u2502", "")
+			w.PrintChar(winX+w.Width, winY+i, "\u2502", "")
 		}
 	}
 
 	// Draw bottom right corner
 	if w.Active {
-		w.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2518", "\033[32m")
+		w.PrintChar(winX+w.Width, winY+w.Height+1, "\u2518", "\033[32m")
 	} else {
-		w.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2518", "")
+		w.PrintChar(winX+w.Width, winY+w.Height+1, "\u2518", "")
 	}
 
 	// Draw bottom border
-	for i := 1; i < visibleLength; i++ {
+	for i := 1; i < w.Width; i++ {
 		// Inserts a horizontal line
 		if w.Active {
-			w.PrintChar(winX+i, winY+visibleHeight+1, "\u2500", "\033[32m")
+			w.PrintChar(winX+i, winY+w.Height+1, "\u2500", "\033[32m")
 		} else {
-			w.PrintChar(winX+i, winY+visibleHeight+1, "\u2500", "")
+			w.PrintChar(winX+i, winY+w.Height+1, "\u2500", "")
 		}
 	}
 }
 
 func (w *Window) ContentToLines(winX int, winY int, visibleLength int) ([]string, int) {
+	visibleLength = w.Width - 1
 	// maxLength is the maximum length of the window subtracting the border
 	maxLength := visibleLength
 
@@ -481,7 +485,9 @@ func (w *Window) ContentToLines(winX int, winY int, visibleLength int) ([]string
 }
 
 // Parse contents reads a string one character at a time, placing it within the bounds of the window and returns the string
-func (w *Window) DrawContents(winX int, winY int, visibleLength, visibleHeight int, startX, startY int) {
+func (w *Window) DrawContents(winX int, winY int) {
+	visibleLength := w.Width - 1
+	visibleHeight := w.Height - 1
 	// maxHeight is the maximum height of the window subtracting the border
 	maxHeight := visibleHeight
 	lines, _ := w.ContentToLines(winX, winY, visibleLength)
@@ -519,12 +525,6 @@ func (w *Window) DrawContents(winX int, winY int, visibleLength, visibleHeight i
 			}
 			// Print current line
 			w.PrintLn(winX+1, currentLine, lines[i], "")
-			// Fill the rest of the line with spaces
-			for j := len(lines[i]) + 1; j < visibleLength; j++ {
-				if w.GetCharAt(winX+j, currentLine) == "" {
-					w.PrintChar(winX+j, currentLine, " ", "")
-				}
-			}
 			// increment currentLine
 			currentLine++
 		}
@@ -558,22 +558,11 @@ func (w *Window) DrawContents(winX int, winY int, visibleLength, visibleHeight i
 
 		for i := 0; i < len(lines); i++ {
 			w.PrintLn(winX+1, currentLine, lines[i], "")
-
-			if i == len(lines)-1 {
-				for lineNumber := i; lineNumber < maxHeight; lineNumber++ {
-					// increment currentLine
-					currentLine++
-					for j := 0; j < visibleLength; j++ {
-						if w.GetCharAt(winX+j, currentLine) == "" {
-							w.PrintLn(winX+j, currentLine, " ", "")
-						}
-					}
-				}
-			}
 			// increment currentLine
 			currentLine++
 		}
 	}
+
 }
 
 func (w *Window) PrintLn(X int, Y int, text string, escapeCode string) {
@@ -615,7 +604,27 @@ func (w *Window) GetCharAt(X, Y int) string {
 	if Y > len(w.pointMap[X])-1 {
 		return ""
 	}
-	return w.pointMap[X][Y].Print()
+	return w.pointMap[X][Y].Character
+}
+
+func (w *Window) GetEscapeCodeAt(X, Y int) string {
+	w.pmapMutex.Lock()
+	defer w.pmapMutex.Unlock()
+	if X > len(w.pointMap)-1 {
+		return ""
+	}
+	if Y > len(w.pointMap[X])-1 {
+		return ""
+	}
+	return w.pointMap[X][Y].EscapeCode
+}
+
+func (w *Window) IsPointBlank(X, Y int) bool {
+	if w.GetEscapeCodeAt(X, Y) == "" && w.GetCharAt(X, Y) == "" {
+		return true
+	} else {
+		return false
+	}
 }
 
 func (w *Window) PointMapToString() string {
@@ -678,9 +687,12 @@ func (w *Window) PointMapToString() string {
 
 func (w *Window) ClearMap(winX int, winY int, visibleLength, visibleHeight int, startX, startY int) {
 	// First clear the window before we redraw it
-	for i := winX; i < visibleLength+2; i++ {
-		for j := winY; j < visibleHeight+2; j++ {
-			w.PrintChar(i, j, " ", "")
+	for i := w.Y + 1; i < w.Y+w.Height+1; i++ {
+		for j := w.X + 1; j < w.X+w.Width; j++ {
+			//if w.GetCharAt(i, j) != " " { // && w.GetEscapeCodeAt(i, j) != "" {
+			//log.Println("Blank point found: ", i, j)
+			w.PrintChar(j, i, " ", "")
+			//}
 		}
 	}
 }
@@ -692,7 +704,13 @@ func (w *Window) FlushLastSent() {
 }
 
 func (w *Window) ResetWindowDrawings() {
+	w.FlushLastSent()
 	w.SetContents("")
 	w.ClearMap(w.X, w.Y, w.Width, w.Height, 0, 0)
-	w.FlushLastSent()
+}
+
+func (w *Window) ForceConsoleRefresh() {
+	w.ResetWindowDrawings()
+	message := &console.ConsoleMessage{Type: "console", Message: "refresh", WindowID: w.GetID()}
+	w.ConsoleSend <- message.String()
 }

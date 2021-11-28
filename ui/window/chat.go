@@ -74,7 +74,7 @@ func (cw *ChatWindow) HandleInput(input Input) {
 		return
 	case InputLeft:
 		log.Println("ChatWindow Left")
-		cw.RequestPopupFromConsole(cw.ConsoleWidth/2-40, cw.ConsoleHeight/2-10, 150, 20, "This is a test of a really long string with a bunch of random content to see if the content buffer will scroll or not correctly")
+		cw.RequestPopupFromConsole(cw.ConsoleWidth/2-40, cw.ConsoleHeight/2-10, 50, 20, "This is a test of a really long string with a bunch of random content to see if the content buffer will scroll or not correctly")
 		return
 	case InputRight:
 		log.Println("ChatWindow Right")

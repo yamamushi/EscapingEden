@@ -8,6 +8,7 @@ type ConsoleMessage struct {
 	Options     string `json:"options"`
 	SenderID    string `json:"sender_id"`
 	RecipientID string `json:"recipient_id"`
+	WindowID    int    `json:"window_id"`
 }
 
 func (c *ConsoleMessage) String() string {

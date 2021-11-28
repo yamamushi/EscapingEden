@@ -16,6 +16,8 @@ import (
 type AsciiArtFile struct {
 	Filename string
 	Data     console.PointMap
+	Height   int
+	Width    int
 }
 
 func OpenASCIIArtFile(filename string) (*AsciiArtFile, error) {
@@ -36,14 +38,16 @@ func OpenASCIIArtFile(filename string) (*AsciiArtFile, error) {
 	lines := strings.Split(contents, "\n")
 	height := len(lines)
 	var width int
-	// First we need to iterate and get the longest line, which serves as our width
+	// First we need to iterate and get the longest line, which serves as our maximum possible width
 	for _, line := range lines {
 		if len(line) > width {
 			width = len(line)
 		}
 	}
-
 	pointMap := console.NewPointMap(height, width)
+	// Now we reset width because our actual width is going to be smaller if we start using escape codes
+	width = 0
+
 	var newEscapeCode string
 	var applyEscapeCode string
 	var lineIndex int
@@ -80,40 +84,28 @@ func OpenASCIIArtFile(filename string) (*AsciiArtFile, error) {
 				// Only when we apply a character do we increment the line index
 				lineIndex++
 				// Don't color spaces
-				if char != ' ' {
-					// Now that we know we're not IN an escape sequence, we can apply the escape code we have
-					point := console.Point{
-						X:          lineIndex,
-						Y:          y,
-						EscapeCode: applyEscapeCode,
-						Character:  string(char),
-					}
-					pointMap[y][lineIndex] = point
-					// we don't reset applyEscapeCode because we want to keep the escape code we've applied for the next character
+				//if char != ' ' {
+				// Now that we know we're not IN an escape sequence, we can apply the escape code we have
+				point := console.Point{
+					X:          lineIndex,
+					Y:          y,
+					EscapeCode: applyEscapeCode,
+					Character:  string(char),
 				}
+				pointMap[y][lineIndex] = point
+				// we don't reset applyEscapeCode because we want to keep the escape code we've applied for the next character
+				//}
 			}
 			//log.Println("Escape code:", applyEscapeCode)
+		}
+		if width < lineIndex {
+			width = lineIndex
 		}
 		// When we hit a new line, we reset our escape code vars
 		newEscapeCode = ""
 		applyEscapeCode = ""
 		lineIndex = 0
-	}
-	return &AsciiArtFile{Filename: filename, Data: pointMap}, nil
-}
 
-func (a *AsciiArtFile) WriteToPointMap(pointmap console.PointMap) console.PointMap {
-	// Writes the contents of the file to the console
-	// This is useful for debugging
-	heightLimit := len(pointmap[0])
-	widthLimit := len(pointmap)
-	for y, line := range a.Data {
-		for x, point := range line {
-			if x < widthLimit && y < heightLimit {
-				pointmap[x][y] = point
-			}
-		}
 	}
-
-	return pointmap
+	return &AsciiArtFile{Filename: filename, Data: pointMap, Height: height, Width: width}, nil
 }

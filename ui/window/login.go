@@ -53,7 +53,7 @@ const (
 	RegistrationSubmit
 )
 
-func NewLoginWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *LoginWindow {
+func NewLoginWindow(x, y, width, height, consoleWidth, consoleHeight int, input, output chan string) *LoginWindow {
 	lw := &LoginWindow{}
 	lw.ID = LOGINMENU
 	// if x or y are less than 1 set them to 1
@@ -67,14 +67,14 @@ func NewLoginWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output c
 	lw.Y = y
 
 	// if w or h are less than 1 set them to 1
-	if w < 1 {
-		w = 1
+	if width < 1 {
+		width = 1
 	}
-	if h < 1 {
-		h = 1
+	if height < 1 {
+		height = 1
 	}
-	lw.Width = w
-	lw.Height = h
+	lw.Width = width
+	lw.Height = height
 	lw.ConsoleWidth = consoleWidth
 	lw.ConsoleHeight = consoleHeight
 	lw.Bordered = true
@@ -110,6 +110,7 @@ func (lw *LoginWindow) UpdateContents() {
 func (lw *LoginWindow) drawMenu() {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
+	//lw.FlushLastSent()
 
 	// First we are going to setup our default login screen
 	lw.PrintLn(lw.X+10, lw.Y+5, "Welcome to Escaping Eden!", "")
@@ -131,9 +132,15 @@ func (lw *LoginWindow) drawMenu() {
 	if err != nil {
 		log.Println(err)
 	} else {
-		lw.pmapMutex.Lock()
-		defer lw.pmapMutex.Unlock()
-		artFile.WriteToPointMap(lw.pointMap)
+		for y, line := range artFile.Data {
+			for x, point := range line {
+				printX := x + lw.Width - artFile.Width
+				printY := y + lw.Height - artFile.Height + 3
+				if printX < lw.Width && printY < lw.Height+3 {
+					lw.PrintChar(printX, printY, point.Character, point.EscapeCode)
+				}
+			}
+		}
 	}
 
 	return
@@ -160,13 +167,15 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 		log.Println("Login selected")
 		lw.windowState = LoginWindowLogin
 		lw.loginState = LoginUsername
-		lw.ResetWindowDrawings() // Whenever we switch to a different window state, we need to reset the drawings
+		//lw.ResetWindowDrawings()
+		lw.ForceConsoleRefresh()
 		return
 	case "r":
 		log.Println("Register selected")
 		lw.windowState = LoginWindowRegister
 		lw.registrationState = RegistrationMain
-		lw.ResetWindowDrawings()
+		//lw.ResetWindowDrawings()
+		lw.ForceConsoleRefresh()
 		return
 	case "q":
 		log.Println("Quit selected")
@@ -233,7 +242,9 @@ func (lw *LoginWindow) handleRegistrationInput(input Input) {
 				lw.registrationState = RegistrationUsername
 			}
 			lw.optionSelected = 0
-			lw.ResetWindowDrawings() // Whenever we switch to a different window state, we need to reset the drawings
+			//lw.ResetWindowDrawings()
+			lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
+			// To get us a clean state
 			return
 		default:
 			return
@@ -292,5 +303,4 @@ func (lw *LoginWindow) drawRegistrationMenu() {
 	} else {
 		lw.PrintLn(lw.X+lw.Width-15, lw.Y+lw.Height, "<Continue>", "\033[1m")
 	}
-
 }
