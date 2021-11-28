@@ -75,15 +75,19 @@ func (cm *ConnectionManager) MessageParser() {
 			if err != nil {
 				continue
 			}
+			log.Println("Message received from manager: ", managerMessage.Message)
 
 			switch managerMessage.Type {
 			case "chat":
 				// For every connection, send the message to the console channel
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
-						managerMessage.Message = conn.ID + ": " + managerMessage.Message
+						log.Println(conn.ID)
+						log.Println(managerMessage.SenderID)
+						log.Println(managerMessage.Message)
+						outMessage := &ManagerMessage{Message: managerMessage.SenderID + ": " + managerMessage.Message, Type: "chat"}
 						// json marshal message to string
-						output, err := json.Marshal(managerMessage)
+						output, err := json.Marshal(outMessage)
 						if err == nil {
 							log.Println("Chat message found, sending to conn.console.ReceiveMessages")
 							conn.console.ReceiveMessages <- string(output)

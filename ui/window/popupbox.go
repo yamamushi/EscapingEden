@@ -94,69 +94,69 @@ func (pb *PopupBox) DrawBorder(winX int, winY int, visibleLength, visibleHeight 
 	// Move cursor to top left corner of window
 	// Draw top left corner
 	if pb.Active {
-		pb.PrintCharAt(winX, winY, "\u250c", "\033[32m")
+		pb.PrintChar(winX, winY, "\u250c", "\033[32m")
 
 	} else {
-		pb.PrintCharAt(winX, winY, "\u250c", "")
+		pb.PrintChar(winX, winY, "\u250c", "")
 	}
 
 	// Draw left border
 	for i := 1; i < visibleHeight+1; i++ {
 		// Inserts a vertical line
 		if pb.Active {
-			pb.PrintCharAt(winX, winY+i, "\u2502", "\033[32m")
+			pb.PrintChar(winX, winY+i, "\u2502", "\033[32m")
 		} else {
-			pb.PrintCharAt(winX, winY+i, "\u2502", "")
+			pb.PrintChar(winX, winY+i, "\u2502", "")
 		}
 	}
 	// Draw bottom left corner
 	if pb.Active {
-		pb.PrintCharAt(winX, winY+visibleHeight+1, "\u2514", "\033[32m")
+		pb.PrintChar(winX, winY+visibleHeight+1, "\u2514", "\033[32m")
 	} else {
-		pb.PrintCharAt(winX, winY+visibleHeight+1, "\u2514", "")
+		pb.PrintChar(winX, winY+visibleHeight+1, "\u2514", "")
 	}
 
 	// Draw top border
 	for i := 1; i < visibleLength; i++ {
 		// Inserts a horizontal line
 		if pb.Active {
-			pb.PrintCharAt(winX+i, winY, "\u2500", "\033[32m")
+			pb.PrintChar(winX+i, winY, "\u2500", "\033[32m")
 		} else {
-			pb.PrintCharAt(winX+i, winY, "\u2500", "")
+			pb.PrintChar(winX+i, winY, "\u2500", "")
 		}
 	}
 
 	// Draw top right corner
 	if pb.Active {
-		pb.PrintCharAt(winX+visibleLength, winY, "\u2510", "\033[32m")
+		pb.PrintChar(winX+visibleLength, winY, "\u2510", "\033[32m")
 	} else {
-		pb.PrintCharAt(winX+visibleLength, winY, "\u2510", "")
+		pb.PrintChar(winX+visibleLength, winY, "\u2510", "")
 	}
 
 	// Draw right border
 	for i := 1; i < visibleHeight+1; i++ {
 		// Inserts a vertical line
 		if pb.Active {
-			pb.PrintCharAt(winX+visibleLength, winY+i, "\u2502", "\033[32m")
+			pb.PrintChar(winX+visibleLength, winY+i, "\u2502", "\033[32m")
 		} else {
-			pb.PrintCharAt(winX+visibleLength, winY+i, "\u2502", "")
+			pb.PrintChar(winX+visibleLength, winY+i, "\u2502", "")
 		}
 	}
 
 	// Draw bottom right corner
 	if pb.Active {
-		pb.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2518", "\033[32m")
+		pb.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2518", "\033[32m")
 	} else {
-		pb.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2518", "")
+		pb.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2518", "")
 	}
 
 	// Draw bottom border
 	for i := 1; i < visibleLength; i++ {
 		// Inserts a horizontal line
 		if pb.Active {
-			pb.PrintCharAt(winX+i, winY+visibleHeight+1, "\u2500", "\033[32m")
+			pb.PrintChar(winX+i, winY+visibleHeight+1, "\u2500", "\033[32m")
 		} else {
-			pb.PrintCharAt(winX+i, winY+visibleHeight+1, "\u2500", "")
+			pb.PrintChar(winX+i, winY+visibleHeight+1, "\u2500", "")
 		}
 	}
 

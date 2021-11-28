@@ -65,10 +65,12 @@ func (cw *ChatWindow) HandleInput(input Input) {
 	case InputUp:
 		log.Println("ChatWindow Up")
 		cw.DecreaseContentPos()
+		cw.ResetWindowDrawings()
 		return
 	case InputDown:
 		log.Println("ChatWindow Down")
 		cw.IncreaseContentPos()
+		cw.ResetWindowDrawings()
 		return
 	case InputLeft:
 		log.Println("ChatWindow Left")
@@ -90,6 +92,7 @@ func (cw *ChatWindow) HandleInput(input Input) {
 		if cw.cwInputBuffer != "" {
 			// Send a console message to the ConsoleSend channel
 			message := console.ConsoleMessage{Message: cw.cwInputBuffer, Type: "chat"}
+			log.Println("Message: " + message.Message)
 			output, err := json.Marshal(message)
 			if err == nil {
 				log.Println("Sending message on cw.ConsoleSend")
@@ -136,6 +139,7 @@ func (cw *ChatWindow) Listen() {
 					cw.SetScrollBufferNew(true)
 				} else {
 					cw.SetScrollBufferNew(false)
+					cw.ResetWindowDrawings()
 				}
 
 				log.Println("content start pos: ", cw.GetContentStartPos())

@@ -14,10 +14,15 @@ func (p *Point) Print() string {
 	var output string
 	// Move cursor to X Y
 	output += "\033[" + strconv.Itoa(p.Y) + ";" + strconv.Itoa(p.X) + "H"
-	output += "\033[0m"
-	output += p.EscapeCode
-	output += p.Character
-	output += "\033[0m"
+	if p.EscapeCode != "" {
+		output += "\033[0m"
+		output += p.EscapeCode
+		output += p.Character
+		output += "\033[0m"
+	} else {
+		output += p.Character
+	}
+
 	return output
 }
 

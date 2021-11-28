@@ -76,7 +76,7 @@ func (c *Console) Init() {
 	go c.CaptureWindowMessages()
 	go c.CaptureManagerMessages()
 
-	c.SetActiveWindow(loginWindow) // Set our default active window to the login window, we will pass this to another
+	c.SetActiveWindow(chatWindow) // Set our default active window to the login window, we will pass this to another
 	// window after we log in.
 
 	c.ConsoleCommands += c.HideCursor() + c.ResetTerminal() // + c.DrawPrompt() + c.MoveCursorToTopLeft()
@@ -116,14 +116,17 @@ func (c *Console) CaptureWindowMessages() {
 				log.Println("Error message: ", consoleMessage.Message)
 				consoleMessage.RecipientID = c.ConnectionID
 				c.SendMessages <- consoleMessage.String()
+				continue
 			case "quit":
 				log.Println("Sending Quit request to ConnectionManager")
 				consoleMessage.RecipientID = c.ConnectionID
 				c.SendMessages <- consoleMessage.String()
+				continue
 			case "chat":
 				log.Println("Chat message: ", consoleMessage.Message)
 				consoleMessage.SenderID = c.ConnectionID
 				c.SendMessages <- consoleMessage.String()
+				continue
 			}
 		}
 	}
@@ -144,7 +147,7 @@ func (c *Console) CaptureManagerMessages() {
 			switch consoleMessage.Type {
 			case "chat":
 				log.Println("Chat message received from manager")
-				c.ChatMessages <- message
+				c.ChatMessages <- consoleMessage.String()
 			case "error":
 				log.Println("Error message received from manager")
 				consoleMessage.Message = "Error: " + consoleMessage.Message
@@ -237,8 +240,7 @@ func (c *Console) Draw() []byte {
 
 	// If the last output was not the same as the current output, we send it to the client and update the last output.
 	if c.LastSentOutput != s && s != "" {
-		log.Println("Sending new output to client")
-		log.Println("Length:", len(s))
+		log.Println("Sending new output to client, length:", len(s))
 		c.LastSentOutput = s
 		return []byte(s)
 	} else {
@@ -447,6 +449,7 @@ func (c *Console) GetWindowAttrs(window window.WindowType) (X int, Y int, visibl
 func (c *Console) DrawWindow(window window.WindowType) (content string) {
 	// Get Window Attrs
 	winX, winY, visibleLength, visibleHeight := c.GetWindowAttrs(window)
+
 	// First we want to clear the window for any new content coming in
 	window.ClearMap(winX, winY, visibleLength, visibleHeight, 0, 0)
 

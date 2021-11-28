@@ -255,23 +255,31 @@ func (lw *LoginWindow) drawRegistrationMenu() {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
 
-	lw.SetContents("Welcome to Escaping Eden! You are about to embark upon a journey into ")
-	//lw.PrintLn(lw.Y+2, lw.X+2, "Welcome to Escaping Eden! You are about to embark upon a journey into ", "")
+	content, err := console.OpenFileAsText("assets/text/welcome.txt")
+	if err != nil {
+		lw.Error("Error opening rules file:" + err.Error())
+		return
+	}
+	lw.PrintChar(lw.X+434, lw.Y+5, "r", "\033[1m")
 
+	lw.SetContents(content)
+	lw.PrintLn(lw.X+1, lw.Y+lw.Height-2, "When you are ready, and have agreed to the [r]ules, please select <Continue> below.", "")
+	lw.PrintLn(lw.X+67, lw.Y+lw.Height-2, "<Continue>", "\033[1m")
+	lw.PrintChar(lw.X+45, lw.Y+lw.Height-2, "r", "\033[1m")
 	// Bold the text for the back and continue buttons
 	if lw.optionSelected == 1 {
 		fg := console.RGBCode(0, 0, 0)
 		bg := console.RGBCode(255, 255, 255)
-		lw.PrintLn(lw.X+5, lw.Height+1, "<Back>", fg.FG()+bg.BG())
+		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", fg.FG()+bg.BG())
 	} else {
-		lw.PrintLn(lw.X+5, lw.Height+1, "<Back>", "\033[1m")
+		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", "\033[1m")
 	}
 	if lw.optionSelected == 2 {
 		fg := console.RGBCode(0, 0, 0)
 		bg := console.RGBCode(255, 255, 255)
-		lw.PrintLn(lw.X+lw.Width-15, lw.Height+1, "<Continue>", fg.FG()+bg.BG())
+		lw.PrintLn(lw.X+lw.Width-15, lw.Y+lw.Height, "<Continue>", fg.FG()+bg.BG())
 	} else {
-		lw.PrintLn(lw.X+lw.Width-15, lw.Height+1, "<Continue>", "\033[1m")
+		lw.PrintLn(lw.X+lw.Width-15, lw.Y+lw.Height, "<Continue>", "\033[1m")
 	}
 
 }

@@ -366,69 +366,69 @@ func (w *Window) DrawBorder(winX int, winY int, visibleLength, visibleHeight int
 	// Move cursor to top left corner of window
 	// Draw top left corner
 	if w.Active {
-		w.PrintCharAt(winX, winY, "\u250c", "\033[32m")
+		w.PrintChar(winX, winY, "\u250c", "\033[32m")
 
 	} else {
-		w.PrintCharAt(winX, winY, "\u250c", "")
+		w.PrintChar(winX, winY, "\u250c", "")
 	}
 
 	// Draw left border
 	for i := 1; i < visibleHeight+1; i++ {
 		// Inserts a vertical line
 		if w.Active {
-			w.PrintCharAt(winX, winY+i, "\u2502", "\033[32m")
+			w.PrintChar(winX, winY+i, "\u2502", "\033[32m")
 		} else {
-			w.PrintCharAt(winX, winY+i, "\u2502", "")
+			w.PrintChar(winX, winY+i, "\u2502", "")
 		}
 	}
 	// Draw bottom left corner
 	if w.Active {
-		w.PrintCharAt(winX, winY+visibleHeight+1, "\u2514", "\033[32m")
+		w.PrintChar(winX, winY+visibleHeight+1, "\u2514", "\033[32m")
 	} else {
-		w.PrintCharAt(winX, winY+visibleHeight+1, "\u2514", "")
+		w.PrintChar(winX, winY+visibleHeight+1, "\u2514", "")
 	}
 
 	// Draw top border
 	for i := 1; i < visibleLength; i++ {
 		// Inserts a horizontal line
 		if w.Active {
-			w.PrintCharAt(winX+i, winY, "\u2500", "\033[32m")
+			w.PrintChar(winX+i, winY, "\u2500", "\033[32m")
 		} else {
-			w.PrintCharAt(winX+i, winY, "\u2500", "")
+			w.PrintChar(winX+i, winY, "\u2500", "")
 		}
 	}
 
 	// Draw top right corner
 	if w.Active {
-		w.PrintCharAt(winX+visibleLength, winY, "\u2510", "\033[32m")
+		w.PrintChar(winX+visibleLength, winY, "\u2510", "\033[32m")
 	} else {
-		w.PrintCharAt(winX+visibleLength, winY, "\u2510", "")
+		w.PrintChar(winX+visibleLength, winY, "\u2510", "")
 	}
 
 	// Draw right border
 	for i := 1; i < visibleHeight+1; i++ {
 		// Inserts a vertical line
 		if w.Active {
-			w.PrintCharAt(winX+visibleLength, winY+i, "\u2502", "\033[32m")
+			w.PrintChar(winX+visibleLength, winY+i, "\u2502", "\033[32m")
 		} else {
-			w.PrintCharAt(winX+visibleLength, winY+i, "\u2502", "")
+			w.PrintChar(winX+visibleLength, winY+i, "\u2502", "")
 		}
 	}
 
 	// Draw bottom right corner
 	if w.Active {
-		w.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2518", "\033[32m")
+		w.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2518", "\033[32m")
 	} else {
-		w.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2518", "")
+		w.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2518", "")
 	}
 
 	// Draw bottom border
 	for i := 1; i < visibleLength; i++ {
 		// Inserts a horizontal line
 		if w.Active {
-			w.PrintCharAt(winX+i, winY+visibleHeight+1, "\u2500", "\033[32m")
+			w.PrintChar(winX+i, winY+visibleHeight+1, "\u2500", "\033[32m")
 		} else {
-			w.PrintCharAt(winX+i, winY+visibleHeight+1, "\u2500", "")
+			w.PrintChar(winX+i, winY+visibleHeight+1, "\u2500", "")
 		}
 	}
 }
@@ -521,7 +521,7 @@ func (w *Window) DrawContents(winX int, winY int, visibleLength, visibleHeight i
 			// Fill the rest of the line with spaces
 			for j := len(lines[i]) + 1; j < visibleLength; j++ {
 				if w.GetCharAt(winX+j, currentLine) == "" {
-					w.PrintCharAt(winX+j, currentLine, " ", "")
+					w.PrintChar(winX+j, currentLine, " ", "")
 				}
 			}
 			// increment currentLine
@@ -531,15 +531,15 @@ func (w *Window) DrawContents(winX int, winY int, visibleLength, visibleHeight i
 		// Draw our arrows last
 		if len(lines)-maxHeight+contentStartPos-1 > 0 {
 			// draw an up arrow in grey
-			w.PrintCharAt(winX+visibleLength, winY+1, "\u2191", "\033[37m")
+			w.PrintChar(winX+visibleLength, winY+1, "\u2191", "\033[37m")
 		}
 		if len(lines)-maxHeight+contentStartPos-1 < len(lines)-maxHeight-1 {
 			if w.ScrollBufferHasNew {
 				// Draw down arrow in red if there is new content
-				w.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2193", "\033[31m")
+				w.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2193", "\033[31m")
 			} else {
 				// Draw down arrow in grey if there is no new content
-				w.PrintCharAt(winX+visibleLength, winY+visibleHeight+1, "\u2193", "\033[37m")
+				w.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2193", "\033[37m")
 			}
 		}
 	} else {
@@ -593,7 +593,7 @@ func (w *Window) PrintLn(X int, Y int, text string, escapeCode string) {
 	}
 }
 
-func (w *Window) PrintCharAt(X int, Y int, text string, escapeCode string) {
+func (w *Window) PrintChar(X int, Y int, text string, escapeCode string) {
 	w.pmapMutex.Lock()
 	defer w.pmapMutex.Unlock()
 	if X > len(w.pointMap)-1 {
@@ -641,7 +641,7 @@ func (w *Window) ClearMap(winX int, winY int, visibleLength, visibleHeight int, 
 	// First clear the window before we redraw it
 	for i := winX; i < visibleLength+2; i++ {
 		for j := winY; j < visibleHeight+2; j++ {
-			w.PrintCharAt(i, j, " ", "")
+			w.PrintChar(i, j, " ", "")
 		}
 	}
 }
