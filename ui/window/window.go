@@ -641,7 +641,7 @@ func (w *Window) PointMapToString() string {
 					// and repeat
 					if pointMapChar == lastSentChar && pointMapEscape == lastSentEscape &&
 						y == lastY && (x)-lastX == 1 {
-						log.Println(pointMapChar)
+						//log.Println(pointMapChar)
 						bufferCount++
 						lastX = x
 					} else {

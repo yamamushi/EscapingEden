@@ -3,36 +3,22 @@ package util
 import (
 	"bufio"
 	"github.com/yamamushi/EscapingEden/ui/console"
-	"github.com/yamamushi/EscapingEden/ui/window"
 	"os"
-	"strconv"
 	"strings"
 )
 
-// ArtConvert is a utility for converting txt art files to a renderable format.
-// It can also store the converted art in a file that contains color mapping information
-
-type ArtConvert struct {
-}
-
-func NewArtConvert() *ArtConvert {
-	return &ArtConvert{}
-}
+// These functions are for working with "art" files, ie ascii art files.
+// It is assumed that the art files do not have any other ANSI escape codes other than the following:
+// [s - save cursor position - discarded
+// [u - restore cursor position - discarded
+// [*m - Colors
 
 type AsciiArtFile struct {
 	Filename string
-	Data     string
+	Data     console.PointMap
 }
 
-func (ac *ArtConvert) OpenAt(filename string, window window.WindowType, X, Y int) (string, error) {
-	af, err := ac.Open(filename)
-	if err != nil {
-		return "", err
-	}
-	return ac.Move(af, window, X, Y), nil
-}
-
-func (ac *ArtConvert) Open(filename string) (*AsciiArtFile, error) {
+func OpenASCIIArtFile(filename string) (*AsciiArtFile, error) {
 	// Opens the file at filename
 	// Returns the contents of the file as a string
 	// Returns an error if the file cannot be opened
@@ -47,21 +33,87 @@ func (ac *ArtConvert) Open(filename string) (*AsciiArtFile, error) {
 	for scanner.Scan() {
 		contents += scanner.Text() + "\n"
 	}
-	return &AsciiArtFile{Filename: filename, Data: contents}, nil
+	lines := strings.Split(contents, "\n")
+	height := len(lines)
+	var width int
+	// First we need to iterate and get the longest line, which serves as our width
+	for _, line := range lines {
+		if len(line) > width {
+			width = len(line)
+		}
+	}
+
+	pointMap := console.NewPointMap(height, width)
+	var newEscapeCode string
+	var applyEscapeCode string
+	var lineIndex int
+	//var lastChar rune
+	for y, line := range lines {
+		for _, char := range line {
+			if char == '\033' && newEscapeCode == "" {
+				// If we find an escape code, we store it and continue to the next character
+				newEscapeCode = "\033"
+				continue
+			}
+
+			if newEscapeCode != "" {
+				if char == 'u' || char == 's' {
+					// ESC[u	restores the cursor to the last saved position
+					// ESC[s	save cursor position
+					// We're going to discard these and reset the escape code, because we only care about color codes
+					// We generally don't care about cursor codes here
+					newEscapeCode = ""
+					continue
+				} else if char == 'm' {
+					// If we're in an escape code and we find the 'm'
+					// Character, we know we're at the end of a color code
+					// And need to reset the last escape code
+					// We also need to save the escape code we've saved to this point into the applyEscapeCode sequence
+					applyEscapeCode = newEscapeCode + string(char)
+					newEscapeCode = ""
+					continue
+				} else {
+					// If we're not at the end of the escape code, we continue adding to it
+					newEscapeCode += string(char)
+				}
+			} else {
+				// Only when we apply a character do we increment the line index
+				lineIndex++
+				// Don't color spaces
+				if char != ' ' {
+					// Now that we know we're not IN an escape sequence, we can apply the escape code we have
+					point := console.Point{
+						X:          lineIndex,
+						Y:          y,
+						EscapeCode: applyEscapeCode,
+						Character:  string(char),
+					}
+					pointMap[y][lineIndex] = point
+					// we don't reset applyEscapeCode because we want to keep the escape code we've applied for the next character
+				}
+			}
+			//log.Println("Escape code:", applyEscapeCode)
+		}
+		// When we hit a new line, we reset our escape code vars
+		newEscapeCode = ""
+		applyEscapeCode = ""
+		lineIndex = 0
+	}
+	return &AsciiArtFile{Filename: filename, Data: pointMap}, nil
 }
 
-// Move moves to X and Y relative to the window position
-func (ac *ArtConvert) Move(af *AsciiArtFile, window window.WindowType, X, Y int) string {
-	X = X + window.GetX()
-	Y = Y + window.GetY()
-	output := "\033[" + strconv.Itoa(X) + ";" + strconv.Itoa(Y) + "H"
-	artLines := strings.Split(af.Data, "\n")
-	for num, line := range artLines {
-		// Move cursor to X+num and Y
-		output += "\033[" + strconv.Itoa(X+num) + ";" + strconv.Itoa(Y) + "H"
-		output += line + "\n"
+func (a *AsciiArtFile) WriteToPointMap(pointmap console.PointMap) console.PointMap {
+	// Writes the contents of the file to the console
+	// This is useful for debugging
+	heightLimit := len(pointmap[0])
+	widthLimit := len(pointmap)
+	for y, line := range a.Data {
+		for x, point := range line {
+			if x < widthLimit && y < heightLimit {
+				pointmap[x][y] = point
+			}
+		}
 	}
-	// Reset our output color always
-	output += console.ResetStyle()
-	return output
+
+	return pointmap
 }

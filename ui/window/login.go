@@ -2,6 +2,7 @@ package window
 
 import (
 	"github.com/yamamushi/EscapingEden/ui/console"
+	"github.com/yamamushi/EscapingEden/ui/util"
 	"log"
 	"strings"
 	"sync"
@@ -125,6 +126,16 @@ func (lw *LoginWindow) drawMenu() {
 	lw.PrintLn(lw.X+11, lw.Y+10, "(", "")
 	lw.PrintLn(lw.X+12, lw.Y+10, "q", "\033[1m")
 	lw.PrintLn(lw.X+13, lw.Y+10, ")uit", "")
+
+	artFile, err := util.OpenASCIIArtFile("assets/ascii/logo.txt")
+	if err != nil {
+		log.Println(err)
+	} else {
+		lw.pmapMutex.Lock()
+		defer lw.pmapMutex.Unlock()
+		artFile.WriteToPointMap(lw.pointMap)
+	}
+
 	return
 }
 
