@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/yamamushi/EscapingEden/ui/console"
 	"log"
+	"strconv"
 	"sync"
 )
 
@@ -623,12 +624,45 @@ func (w *Window) PointMapToString() string {
 
 	// iterate through entire w.pointMap and print out the character at each point
 	output := ""
+	lastSentChar := ""
+	lastSentEscape := ""
+	lastY := 0
+	bufferCount := 0
 
-	for x := 0; x < len(w.pointMap); x++ {
-		for y := 0; y < len(w.pointMap[x]); y++ {
+	for y := 0; y < len(w.pointMap[0]); y++ {
+		for x := 0; x < len(w.pointMap); x++ {
 			if w.pointMap[x][y].Character != "" || w.pointMap[x][y].EscapeCode != "" {
+
 				if w.lastSentContents[x][y].Print() != w.pointMap[x][y].Print() {
-					output += w.pointMap[x][y].Print()
+					pointMapChar := w.pointMap[x][y].Character
+					pointMapEscape := w.pointMap[x][y].EscapeCode
+					// If this character is the last one sent, then we increase the buffer count
+					// and repeat
+					if pointMapChar == lastSentChar && pointMapEscape == lastSentEscape && y == lastY && pointMapChar != "\u2502" {
+						bufferCount++
+					} else {
+						// If we reached a new character, and the buffer count is greater than 0
+						// We need to print the repeated last character bufferCount times
+						if bufferCount > 0 {
+							repeatCode := lastSentEscape + "\033[" + strconv.Itoa(bufferCount) + "b" + "\033[0m"
+							output += repeatCode
+							// Finally Reset the buffer count
+							bufferCount = 0
+						} else {
+							// If the buffer count was already 0, we update the last sent character
+							// And reset the buffer count for verbosity
+							lastSentChar = pointMapChar
+							lastSentEscape = pointMapEscape
+							lastY = w.pointMap[x][y].Y
+							bufferCount = 0
+						}
+						// Now that we have dealt with the buffer count, we can print the new character
+						output += w.pointMap[x][y].Print()
+
+					}
+
+					// Finally, no matter what we do with the character, we still append it to
+					// The last sent contents, as printing it will still take up column spaces
 					w.lastSentContents[x][y] = w.pointMap[x][y]
 				}
 			}
