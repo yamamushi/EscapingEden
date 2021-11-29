@@ -1,6 +1,7 @@
 package popupbox
 
 import (
+	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/util"
 	"github.com/yamamushi/EscapingEden/ui/window"
@@ -15,7 +16,7 @@ type PopupBox struct {
 
 func NewPopupBox(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *PopupBox {
 	pb := &PopupBox{}
-	pb.ID = window.POPUPBOX
+	pb.ID = config.WindowPopupBox
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
 		x = 1

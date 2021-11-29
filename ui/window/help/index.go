@@ -64,3 +64,5 @@ func (hw *HelpWindow) DrawIndex() {
 	hw.DrawIndexInfo()
 	hw.PrintIndexControls()
 }
+
+//Need to finish index generation

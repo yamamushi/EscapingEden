@@ -1,6 +1,7 @@
 package login
 
 import (
+	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/util"
 	"github.com/yamamushi/EscapingEden/ui/window"
@@ -56,7 +57,7 @@ const (
 
 func NewLoginWindow(x, y, width, height, consoleWidth, consoleHeight int, input, output chan string) *LoginWindow {
 	lw := &LoginWindow{}
-	lw.ID = window.LOGINMENU
+	lw.ID = config.WindowLoginMenu
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
 		x = 1

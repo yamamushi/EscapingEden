@@ -2,6 +2,7 @@ package ui
 
 import (
 	"encoding/json"
+	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"github.com/yamamushi/EscapingEden/ui/window/chat"
@@ -120,7 +121,7 @@ func (c *Console) CaptureWindowMessages() {
 				log.Println("Received console message")
 				switch consoleMessage.Message {
 				case "popup":
-					options := &window.Config{}
+					options := &config.WindowConfig{}
 					err = json.Unmarshal([]byte(consoleMessage.Options), options)
 					if err != nil {
 						log.Println("Error unmarshalling popup box options: ", err)
@@ -130,7 +131,7 @@ func (c *Console) CaptureWindowMessages() {
 						c.OpenPopup(options)
 					}
 				case "help":
-					options := &window.Config{}
+					options := &config.WindowConfig{}
 					err = json.Unmarshal([]byte(consoleMessage.Options), options)
 					if err != nil {
 						log.Println("Error unmarshalling help box options: ", err)
@@ -240,7 +241,7 @@ func (c *Console) AddWindow(w window.WindowType) {
 }
 
 // RemoveWindow removes a window from the console by ID.
-func (c *Console) RemoveWindow(id window.ID) {
+func (c *Console) RemoveWindow(id config.WindowID) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -339,7 +340,7 @@ func (c *Console) HandleInput(rawInput byte) {
 	//log.Println("Console received input: ", int(rawInput))
 
 	if rawInput == 8 {
-		options := &window.Config{X: c.Width/2 - 40, Y: c.Height/2 - 10, Width: 100, Height: 20, Page: 0}
+		options := &config.WindowConfig{X: c.Width/2 - 40, Y: c.Height/2 - 10, Width: 100, Height: 20, Page: 0}
 		go c.ToggleHelp(options)
 		return
 	}
@@ -602,7 +603,7 @@ func (c *Console) GetActiveWindow() window.WindowType {
 }
 
 // OpenPopup opens a new popup window using the options
-func (c *Console) OpenPopup(options *window.Config) {
+func (c *Console) OpenPopup(options *config.WindowConfig) {
 	//log.Println(options)
 	popupBox := popupbox.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxMessages, c.WindowMessages)
 	popupBox.Init()
@@ -617,7 +618,7 @@ func (c *Console) OpenPopup(options *window.Config) {
 func (c *Console) ClosePopup() {
 	// Loop through windows and remove the popup
 	for _, w := range c.Windows {
-		if w.GetID() == window.POPUPBOX {
+		if w.GetID() == config.WindowPopupBox {
 			c.RemoveWindow(w.GetID())
 			c.SetActiveWindow(c.LastActiveWindow)
 			break
@@ -636,7 +637,7 @@ func (c *Console) HandlePopupMessage(message *types.ConsoleMessage) {
 
 func (c *Console) IsPopupOpen() bool {
 	for _, w := range c.Windows {
-		if w.GetID() == window.POPUPBOX {
+		if w.GetID() == config.WindowPopupBox {
 			return true
 		}
 	}
@@ -644,7 +645,7 @@ func (c *Console) IsPopupOpen() bool {
 }
 
 // OpenPopup opens a new popup window using the options
-func (c *Console) ToggleHelp(options *window.Config) {
+func (c *Console) ToggleHelp(options *config.WindowConfig) {
 	if !c.IsHelpOpen() {
 		helpWindow := help.NewHelpWindow(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, options.Page, c.PopupBoxMessages, c.WindowMessages)
 		helpWindow.Init()
@@ -662,7 +663,7 @@ func (c *Console) ToggleHelp(options *window.Config) {
 func (c *Console) CloseHelp() {
 	// Loop through windows and remove the popup
 	for _, w := range c.Windows {
-		if w.GetID() == window.HELPBOX {
+		if w.GetID() == config.WindowHelpBox {
 			c.RemoveWindow(w.GetID())
 			c.SetActiveWindow(c.LastActiveWindow)
 			break
@@ -681,7 +682,7 @@ func (c *Console) HandleHelpMessage(message *types.ConsoleMessage) {
 
 func (c *Console) IsHelpOpen() bool {
 	for _, w := range c.Windows {
-		if w.GetID() == window.HELPBOX {
+		if w.GetID() == config.WindowHelpBox {
 			return true
 		}
 	}
@@ -698,7 +699,7 @@ func (c *Console) ForceRedraw() {
 	c.forceScreenRefresh = true
 }
 
-func (c *Console) ForceRedrawOn(windowType window.ID) {
+func (c *Console) ForceRedrawOn(windowType config.WindowID) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	log.Println("Forcing redraw on: ", windowType)
@@ -758,11 +759,11 @@ func (c *Console) HandleResize(newWidth, newHeight int) {
 	c.Height = newHeight
 	for _, w := range c.Windows {
 		switch w.GetID() {
-		case window.CHATBOX:
+		case config.WindowChatBox:
 			w.UpdateParams(0, c.Height-10, c.Width-50, 9, c.Width, c.Height)
-		case window.LOGINMENU:
+		case config.WindowLoginMenu:
 			w.UpdateParams(0, 0, c.Width-50, c.Height-13, c.Width, c.Height)
-		case window.TOOLBOX:
+		case config.WindowToolBox:
 			w.UpdateParams(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height)
 		}
 

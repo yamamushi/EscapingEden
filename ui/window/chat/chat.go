@@ -3,6 +3,7 @@ package chat
 import (
 	"encoding/json"
 	"github.com/yamamushi/EscapingEden/edenutil"
+	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"log"
@@ -22,7 +23,7 @@ type ChatWindow struct {
 
 func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *ChatWindow {
 	cw := new(ChatWindow)
-	cw.ID = window.CHATBOX
+	cw.ID = config.WindowChatBox
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
 		x = 1

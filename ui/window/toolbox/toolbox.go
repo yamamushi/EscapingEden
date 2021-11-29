@@ -2,6 +2,7 @@ package toolbox
 
 import (
 	"github.com/yamamushi/EscapingEden/edenutil"
+	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"log"
@@ -16,7 +17,7 @@ type ToolboxWindow struct {
 
 func NewToolboxWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *ToolboxWindow {
 	lw := &ToolboxWindow{}
-	lw.ID = window.TOOLBOX
+	lw.ID = config.WindowToolBox
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
 		x = 1

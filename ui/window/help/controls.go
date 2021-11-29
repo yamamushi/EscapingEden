@@ -142,7 +142,7 @@ func (hw *HelpWindow) PrintControls() {
 		commandList = homeCommand + separator + nextCommand + separator + scrollUpCommand +
 			separator + scrollDownCommand + separator + indexCommand + separator + closeCommand
 	} else {
-		log.Println("Printing controls for non home page: ", prevDistance)
+		//log.Println("Printing controls for non home page: ", prevDistance)
 		commandList = homeCommand + separator + prevCommand + separator + nextCommand + separator + scrollUpCommand +
 			separator + scrollDownCommand + separator + indexCommand + separator + closeCommand
 	}
