@@ -26,8 +26,6 @@ func (hp HelpPage) String() string {
 		return "credits"
 	case HelpPageAbout:
 		return "about"
-	case HelpPageIndex:
-		return "index"
 	default:
 		return "unknown"
 	}

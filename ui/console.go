@@ -339,7 +339,7 @@ func (c *Console) HandleInput(rawInput byte) {
 	//log.Println("Console received input: ", int(rawInput))
 
 	if rawInput == 8 {
-		options := &window.Config{X: c.Width/2 - 25, Y: 5, Width: 50, Height: 20, Page: 0}
+		options := &window.Config{X: c.Width/2 - 40, Y: c.Height/2 - 10, Width: 100, Height: 20, Page: 0}
 		go c.ToggleHelp(options)
 		return
 	}

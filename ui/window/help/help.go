@@ -23,6 +23,7 @@ type HelpWindow struct {
 	// Threading stuff if we need it
 	hwMutex           sync.Mutex
 	scrollInitialized bool
+	indexPage         int
 }
 
 func NewHelpWindow(x, y, w, h, consoleWidth, consoleHeight int, page types.HelpPage, input, output chan string) *HelpWindow {
@@ -65,84 +66,49 @@ func NewHelpWindow(x, y, w, h, consoleWidth, consoleHeight int, page types.HelpP
 	return hw
 }
 
-func (hw *HelpWindow) HandleInput(input types.Input) {
-	hw.hwMutex.Lock()
-	defer hw.hwMutex.Unlock()
-
-	if hw.GetActive() {
-		log.Println("Help Window Handling input")
-	} else {
-		log.Println("Help window received an input event that it should not have")
-		return
-	}
-
-	switch input.Type {
-
-	case types.InputUp:
-		log.Println("Help Window Handling input up")
-		hw.DecreaseContentPos()
-		hw.ResetWindowDrawings()
-		return
-	case types.InputDown:
-		log.Println("Help Window Handling input down")
-		hw.IncreaseContentPos()
-		hw.ResetWindowDrawings()
-		return
-	case types.InputCharacter:
-		switch input.Data {
-		case "c":
-			message := types.ConsoleMessage{Type: "help", Message: "close"}
-			hw.ConsoleSend <- message.String()
-			log.Println("Help sent close message to console")
-		}
-	default:
-		log.Println("Unhandled Input event in Help Window")
-	}
-
-}
-
 func (hw *HelpWindow) UpdateContents() {
 	hw.hwMutex.Lock()
 	defer hw.hwMutex.Unlock()
 
 	switch hw.HelpPage {
+	case types.HelpPageMain:
+		hw.LoadPage(types.HelpPageMain)
 	case types.HelpPageRules:
 		hw.LoadPage(types.HelpPageRules)
+	case types.HelpPageDeath:
+		hw.LoadPage(types.HelpPageDeath)
+	case types.HelpPageAbout:
+		hw.LoadPage(types.HelpPageAbout)
+	case types.HelpPageControls:
+		hw.LoadPage(types.HelpPageControls)
+	case types.HelpPageCredits:
+		hw.LoadPage(types.HelpPageCredits)
+	case types.HelpPageIndex:
+		hw.LoadPage(types.HelpPageIndex)
+	default:
+		hw.LoadPage(types.HelpPageMain)
 	}
 }
 
-func (hw *HelpWindow) LoadPage(page types.HelpPage) {
-
+func (hw *HelpWindow) PrintPageInfo(page types.HelpPage) {
 	// Top Field
 	windowTitle := "Escaping Eden Help"
 	pageInfo := strings.Title(page.String()) + " (Page " + strconv.Itoa(int(page)) + ")"
 	hw.PrintLn(hw.X+1, hw.Y+1, windowTitle, "\033[1m")
 	hw.PrintLn(hw.X+hw.Width-len(pageInfo)-1, hw.Y+1, pageInfo, "")
+}
 
-	// Bottom Field
-	separator := "  |  "
-	homeCommand := "[h]ome"
-	homeDistance := 1
-	nextCommand := "[n]ext"
-	nextDistance := len(homeCommand+separator) + homeDistance
-	prevCommand := "[p]revious"
-	prevDistance := len(nextCommand+separator) + nextDistance
-	scrollUpCommand := "[ ] Scroll Up"
-	scrollUpDistance := len(prevCommand+separator) + prevDistance
-	scrollDownCommand := "[ ] Scroll Down"
-	scrollDownDistance := len(scrollUpCommand+separator) + scrollUpDistance
-	closeCommand := "[c]lose"
-	closeDistance := len(scrollDownCommand+separator) + scrollDownDistance
-	commandList := homeCommand + separator + nextCommand + separator + prevCommand + separator + scrollUpCommand + separator + scrollDownCommand + separator + closeCommand
-	shift := (hw.Width / 2) - (len(commandList) / 2) - 1
-	//hw.PrintLn(hw.X+(hw.Width/2)-(len(commandList)/2)-1, hw.Y+hw.Height, commandList, "")
-	hw.PrintLn(hw.X+shift, hw.Y+hw.Height, commandList, "")
-	hw.PrintChar(hw.X+shift+homeDistance, hw.Y+hw.Height, "h", "\033[1m")
-	hw.PrintChar(hw.X+shift+nextDistance, hw.Y+hw.Height, "n", "\033[1m")
-	hw.PrintChar(hw.X+shift+prevDistance, hw.Y+hw.Height, "p", "\033[1m")
-	hw.PrintChar(hw.X+shift+scrollUpDistance, hw.Y+hw.Height, "\u25B2", "\033[1m")
-	hw.PrintChar(hw.X+shift+scrollDownDistance, hw.Y+hw.Height, "\u25BC", "\033[1m")
-	hw.PrintChar(hw.X+shift+closeDistance, hw.Y+hw.Height, "c", "\033[1m")
+func (hw *HelpWindow) LoadPage(page types.HelpPage) {
+	if page == types.HelpPageIndex {
+		log.Println("Help Window Loading page index")
+		hw.DrawIndex()
+		return
+	}
+	// Prints our top field content
+	hw.PrintPageInfo(page)
+
+	// Prints our bottom field content
+	hw.PrintControls()
 
 	// We load the text file for the help page
 	content, err := util.OpenFileAsText("assets/text/" + page.String() + ".txt")

@@ -228,7 +228,7 @@ func (lw *LoginWindow) handleRegistrationInput(input types.Input) {
 				return
 			case "d":
 				log.Println("Opening death help page")
-				lw.RequestHelpFromConsole(types.HelpPageRules)
+				lw.RequestHelpFromConsole(types.HelpPageDeath)
 				return
 			case "r":
 				log.Println("Opening rules help page")
