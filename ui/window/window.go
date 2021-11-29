@@ -1,33 +1,43 @@
 package window
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/yamamushi/EscapingEden/ui/console"
+	"github.com/yamamushi/EscapingEden/ui/types"
 	"log"
 	"strconv"
 	"sync"
 )
 
-type WindowID int
+type ID int
 
+// These are used as ID's for tracking drawing and other behavior.
+// They are unique, and only one window of any type can be open at any time.
 const (
-	// Some default window ID's that are used by the console
-	DEBUGBOX   WindowID = 0
-	CONSOLE             = 1
-	CHATBOX             = 2
-	INVENTORY           = 3
-	MINIMAP             = 4
-	PLAYERINFO          = 5
-	PLAYERLIST          = 6
-	STATUS              = 7
-	TARGET              = 8
-	TARGETINFO          = 9
-	TARGETLIST          = 10
-	LOGINMENU           = 11
-	WORLDMAP            = 12
-	TOOLBOX             = 13
-	POPUPBOX            = 14
+	DEBUGBOX ID = iota
+	HELPBOX
+	CHATBOX
+	LOGINMENU
+	TOOLBOX
+	POPUPBOX
 )
+
+type Config struct {
+	X       int
+	Y       int
+	Width   int
+	Height  int
+	Content string
+}
+
+func NewWindowConfig(x, y, width, height int, content string) *Config {
+	return &Config{x, y, width, height, content}
+}
+
+func (c *Config) String() string {
+	output, _ := json.Marshal(c)
+	return string(output)
+}
 
 type WindowType interface {
 	ClearMap(X, Y, height, width, startX, startY int)
@@ -35,7 +45,7 @@ type WindowType interface {
 	HandleInput(input Input)
 	Init()
 
-	HandleReceive(message console.ConsoleMessage)
+	HandleReceive(message types.ConsoleMessage)
 
 	DrawBorder(X, Y int)
 	DrawContents(X, Y int)
@@ -46,7 +56,7 @@ type WindowType interface {
 	FlushLastSent()
 	ResetWindowDrawings()
 
-	GetID() int
+	GetID() ID
 	GetX() int
 	GetY() int
 	UpdateParams(x, y, height, width, consoleWidth, consoleHeight int)
@@ -63,18 +73,22 @@ type WindowType interface {
 	GetBG() int
 	GetBorderFG() int
 	GetBorderBG() int
+	GetConfig() *Config
 
 	CheckScrollBufferNew() bool
 	SetScrollBufferNew(bool)
 	SupportsScrolling() bool
 	GetContentStartPos() int
 
+	LockMutex()
+	UnlockMutex()
+
 	Error(string)
 	Quit()
 }
 
 type Window struct {
-	ID int
+	ID ID
 	X  int // The X position of the Window
 	Y  int // The Y position of the Window
 
@@ -109,8 +123,8 @@ type Window struct {
 
 	mutex               sync.Mutex
 	pmapMutex           sync.Mutex
-	pointMap            console.PointMap
-	lastSentContents    console.PointMap // The last contents sent to the client
+	pointMap            types.PointMap
+	lastSentContents    types.PointMap // The last contents sent to the client
 	pointMapInitialized bool
 }
 
@@ -122,8 +136,8 @@ func (w *Window) Draw(X int, Y int) {
 }
 
 func (w *Window) Init() {
-	w.pointMap = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
-	w.lastSentContents = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.pointMap = types.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.lastSentContents = types.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
 	w.pointMapInitialized = true
 }
 
@@ -132,17 +146,17 @@ func (w *Window) HandleInput(input Input) {
 }
 
 func (w *Window) Error(err string) {
-	consoleMessage := &console.ConsoleMessage{Type: "error", Message: err}
+	consoleMessage := &types.ConsoleMessage{Type: "error", Message: err}
 	w.ConsoleSend <- consoleMessage.String()
 }
 
 func (w *Window) Quit() {
-	consoleMessage := &console.ConsoleMessage{Type: "quit"}
+	consoleMessage := &types.ConsoleMessage{Type: "quit"}
 	w.ConsoleSend <- consoleMessage.String()
 }
 
 // These functions implement the default WindowType interface for Window
-func (w *Window) GetID() int {
+func (w *Window) GetID() ID {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 
@@ -189,6 +203,14 @@ func (w *Window) GetY() int {
 	defer w.mutex.Unlock()
 
 	return w.Y
+}
+
+func (w *Window) LockMutex() {
+	w.mutex.Lock()
+}
+
+func (w *Window) UnlockMutex() {
+	w.mutex.Unlock()
 }
 
 func (w *Window) SupportsScrolling() bool {
@@ -337,15 +359,22 @@ func (w *Window) MoveCursorTopLeft() string {
 	return fmt.Sprintf("\033[%d;%dH", w.Y+1, w.X+1)
 }
 
-func (w *Window) HandleReceive(message console.ConsoleMessage) {
+func (w *Window) HandleReceive(message types.ConsoleMessage) {
 	w.ConsoleReceive <- message.String()
+}
+
+func (w *Window) GetConfig() *Config {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	return NewWindowConfig(w.X, w.Y, w.Width, w.Height, w.Contents)
 }
 
 func (w *Window) RequestPopupFromConsole(x, y, width, height int, content string) {
 	log.Println("Requesting popup from console")
-	config := PopupConfig(x, y, width, height, content)
+	config := NewWindowConfig(x, y, width, height, content)
 	log.Println(config.String())
-	request := console.ConsoleMessage{Type: "console", Message: "popup", Options: config.String()}
+	request := types.ConsoleMessage{Type: "console", Message: "popup", Options: config.String()}
 	log.Println(request.String())
 	w.ConsoleSend <- request.String()
 }
@@ -596,7 +625,7 @@ func (w *Window) PrintLn(X int, Y int, text string, escapeCode string) {
 	for i, character := range text {
 		//log.Println("inserting character:", string(character))
 		// For the point at X, Y+1, set the character to the character at the current index of the text string
-		w.pointMap[X+i][Y] = console.Point{X: X + i, Y: Y, Character: string(character), EscapeCode: escapeCode}
+		w.pointMap[X+i][Y] = types.Point{X: X + i, Y: Y, Character: string(character), EscapeCode: escapeCode}
 		//log.Println("pointMap:", X, Y+i, w.pointMap[X][Y+i].Character)
 	}
 }
@@ -610,7 +639,7 @@ func (w *Window) PrintChar(X int, Y int, text string, escapeCode string) {
 	if Y > len(w.pointMap[X])-1 || Y < 0 {
 		return
 	}
-	w.pointMap[X][Y] = console.Point{X: X, Y: Y, Character: text, EscapeCode: escapeCode}
+	w.pointMap[X][Y] = types.Point{X: X, Y: Y, Character: text, EscapeCode: escapeCode}
 }
 
 func (w *Window) GetCharAt(X, Y int) string {
@@ -718,7 +747,7 @@ func (w *Window) ClearMap(winX int, winY int, visibleLength, visibleHeight int, 
 func (w *Window) FlushLastSent() {
 	w.pmapMutex.Lock()
 	defer w.pmapMutex.Unlock()
-	w.lastSentContents = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.lastSentContents = types.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
 }
 
 func (w *Window) ResetWindowDrawings() {
@@ -729,7 +758,7 @@ func (w *Window) ResetWindowDrawings() {
 
 func (w *Window) ForceConsoleRefresh() {
 	w.ResetWindowDrawings()
-	message := &console.ConsoleMessage{Type: "console", Message: "refresh", WindowID: w.GetID()}
+	message := &types.ConsoleMessage{Type: "console", Message: "refresh", WindowID: int(w.GetID())}
 	w.ConsoleSend <- message.String()
 }
 
@@ -763,8 +792,8 @@ func (w *Window) UpdateParams(x, y, width, height, consoleWidth, consoleHeight i
 	w.ConsoleWidth = consoleWidth
 	w.ConsoleHeight = consoleHeight
 
-	w.pointMap = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
-	w.lastSentContents = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.pointMap = types.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.lastSentContents = types.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
 	w.pointMapInitialized = true
 
 	for i := w.Y + 1; i < w.Y+w.Height+1; i++ {
@@ -775,8 +804,8 @@ func (w *Window) UpdateParams(x, y, width, height, consoleWidth, consoleHeight i
 			if i > len(w.pointMap[i])-1 {
 				return
 			}
-			w.pointMap[j][i] = console.Point{X: j, Y: i, Character: " ", EscapeCode: ""}
+			w.pointMap[j][i] = types.Point{X: j, Y: i, Character: " ", EscapeCode: ""}
 		}
 	}
-	w.lastSentContents = console.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
+	w.lastSentContents = types.NewPointMap(w.ConsoleWidth, w.ConsoleHeight)
 }

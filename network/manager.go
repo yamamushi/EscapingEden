@@ -1,4 +1,4 @@
-package server
+package network
 
 import (
 	"encoding/json"
@@ -12,14 +12,17 @@ type ConnectionManager struct {
 	mutex         sync.Mutex
 	connectionMap *sync.Map
 
+	startedNotify chan bool
+
 	// Channel for receiving messages
 	CMReceiveMessages chan string
 }
 
-func NewConnectionManager(connectionMap *sync.Map) *ConnectionManager {
+func NewConnectionManager(connectionMap *sync.Map, startedNotify chan bool) *ConnectionManager {
 
 	return &ConnectionManager{
 		connectionMap: connectionMap,
+		startedNotify: startedNotify,
 	}
 }
 
@@ -43,7 +46,8 @@ func (cm *ConnectionManager) Run() {
 
 // Non blocking check for messages
 func (cm *ConnectionManager) MessageParser() {
-	log.Println("ConnectionManager Listening for incoming messages")
+	cm.startedNotify <- true
+	log.Println("ConnectionManager is now listening for incoming messages")
 	cm.CMReceiveMessages = make(chan string)
 	for {
 		select {

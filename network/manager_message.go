@@ -1,8 +1,6 @@
-package console
+package network
 
-import "encoding/json"
-
-type ConsoleMessage struct {
+type ManagerMessage struct {
 	Type        string `json:"type"`
 	Message     string `json:"message"`
 	Options     string `json:"options"`
@@ -11,7 +9,10 @@ type ConsoleMessage struct {
 	WindowID    int    `json:"window_id"`
 }
 
-func (c *ConsoleMessage) String() string {
-	out, _ := json.Marshal(c)
-	return string(out)
-}
+// MessageType is the type of message
+type MessageType string
+
+// MessageTypes are the types of messages
+const (
+	MessageTypeChat MessageType = "chat"
+)

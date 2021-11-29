@@ -3,6 +3,7 @@ module github.com/yamamushi/EscapingEden
 go 1.17
 
 require (
+	github.com/BurntSushi/toml v0.4.1
 	github.com/google/uuid v1.3.0
 	github.com/hajimehoshi/ebiten/v2 v2.2.2
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410

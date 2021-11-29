@@ -1,4 +1,4 @@
-package server
+package network
 
 import (
 	"bufio"
@@ -54,39 +54,84 @@ func (c *Connection) Handle() {
 	/*
 		We need to setup the session, and to do that we need to do some communication with the client.
 	*/
-	//RequestTerminalType(conn)
-	w, h, err := RequestTerminalSize(c.conn)
-	log.Println("Enabling LineMode on client")
-	err = EnableLineMode(c.conn)
-	err = DisableEcho(c.conn) // Flush our IAC codes, we don't care about the responses (for now)
+	log.Println("Setting up new Connection for:", c.ID)
+
+	log.Println("Requesting terminal type for:", c.ID)
+	termType, err := RequestTerminalType(c.conn)
 	if err != nil {
-		log.Println("Client unsupported, disconnecting: ", err)
+		log.Println("Error requesting terminal type:", c.ID, " Message: ", err, "Closing connection")
 		c.manager.HandleDisconnect(c)
 		return
 	}
-	c.conn.Write([]byte("\033[2J"))
-	c.conn.Write([]byte("\033[?25l"))
+	if termType == "xterm-256color" {
+		log.Println("Unsupported terminal type:", c.ID, " TermType:", termType, " Closing connection")
+		c.manager.HandleDisconnect(c)
+		return
+	}
 
-	c.console = ui.NewConsole(w, h, c.ID, c.manager.CMReceiveMessages)
-	log.Println("Initializing Console")
+	log.Println("Requesting terminal size for:", c.ID)
+	width, height, err := RequestTerminalSize(c.conn)
+	if err != nil {
+		log.Println("Terminal Size Request Error:", c.ID, " Message: ", err, " Closing connection")
+		c.manager.HandleDisconnect(c)
+		return
+	}
+
+	log.Println("Enabling LineMode on client:", c.ID)
+	err = EnableLineMode(c.conn)
+	if err != nil {
+		log.Println("LineMode Enable Error:", c.ID, " Message: ", err, " Closing connection")
+		c.manager.HandleDisconnect(c)
+		return
+	}
+
+	log.Println("Disabling Echo on client:", c.ID)
+	err = DisableEcho(c.conn) // Flush our IAC codes, we don't care about the responses (for now)
+	if err != nil {
+		log.Println("Disable Echo Error:", c.ID, " Message: ", err, " Closing connection")
+		c.manager.HandleDisconnect(c)
+		return
+	}
+
+	log.Println("Flushing client terminal and hiding cursor:", c.ID)
+	_, err = c.conn.Write([]byte("\033[2J"))
+	if err != nil {
+		log.Println("Flush Error:", c.ID, " Message: ", err, " Closing connection")
+		c.manager.HandleDisconnect(c)
+		return
+	}
+	_, err = c.conn.Write([]byte("\033[?25l"))
+	if err != nil {
+		log.Println("Hide Cursor Error:", c.ID, " Message: ", err, " Closing connection")
+		c.manager.HandleDisconnect(c)
+		return
+	}
+
+	c.console = ui.NewConsole(width, height, c.ID, c.manager.CMReceiveMessages)
+	log.Println("Initializing Console for:", c.ID)
 	c.console.Init()
-	go c.UpdateHandler()
-	log.Println("Console Initialized")
-	//time.Sleep(time.Second * 1)
+	log.Println("Console Initialized for:", c.ID)
 
-	reader := bufio.NewReader(c.conn)
+	log.Println("Launching Write Handler for:", c.ID)
+	go c.WriteHandler()
+	log.Println("Launching Read Handler for:", c.ID)
+	go c.ReadHandler()
+	log.Println("Connection successfully created for:", c.ID)
+}
 
+func (c *Connection) ReadHandler() {
 	// Enter our client loop
+	reader := bufio.NewReader(c.conn)
 	for {
 		readByte, err := reader.ReadByte()
 		if err != nil {
-			log.Println("Client closed connection")
+			log.Println("Client ", c.ID, " closed connection")
 			c.manager.HandleDisconnect(c)
 			return
 		}
 
 		if readByte == IAC {
-			log.Println("IAC received")
+			//log.Println("IAC received")
 			c.iacActive = true
 			continue
 		}
@@ -99,7 +144,7 @@ func (c *Connection) Handle() {
 	}
 }
 
-func (c *Connection) UpdateHandler() {
+func (c *Connection) WriteHandler() {
 	for {
 		if c.console.GetShutdown() {
 			log.Println("Client requested shutdown")
@@ -135,13 +180,13 @@ func (c *Connection) HandleIAC(readByte byte) {
 			return
 		}
 		if readByte == 250 {
-			log.Println("IAC subnegotiation received")
+			//log.Println("IAC subnegotiation received")
 			c.iacSubnegotationActive = true
 			return
 		}
 		if c.iacSubnegotationActive {
 			if readByte == 31 && !c.iacResizeActive {
-				log.Println("IAC Window resize received")
+				//log.Println("IAC Window resize received")
 				c.iacResizeActive = true
 				return
 			}
@@ -155,7 +200,7 @@ func (c *Connection) HandleIAC(readByte byte) {
 					c.iacParamIndex = 0
 					c.iacWindowResizeY = int(readByte)
 					c.iacResizeActive = false
-					log.Println("IAC Window resize received: ", c.iacWindowResizeX, c.iacWindowResizeY)
+					//log.Println("IAC Window resize received: ", c.iacWindowResizeX, c.iacWindowResizeY)
 					return
 				}
 			}
@@ -171,14 +216,14 @@ func (c *Connection) HandleIAC(readByte byte) {
 				}
 				c.iacWindowResizeX = 0
 				c.iacWindowResizeY = 0
-				log.Println("IAC subnegotiation complete")
+				//log.Println("IAC subnegotiation complete")
 
 				return
 			}
 		}
 
-		log.Println("Unhandled IAC command received: ", int(readByte))
-		log.Println("If you're reading this, you're about to see garbage get sent to your windows.")
+		log.Println("!!! If you're reading this, IAC parsing failed and "+
+			"you're about to see garbage get sent to your windows. Unhandled IAC command: ", int(readByte))
 		c.iacActive = false
 	}
 }

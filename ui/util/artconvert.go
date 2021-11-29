@@ -2,7 +2,7 @@ package util
 
 import (
 	"bufio"
-	"github.com/yamamushi/EscapingEden/ui/console"
+	"github.com/yamamushi/EscapingEden/ui/types"
 	"os"
 	"strings"
 )
@@ -15,7 +15,7 @@ import (
 
 type AsciiArtFile struct {
 	Filename string
-	Data     console.PointMap
+	Data     types.PointMap
 	Height   int
 	Width    int
 }
@@ -44,7 +44,7 @@ func OpenASCIIArtFile(filename string) (*AsciiArtFile, error) {
 			width = len(line)
 		}
 	}
-	pointMap := console.NewPointMap(height, width)
+	pointMap := types.NewPointMap(height, width)
 	// Now we reset width because our actual width is going to be smaller if we start using escape codes
 	width = 0
 
@@ -86,7 +86,7 @@ func OpenASCIIArtFile(filename string) (*AsciiArtFile, error) {
 				// Don't color spaces
 				//if char != ' ' {
 				// Now that we know we're not IN an escape sequence, we can apply the escape code we have
-				point := console.Point{
+				point := types.Point{
 					X:          lineIndex,
 					Y:          y,
 					EscapeCode: applyEscapeCode,

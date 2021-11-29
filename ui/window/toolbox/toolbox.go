@@ -1,20 +1,21 @@
-package window
+package toolbox
 
 import (
 	"github.com/yamamushi/EscapingEden/edenutil"
+	"github.com/yamamushi/EscapingEden/ui/window"
 	"log"
 	"sync"
 	"time"
 )
 
 type ToolboxWindow struct {
-	Window
+	window.Window
 	twMutex sync.Mutex
 }
 
 func NewToolboxWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *ToolboxWindow {
 	lw := &ToolboxWindow{}
-	lw.ID = TOOLBOX
+	lw.ID = window.TOOLBOX
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
 		x = 1
@@ -43,7 +44,7 @@ func NewToolboxWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output
 	return lw
 }
 
-func (tw *ToolboxWindow) HandleInput(input Input) {
+func (tw *ToolboxWindow) HandleInput(input window.Input) {
 	tw.twMutex.Lock()
 	defer tw.twMutex.Unlock()
 

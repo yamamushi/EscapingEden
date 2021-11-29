@@ -1,9 +1,10 @@
-package window
+package chat
 
 import (
 	"encoding/json"
 	"github.com/yamamushi/EscapingEden/edenutil"
-	"github.com/yamamushi/EscapingEden/ui/console"
+	"github.com/yamamushi/EscapingEden/ui/types"
+	"github.com/yamamushi/EscapingEden/ui/window"
 	"log"
 	"sync"
 	"time"
@@ -12,7 +13,7 @@ import (
 // Implements a Chat Window
 
 type ChatWindow struct {
-	Window
+	window.Window
 	History       []string
 	HistoryIndex  int
 	cwMutex       sync.Mutex
@@ -21,7 +22,7 @@ type ChatWindow struct {
 
 func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *ChatWindow {
 	cw := new(ChatWindow)
-	cw.ID = CHATBOX
+	cw.ID = window.CHATBOX
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
 		x = 1
@@ -64,7 +65,7 @@ func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output ch
 	return cw
 }
 
-func (cw *ChatWindow) HandleInput(input Input) {
+func (cw *ChatWindow) HandleInput(input window.Input) {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
 	if cw.GetActive() {
@@ -72,36 +73,36 @@ func (cw *ChatWindow) HandleInput(input Input) {
 	}
 
 	switch input.Type {
-	case InputUp:
+	case window.InputUp:
 		log.Println("ChatWindow Up")
 		cw.DecreaseContentPos()
 		cw.ResetWindowDrawings()
 		return
-	case InputDown:
+	case window.InputDown:
 		log.Println("ChatWindow Down")
 		cw.IncreaseContentPos()
 		cw.ResetWindowDrawings()
 		return
-	case InputLeft:
+	case window.InputLeft:
 		log.Println("ChatWindow Left")
 		cw.RequestPopupFromConsole(cw.ConsoleWidth/2-40, cw.ConsoleHeight/2-10, 50, 20, "This is a test of a really long string with a bunch of random content to see if the content buffer will scroll or not correctly")
 		return
-	case InputRight:
+	case window.InputRight:
 		log.Println("ChatWindow Right")
 		return
-	case InputNewline:
+	case window.InputNewline:
 		log.Println("ChatWindow Newline")
 		return
-	case InputBackspace:
+	case window.InputBackspace:
 		log.Println("ChatWindow Backspace")
 		// remove one character from the input buffer
 		cw.cwInputBuffer = cw.cwInputBuffer[:len(cw.cwInputBuffer)-1]
 		return
-	case InputReturn:
+	case window.InputReturn:
 		log.Println("ChatWindow Return")
 		if cw.cwInputBuffer != "" {
 			// Send a console message to the ConsoleSend channel
-			message := console.ConsoleMessage{Message: cw.cwInputBuffer, Type: "chat"}
+			message := types.ConsoleMessage{Message: cw.cwInputBuffer, Type: "chat"}
 			log.Println("Message: " + message.Message)
 			output, err := json.Marshal(message)
 			if err == nil {
@@ -137,7 +138,7 @@ func (cw *ChatWindow) Listen() {
 		case msg := <-cw.ConsoleReceive:
 			log.Println("Chat window received message from console")
 
-			message := console.ConsoleMessage{}
+			message := types.ConsoleMessage{}
 			err := json.Unmarshal([]byte(msg), &message)
 			if err == nil {
 				cw.cwMutex.Lock()

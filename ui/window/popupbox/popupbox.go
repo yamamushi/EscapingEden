@@ -1,37 +1,21 @@
-package window
+package popupbox
 
 import (
-	"encoding/json"
-	"github.com/yamamushi/EscapingEden/ui/console"
+	"github.com/yamamushi/EscapingEden/ui/types"
+	"github.com/yamamushi/EscapingEden/ui/util"
+	"github.com/yamamushi/EscapingEden/ui/window"
 	"log"
 	"sync"
 )
 
 type PopupBox struct {
-	Window
+	window.Window
 	pbMutex sync.Mutex
-}
-
-type PopupBoxConfig struct {
-	X       int
-	Y       int
-	Width   int
-	Height  int
-	Content string
-}
-
-func PopupConfig(x, y, width, height int, content string) *PopupBoxConfig {
-	return &PopupBoxConfig{x, y, width, height, content}
-}
-
-func (c *PopupBoxConfig) String() string {
-	output, _ := json.Marshal(c)
-	return string(output)
 }
 
 func NewPopupBox(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *PopupBox {
 	pb := &PopupBox{}
-	pb.ID = POPUPBOX
+	pb.ID = window.POPUPBOX
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
 		x = 1
@@ -61,7 +45,7 @@ func NewPopupBox(x, y, w, h, consoleWidth, consoleHeight int, input, output chan
 	return pb
 }
 
-func (pb *PopupBox) HandleInput(input Input) {
+func (pb *PopupBox) HandleInput(input window.Input) {
 	pb.pbMutex.Lock()
 	defer pb.pbMutex.Unlock()
 
@@ -70,17 +54,17 @@ func (pb *PopupBox) HandleInput(input Input) {
 	}
 
 	switch input.Type {
-	case InputUp:
+	case window.InputUp:
 		log.Println("PopupBox Up")
 		pb.DecreaseContentPos()
 		return
-	case InputDown:
+	case window.InputDown:
 		log.Println("PopupBox Down")
 		pb.IncreaseContentPos()
 		return
-	case InputReturn:
+	case window.InputReturn:
 		log.Println("PopupBox Handling input return - attempting to close popup")
-		message := console.ConsoleMessage{Type: "popupbox", Message: "close"}
+		message := types.ConsoleMessage{Type: "popupbox", Message: "close"}
 		pb.ConsoleSend <- message.String()
 		log.Println("PopupBox sent close message to console")
 	}
@@ -164,8 +148,8 @@ func (pb *PopupBox) DrawBorder(winX int, winY int) {
 	if pb.Active {
 		var colorCode string
 		// set colorCode background to green
-		colorCode = console.RGBCode(0, 0, 0).FG()
-		colorCode += console.RGBCode(0, 255, 0).BG()
+		colorCode = util.RGBCode(0, 0, 0).FG()
+		colorCode += util.RGBCode(0, 255, 0).BG()
 
 		pb.PrintLn(winX+pb.Width/2-3, winY+pb.Height+1, "Close", colorCode)
 	} else {

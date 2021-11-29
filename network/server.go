@@ -1,4 +1,4 @@
-package server
+package network
 
 import (
 	"github.com/google/uuid"
@@ -29,25 +29,29 @@ func NewServer(host string, port string) *Server {
 }
 
 // Start starts the server
-func (s *Server) Start() {
+func (s *Server) Start(startedNotify chan bool) error {
 	l, err := net.Listen("tcp", s.Host+":"+s.Port)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 
-	defer l.Close()
 	// Using sync.Map to not deal with concurrency slice/map issues
-	s.ConnectionManager = NewConnectionManager(s.ConnectMap)
+	s.ConnectionManager = NewConnectionManager(s.ConnectMap, startedNotify)
 	go s.ConnectionManager.Run()
+	go s.Listen(l)
+	return nil
+}
 
+func (s *Server) Listen(l net.Listener) {
+	defer l.Close()
 	for {
 		conn, err := l.Accept()
 		if err != nil {
+			log.Println("Fatal Error Accepting Connection: ", err)
 			return
 		}
 		id := uuid.New().String()
-		log.Println("Storing Connection")
+		log.Println("Storing New Connection: ", id)
 		s.ConnectionManager.AddConnection(NewConnection(conn, id, s.ConnectionManager))
 	}
 }

@@ -1,4 +1,4 @@
-package server
+package network
 
 import (
 	"errors"
@@ -37,7 +37,7 @@ const (
 )
 
 // RequestTerminalType sends the terminal type request
-func RequestTerminalType(conn net.Conn) {
+func RequestTerminalType(conn net.Conn) (string, error) {
 	conn.Write([]byte{IAC, DO, 24})
 	conn.Write([]byte{IAC, SB, 24, 1, IAC, SE})
 
@@ -47,17 +47,15 @@ func RequestTerminalType(conn net.Conn) {
 		b := make([]byte, 1)
 		_, err := conn.Read(b)
 		if err != nil {
-			log.Println(err)
-			return
+			return "", err
 		}
 		if b[0] != IAC && b[0] != SE && b[0] != WILL && b[0] != WONT && b[0] != DO && b[0] != DONT && b[0] != SB && b[0] != NAWS {
-			log.Println(b[0])
+			//log.Println(b[0])
 			buf = append(buf[:], b[0])
 		}
 
 		if b[0] == SE {
-			log.Println(string(buf))
-			break
+			return string(buf), nil
 		}
 	}
 }
@@ -100,7 +98,7 @@ func DisableEcho(conn net.Conn) error {
 		b := make([]byte, 1)
 		_, err := conn.Read(b)
 		if err != nil {
-			log.Println(err)
+			//log.Println(err)
 			return err
 		}
 
@@ -113,7 +111,7 @@ func DisableEcho(conn net.Conn) error {
 				b := make([]byte, 1)
 				_, err := conn.Read(b)
 				if err != nil {
-					log.Println(err)
+					//log.Println(err)
 					return err
 				}
 				if b[0] == ECHO {
@@ -126,11 +124,11 @@ func DisableEcho(conn net.Conn) error {
 				b := make([]byte, 1)
 				_, err := conn.Read(b)
 				if err != nil {
-					log.Println(err)
+					//log.Println(err)
 					return err
 				}
 				if b[0] == ECHO {
-					log.Println("client accepted echo")
+					//log.Println("client accepted echo")
 					return nil
 				}
 			}
@@ -157,7 +155,7 @@ func EnableLineMode(conn net.Conn) error {
 		}
 		if iac {
 			if b[0] == SB {
-				log.Println("Subnegotiation begun")
+				//log.Println("Subnegotiation begun")
 				// Read until SE is read because we don't care about the response
 				for {
 					b := make([]byte, 1)
@@ -167,7 +165,7 @@ func EnableLineMode(conn net.Conn) error {
 						return err
 					}
 					if b[0] == SE {
-						log.Println("Subnegotiation ended")
+						//log.Println("Subnegotiation ended")
 						return nil // Client accented linemode, and negotiated
 					}
 				}
@@ -178,7 +176,7 @@ func EnableLineMode(conn net.Conn) error {
 				b := make([]byte, 1)
 				_, err := conn.Read(b)
 				if err != nil {
-					log.Println(err)
+					//log.Println(err)
 					return err
 				}
 				if b[0] == LINEMODE {
@@ -194,7 +192,7 @@ func EnableLineMode(conn net.Conn) error {
 					return err
 				}
 				if b[0] == LINEMODE {
-					log.Println("client accented linemode")
+					continue
 				}
 			}
 		}

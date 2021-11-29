@@ -1,15 +1,15 @@
-package window
+package login
 
 import (
-	"github.com/yamamushi/EscapingEden/ui/console"
 	"github.com/yamamushi/EscapingEden/ui/util"
+	"github.com/yamamushi/EscapingEden/ui/window"
 	"log"
 	"strings"
 	"sync"
 )
 
 type LoginWindow struct {
-	Window
+	window.Window
 	credentials       *LoginCreds
 	lwMutex           sync.Mutex
 	windowState       LoginWindowState
@@ -55,7 +55,7 @@ const (
 
 func NewLoginWindow(x, y, width, height, consoleWidth, consoleHeight int, input, output chan string) *LoginWindow {
 	lw := &LoginWindow{}
-	lw.ID = LOGINMENU
+	lw.ID = window.LOGINMENU
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
 		x = 1
@@ -85,7 +85,7 @@ func NewLoginWindow(x, y, width, height, consoleWidth, consoleHeight int, input,
 	return lw
 }
 
-func (lw *LoginWindow) HandleInput(input Input) {
+func (lw *LoginWindow) HandleInput(input window.Input) {
 	switch lw.windowState {
 	case LoginWindowMenu:
 		lw.handleMenuInput(input.Data)
@@ -110,8 +110,8 @@ func (lw *LoginWindow) UpdateContents() {
 func (lw *LoginWindow) drawMenu() {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
-	lw.mutex.Lock()
-	defer lw.mutex.Unlock()
+	lw.LockMutex()
+	defer lw.UnlockMutex()
 	//lw.FlushLastSent()
 
 	// First we are going to setup our default login screen
@@ -209,7 +209,7 @@ func (lw *LoginWindow) handleLoginInput(input string) {
 	}
 }
 
-func (lw *LoginWindow) handleRegistrationInput(input Input) {
+func (lw *LoginWindow) handleRegistrationInput(input window.Input) {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
 
@@ -221,21 +221,21 @@ func (lw *LoginWindow) handleRegistrationInput(input Input) {
 	switch lw.registrationState {
 	case RegistrationMain:
 		switch input.Type {
-		case InputCharacter:
+		case window.InputCharacter:
 			if input.Data == "r" {
 				log.Println("Opening rules popup")
 				lw.RequestPopupFromConsole(lw.ConsoleWidth/2-40, lw.ConsoleHeight/2-10, 100, 20, "This is a test of a really long string with a bunch of random content to see if the content buffer will scroll or not correctly")
 			}
 			return
-		case InputLeft:
+		case window.InputLeft:
 			log.Println("Left arrow pressed")
 			lw.optionSelected = 1
 			return
-		case InputRight:
+		case window.InputRight:
 			log.Println("Right arrow pressed")
 			lw.optionSelected = 2
 			return
-		case InputReturn:
+		case window.InputReturn:
 			log.Println("Return pressed")
 			if lw.optionSelected == 1 {
 				lw.windowState = LoginWindowMenu
@@ -279,7 +279,7 @@ func (lw *LoginWindow) drawRegistrationMenu() {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
 
-	content, err := console.OpenFileAsText("assets/text/welcome.txt")
+	content, err := util.OpenFileAsText("assets/text/welcome.txt")
 	if err != nil {
 		lw.Error("Error opening rules file:" + err.Error())
 		return
@@ -290,8 +290,9 @@ func (lw *LoginWindow) drawRegistrationMenu() {
 	// But that's a bit more overkill for this
 	lw.PrintChar(lw.X+43, lw.Y+5, "r", "\033[1m")
 	lw.PrintLn(lw.X+45, lw.Y+8, "ctrl-r", "\033[1m")
+	lw.PrintLn(lw.X+20, lw.Y+9, "ctrl-h", "\033[1m")
 	lw.PrintChar(lw.X+20, lw.Y+7, "b", "\033[1m")
-	lw.PrintChar(lw.X+2, lw.Y+11, "d", "\033[1m")
+	lw.PrintChar(lw.X+2, lw.Y+12, "d", "\033[1m")
 	lw.SetContents(content)
 
 	// We eventually want to embed all of this in an easier to use way
@@ -300,15 +301,15 @@ func (lw *LoginWindow) drawRegistrationMenu() {
 	lw.PrintChar(lw.X+45, lw.Y+lw.Height-2, "r", "\033[1m")
 	// Bold the text for the back and continue buttons
 	if lw.optionSelected == 1 {
-		fg := console.RGBCode(0, 0, 0)
-		bg := console.RGBCode(255, 255, 255)
+		fg := util.RGBCode(0, 0, 0)
+		bg := util.RGBCode(255, 255, 255)
 		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", fg.FG()+bg.BG())
 	} else {
 		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", "\033[1m")
 	}
 	if lw.optionSelected == 2 {
-		fg := console.RGBCode(0, 0, 0)
-		bg := console.RGBCode(255, 255, 255)
+		fg := util.RGBCode(0, 0, 0)
+		bg := util.RGBCode(255, 255, 255)
 		lw.PrintLn(lw.X+lw.Width-15, lw.Y+lw.Height, "<Continue>", fg.FG()+bg.BG())
 	} else {
 		lw.PrintLn(lw.X+lw.Width-15, lw.Y+lw.Height, "<Continue>", "\033[1m")

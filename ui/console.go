@@ -2,8 +2,12 @@ package ui
 
 import (
 	"encoding/json"
-	"github.com/yamamushi/EscapingEden/ui/console"
+	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
+	"github.com/yamamushi/EscapingEden/ui/window/chat"
+	"github.com/yamamushi/EscapingEden/ui/window/login"
+	"github.com/yamamushi/EscapingEden/ui/window/popupbox"
+	"github.com/yamamushi/EscapingEden/ui/window/toolbox"
 	"log"
 	"strconv"
 	"sync"
@@ -72,17 +76,17 @@ func (c *Console) Init() {
 
 	c.consoleInitialized = false
 	// First we set up our login window
-	loginWindow := window.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height, c.LoginMessages, c.WindowMessages)
+	loginWindow := login.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height, c.LoginMessages, c.WindowMessages)
 	loginWindow.Init()
 	c.AddWindow(loginWindow)
 
 	// Next we set up our chat window
-	chatWindow := window.NewChatWindow(0, c.Height-10, c.Width-50, 9, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
+	chatWindow := chat.NewChatWindow(0, c.Height-10, c.Width-50, 9, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
 	chatWindow.Init()
 	c.AddWindow(chatWindow)
 
 	// Then we add our toolbox last
-	toolboxWindow := window.NewToolboxWindow(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height, c.ToolboxMessages, c.WindowMessages)
+	toolboxWindow := toolbox.NewToolboxWindow(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height, c.ToolboxMessages, c.WindowMessages)
 	toolboxWindow.Init()
 	c.AddWindow(toolboxWindow)
 
@@ -103,7 +107,7 @@ func (c *Console) CaptureWindowMessages() {
 		select {
 		case message := <-c.WindowMessages:
 			log.Println("Client received window message")
-			consoleMessage := &console.ConsoleMessage{}
+			consoleMessage := &types.ConsoleMessage{}
 			err := json.Unmarshal([]byte(message), consoleMessage)
 			if err != nil {
 				log.Println("Error unmarshalling consoleMessage: ", err)
@@ -115,7 +119,7 @@ func (c *Console) CaptureWindowMessages() {
 				log.Println("Received console message")
 				switch consoleMessage.Message {
 				case "popup":
-					options := &window.PopupBoxConfig{}
+					options := &window.Config{}
 					err = json.Unmarshal([]byte(consoleMessage.Options), options)
 					if err != nil {
 						log.Println("Error unmarshalling popup box options: ", err)
@@ -163,7 +167,7 @@ func (c *Console) CaptureManagerMessages() {
 		select {
 		case message := <-c.ReceiveMessages:
 			log.Println("Console received message from manager")
-			consoleMessage := &console.ConsoleMessage{}
+			consoleMessage := &types.ConsoleMessage{}
 			err := json.Unmarshal([]byte(message), consoleMessage)
 			if err != nil {
 				log.Println("Error unmarshalling consoleMessage: ", err)
@@ -221,7 +225,7 @@ func (c *Console) AddWindow(w window.WindowType) {
 }
 
 // RemoveWindow removes a window from the console by ID.
-func (c *Console) RemoveWindow(id int) {
+func (c *Console) RemoveWindow(id window.ID) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -551,11 +555,14 @@ func (c *Console) SetActiveWindow(window window.WindowType) {
 
 	for i, w := range c.Windows {
 		if w.GetID() == window.GetID() {
-			log.Println("Active window set to: ", w.GetID())
+			//log.Println("Active window set to: ", w.GetID())
 			w.SetActive(true)
+			// We do this to move the window to the end of the slice
+			// Since the last one will always be drawn last, ensuring it will be on top
+			// of all other drawn windows
 			c.Windows = append(c.Windows[:i], c.Windows[i+1:]...)
 			c.Windows = append(c.Windows, window)
-			log.Println("Active Window: ", c.Windows[len(c.Windows)-1].GetID())
+			//log.Println("Active Window: ", c.Windows[len(c.Windows)-1].GetID())
 		} else {
 			w.SetActive(false)
 		}
@@ -573,9 +580,9 @@ func (c *Console) GetActiveWindow() window.WindowType {
 }
 
 // OpenPopup opens a new popup window using the options
-func (c *Console) OpenPopup(options *window.PopupBoxConfig) {
+func (c *Console) OpenPopup(options *window.Config) {
 	//log.Println(options)
-	popupBox := window.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxMessages, c.WindowMessages)
+	popupBox := popupbox.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxMessages, c.WindowMessages)
 	popupBox.Init()
 	popupBox.SetContents(options.Content)
 	c.LastActiveWindow = c.GetActiveWindow() // Save the last active window
@@ -598,7 +605,7 @@ func (c *Console) ClosePopup() {
 	c.ForceRedraw()
 }
 
-func (c *Console) HandlePopupMessage(message *console.ConsoleMessage) {
+func (c *Console) HandlePopupMessage(message *types.ConsoleMessage) {
 	switch message.Message {
 	case "close":
 		c.ClosePopup()
@@ -624,12 +631,12 @@ func (c *Console) ForceRedraw() {
 	c.forceScreenRefresh = true
 }
 
-func (c *Console) ForceRedrawOn(windowType window.WindowID) {
+func (c *Console) ForceRedrawOn(windowType window.ID) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	log.Println("Forcing redraw on: ", windowType)
 	for _, w := range c.Windows {
-		if w.GetID() == int(windowType) {
+		if w.GetID() == windowType {
 			log.Println("Flushing: ", w.GetID())
 			w.FlushLastSent()
 		}

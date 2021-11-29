@@ -1,4 +1,4 @@
-package console
+package types
 
 import "strconv"
 

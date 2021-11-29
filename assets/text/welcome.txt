@@ -6,6 +6,7 @@ That being said, Escaping Eden does have [r]ules, and it is highly recommended t
 
     * A letter in [b]rackets indicates it is a command that can be used on that window.
     * Some commands are universal, such as <ctrl-r> to force a refresh of the entire console.
+    * You can use <ctrl-h> to toggle the help menu at any time.
 
 Escaping Eden is a harsh world, and it is not without consequences. This game employs a permanent
 [d]eath mechanic, that will likely bring your early characters to ruin quickly. This is to be expected,
