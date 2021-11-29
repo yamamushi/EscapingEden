@@ -18,7 +18,8 @@ import (
 type HelpWindow struct {
 	window.Window
 
-	HelpPage types.HelpPage
+	HelpPage     types.HelpPage
+	LastHelpPage types.HelpPage
 
 	// Threading stuff if we need it
 	hwMutex           sync.Mutex

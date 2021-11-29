@@ -29,20 +29,18 @@ func (hw *HelpWindow) PrintIndexControls() {
 		nextDistance = len(homeCommand+separator) + homeDistance
 	}
 
-	indexCommand := "[ ]ndex"
-	indexDistance := len(nextCommand+separator) + nextDistance
-	closeCommand := "[ ]lose"
-	closeDistance := len(indexCommand+separator) + indexDistance
+	closeCommand := "[ ]lose index"
+	closeDistance := len(nextCommand+separator) + nextDistance
 
 	var commandList string
 	var shift int
 	if hw.indexPage > 0 {
 		commandList = homeCommand + separator + prevCommand + separator + nextCommand +
-			separator + indexCommand + separator + closeCommand
+			separator + closeCommand
 
 	} else {
 		commandList = homeCommand + separator + nextCommand +
-			separator + indexCommand + separator + closeCommand
+			separator + closeCommand
 	}
 
 	//hw.PrintLn(hw.X+(hw.Width/2)-(len(commandList)/2)-1, hw.Y+hw.Height, commandList, "")
@@ -58,7 +56,6 @@ func (hw *HelpWindow) PrintIndexControls() {
 
 	hw.PrintChar(hw.X+shift+nextDistance, hw.Y+hw.Height, "\u25BA", "\033[1m")
 	hw.PrintChar(hw.X+shift+nextDistance+2, hw.Y+hw.Height, "n", "\033[1m")
-	hw.PrintChar(hw.X+shift+indexDistance, hw.Y+hw.Height, "i", "\033[1m")
 	hw.PrintChar(hw.X+shift+closeDistance, hw.Y+hw.Height, "c", "\033[1m")
 }
 

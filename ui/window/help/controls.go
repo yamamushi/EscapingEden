@@ -32,6 +32,8 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 		log.Println("Help Window Handling input right")
 		if hw.HelpPage == types.HelpPageIndex {
 			hw.indexPage += 1
+		} else {
+			hw.HelpPage += 1
 		}
 		hw.ForceConsoleRefresh()
 		return
@@ -40,6 +42,14 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 		if hw.HelpPage == types.HelpPageIndex {
 			if hw.indexPage > 0 {
 				hw.indexPage -= 1
+			} else {
+				if hw.HelpPage == types.HelpPageMain {
+					hw.HelpPage -= 1
+				}
+			}
+		} else {
+			if hw.HelpPage != types.HelpPageMain {
+				hw.HelpPage -= 1
 			}
 		}
 		hw.ForceConsoleRefresh()
@@ -47,10 +57,15 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 	case types.InputCharacter:
 		switch input.Data {
 		case "c":
-			message := types.ConsoleMessage{Type: "help", Message: "close"}
-			hw.scrollInitialized = false
-			hw.ConsoleSend <- message.String()
-			log.Println("Help sent close message to console")
+			if hw.HelpPage == types.HelpPageIndex {
+				hw.HelpPage = hw.LastHelpPage
+			} else {
+				message := types.ConsoleMessage{Type: "help", Message: "close"}
+				hw.scrollInitialized = false
+				hw.ConsoleSend <- message.String()
+				log.Println("Help sent close message to console")
+			}
+
 		case "h":
 			hw.HelpPage = types.HelpPageMain
 			hw.ResetWindowDrawings()
@@ -58,13 +73,37 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 			hw.ForceConsoleRefresh()
 			return
 		case "i":
+			// If we're not on the index then load it, otherwise toss it
+			if hw.HelpPage != types.HelpPageIndex {
+				hw.LastHelpPage = hw.HelpPage
+				hw.HelpPage = types.HelpPageIndex
+				hw.ResetWindowDrawings()
+				hw.scrollInitialized = false
+				hw.ForceConsoleRefresh()
+			}
+			return
+		case "n":
 			hw.HelpPage = types.HelpPageIndex
-			hw.ResetWindowDrawings()
-			hw.scrollInitialized = false
+			if hw.HelpPage == types.HelpPageIndex {
+				hw.indexPage += 1
+			} else {
+				hw.HelpPage += 1
+			}
 			hw.ForceConsoleRefresh()
 			return
+		case "p":
+			if hw.HelpPage == types.HelpPageIndex {
+				if hw.indexPage > 0 {
+					hw.indexPage -= 1
+				}
+			} else if hw.HelpPage != types.HelpPageMain {
+				hw.HelpPage -= 1
+			}
+			hw.ForceConsoleRefresh()
+			return
+		default:
+			return
 		}
-
 	default:
 		log.Println("Unhandled Input event in Help Window")
 	}
@@ -94,7 +133,7 @@ func (hw *HelpWindow) PrintControls() {
 	scrollDownDistance := len(scrollUpCommand+separator) + scrollUpDistance
 	indexCommand := "[ ]ndex"
 	indexDistance := len(scrollDownCommand+separator) + scrollDownDistance
-	closeCommand := "[ ]lose"
+	closeCommand := "[ ]lose help"
 	closeDistance := len(indexCommand+separator) + indexDistance
 
 	var commandList string
