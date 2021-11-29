@@ -65,7 +65,7 @@ func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output ch
 	return cw
 }
 
-func (cw *ChatWindow) HandleInput(input window.Input) {
+func (cw *ChatWindow) HandleInput(input types.Input) {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
 	if cw.GetActive() {
@@ -73,32 +73,32 @@ func (cw *ChatWindow) HandleInput(input window.Input) {
 	}
 
 	switch input.Type {
-	case window.InputUp:
+	case types.InputUp:
 		log.Println("ChatWindow Up")
 		cw.DecreaseContentPos()
 		cw.ResetWindowDrawings()
 		return
-	case window.InputDown:
+	case types.InputDown:
 		log.Println("ChatWindow Down")
 		cw.IncreaseContentPos()
 		cw.ResetWindowDrawings()
 		return
-	case window.InputLeft:
+	case types.InputLeft:
 		log.Println("ChatWindow Left")
 		cw.RequestPopupFromConsole(cw.ConsoleWidth/2-40, cw.ConsoleHeight/2-10, 50, 20, "This is a test of a really long string with a bunch of random content to see if the content buffer will scroll or not correctly")
 		return
-	case window.InputRight:
+	case types.InputRight:
 		log.Println("ChatWindow Right")
 		return
-	case window.InputNewline:
+	case types.InputNewline:
 		log.Println("ChatWindow Newline")
 		return
-	case window.InputBackspace:
+	case types.InputBackspace:
 		log.Println("ChatWindow Backspace")
 		// remove one character from the input buffer
 		cw.cwInputBuffer = cw.cwInputBuffer[:len(cw.cwInputBuffer)-1]
 		return
-	case window.InputReturn:
+	case types.InputReturn:
 		log.Println("ChatWindow Return")
 		if cw.cwInputBuffer != "" {
 			// Send a console message to the ConsoleSend channel

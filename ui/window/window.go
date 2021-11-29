@@ -28,10 +28,11 @@ type Config struct {
 	Width   int
 	Height  int
 	Content string
+	Page    types.HelpPage
 }
 
 func NewWindowConfig(x, y, width, height int, content string) *Config {
-	return &Config{x, y, width, height, content}
+	return &Config{X: x, Y: y, Width: width, Height: height, Content: content}
 }
 
 func (c *Config) String() string {
@@ -42,7 +43,7 @@ func (c *Config) String() string {
 type WindowType interface {
 	ClearMap(X, Y, height, width, startX, startY int)
 	Draw(X, Y int)
-	HandleInput(input Input)
+	HandleInput(input types.Input)
 	Init()
 
 	HandleReceive(message types.ConsoleMessage)
@@ -100,6 +101,9 @@ type Window struct {
 	ScrollingSupported bool
 	ScrollBufferHasNew bool // Indicates that the scroll buffer has new content
 
+	// For Window Paging, only HELPBOX uses this
+	Page int
+
 	Width         int // The width of the Window
 	Height        int // The height of the Window
 	ConsoleWidth  int // The width of the console
@@ -119,7 +123,7 @@ type Window struct {
 	ConsoleSend    chan string // Send messages to the Console
 	ConsoleReceive chan string // Receive messages from the Console
 
-	DirectionInput InputType // The last direction input from the user
+	DirectionInput types.InputType // The last direction input from the user
 
 	mutex               sync.Mutex
 	pmapMutex           sync.Mutex
@@ -141,7 +145,7 @@ func (w *Window) Init() {
 	w.pointMapInitialized = true
 }
 
-func (w *Window) HandleInput(input Input) {
+func (w *Window) HandleInput(input types.Input) {
 	return
 }
 
@@ -344,13 +348,13 @@ func (w *Window) GetBorderBG() int {
 func (w *Window) IncreaseContentPos() {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
-	w.DirectionInput = InputUp
+	w.DirectionInput = types.InputUp
 }
 
 func (w *Window) DecreaseContentPos() {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
-	w.DirectionInput = InputDown
+	w.DirectionInput = types.InputDown
 }
 
 // MoveCursorTopLeft moves the cursor to the top left of the Window and returns as a string
@@ -375,6 +379,17 @@ func (w *Window) RequestPopupFromConsole(x, y, width, height int, content string
 	config := NewWindowConfig(x, y, width, height, content)
 	log.Println(config.String())
 	request := types.ConsoleMessage{Type: "console", Message: "popup", Options: config.String()}
+	log.Println(request.String())
+	w.ConsoleSend <- request.String()
+}
+
+func (w *Window) RequestHelpFromConsole(x, y, width, height int, page types.HelpPage) {
+	log.Println("Requesting help from console")
+	config := NewWindowConfig(x, y, width, height, "")
+	log.Println(page)
+	config.Page = page
+	log.Println(config.String())
+	request := types.ConsoleMessage{Type: "console", Message: "help", Options: config.String()}
 	log.Println(request.String())
 	w.ConsoleSend <- request.String()
 }
@@ -525,10 +540,10 @@ func (w *Window) DrawContents(winX int, winY int) {
 
 	if len(lines) > maxHeight {
 		if w.ScrollingSupported {
-			if w.DirectionInput == InputUp {
+			if w.DirectionInput == types.InputUp {
 				w.ContentStartPos++
 				w.DirectionInput = 0
-			} else if w.DirectionInput == InputDown {
+			} else if w.DirectionInput == types.InputDown {
 				w.ContentStartPos--
 				w.DirectionInput = 0
 			}
@@ -586,10 +601,10 @@ func (w *Window) DrawContents(winX int, winY int) {
 		if w.ScrollingSupported {
 			// If the length of content doesn't exceed our visible height, we don't need to scroll
 			// And we can discard the DirectionInput
-			if w.DirectionInput == InputUp {
+			if w.DirectionInput == types.InputUp {
 				w.ContentStartPos = 0
 				w.DirectionInput = 0
-			} else if w.DirectionInput == InputDown {
+			} else if w.DirectionInput == types.InputDown {
 				w.ContentStartPos = 0
 				w.DirectionInput = 0
 			}

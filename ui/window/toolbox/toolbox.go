@@ -2,6 +2,7 @@ package toolbox
 
 import (
 	"github.com/yamamushi/EscapingEden/edenutil"
+	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"log"
 	"sync"
@@ -44,7 +45,7 @@ func NewToolboxWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output
 	return lw
 }
 
-func (tw *ToolboxWindow) HandleInput(input window.Input) {
+func (tw *ToolboxWindow) HandleInput(input types.Input) {
 	tw.twMutex.Lock()
 	defer tw.twMutex.Unlock()
 

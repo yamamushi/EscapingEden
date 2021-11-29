@@ -45,7 +45,7 @@ func NewPopupBox(x, y, w, h, consoleWidth, consoleHeight int, input, output chan
 	return pb
 }
 
-func (pb *PopupBox) HandleInput(input window.Input) {
+func (pb *PopupBox) HandleInput(input types.Input) {
 	pb.pbMutex.Lock()
 	defer pb.pbMutex.Unlock()
 
@@ -54,15 +54,15 @@ func (pb *PopupBox) HandleInput(input window.Input) {
 	}
 
 	switch input.Type {
-	case window.InputUp:
+	case types.InputUp:
 		log.Println("PopupBox Up")
 		pb.DecreaseContentPos()
 		return
-	case window.InputDown:
+	case types.InputDown:
 		log.Println("PopupBox Down")
 		pb.IncreaseContentPos()
 		return
-	case window.InputReturn:
+	case types.InputReturn:
 		log.Println("PopupBox Handling input return - attempting to close popup")
 		message := types.ConsoleMessage{Type: "popupbox", Message: "close"}
 		pb.ConsoleSend <- message.String()

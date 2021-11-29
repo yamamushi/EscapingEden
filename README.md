@@ -9,6 +9,7 @@ It implements a unique xterm-256 based UI over telnet, and as such, supported te
   * [Introduction](#introduction)
   * [About](#about)
   * [Roadmap](#roadmap)
+  * [Building](#building)
   * [Contributing](#contributing)
   * [License](#license)
 
@@ -52,7 +53,9 @@ Work is ongoing to bring the User Interface to a more polished state, and to add
 general project cleanup. I intend to implement an actual safe logging mechanism, as well as a more robust way to handle
 errors when they occur. 
 
-Once I am satisfied with the state of a working UI, I will continue to expand the project to add more gameplay features. 
+Once I am satisfied with the state of a working UI, I will continue to expand the project to add more gameplay features.
+
+
 
 ## Contributing
 

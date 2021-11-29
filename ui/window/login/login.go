@@ -1,6 +1,7 @@
 package login
 
 import (
+	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/util"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"log"
@@ -85,7 +86,7 @@ func NewLoginWindow(x, y, width, height, consoleWidth, consoleHeight int, input,
 	return lw
 }
 
-func (lw *LoginWindow) HandleInput(input window.Input) {
+func (lw *LoginWindow) HandleInput(input types.Input) {
 	switch lw.windowState {
 	case LoginWindowMenu:
 		lw.handleMenuInput(input.Data)
@@ -157,11 +158,6 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 	}
 	input = strings.ToLower(input)
 
-	if input != "l" && input != "r" && input != "q" && input != "login" && input != "register" && input != "quit" {
-		lw.Error("Invalid input received")
-		return
-	}
-
 	input = input[:1]
 
 	switch input {
@@ -182,6 +178,9 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 	case "q":
 		log.Println("Quit selected")
 		lw.Quit()
+		return
+	default:
+		lw.Error("Invalid input received")
 		return
 	}
 }
@@ -209,7 +208,7 @@ func (lw *LoginWindow) handleLoginInput(input string) {
 	}
 }
 
-func (lw *LoginWindow) handleRegistrationInput(input window.Input) {
+func (lw *LoginWindow) handleRegistrationInput(input types.Input) {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
 
@@ -221,21 +220,34 @@ func (lw *LoginWindow) handleRegistrationInput(input window.Input) {
 	switch lw.registrationState {
 	case RegistrationMain:
 		switch input.Type {
-		case window.InputCharacter:
-			if input.Data == "r" {
-				log.Println("Opening rules popup")
-				lw.RequestPopupFromConsole(lw.ConsoleWidth/2-40, lw.ConsoleHeight/2-10, 100, 20, "This is a test of a really long string with a bunch of random content to see if the content buffer will scroll or not correctly")
+		case types.InputCharacter:
+			switch input.Data {
+			case "b":
+				log.Println("Opening controls help page")
+				lw.RequestHelpFromConsole(lw.ConsoleWidth/2-40, lw.ConsoleHeight/2-10, 100, 20, types.HelpPageControls)
+				return
+			case "d":
+				log.Println("Opening death help page")
+				lw.RequestHelpFromConsole(lw.ConsoleWidth/2-40, lw.ConsoleHeight/2-10, 100, 20, types.HelpPageRules)
+				return
+			case "r":
+				log.Println("Opening rules help page")
+				lw.RequestHelpFromConsole(lw.ConsoleWidth/2-40, lw.ConsoleHeight/2-10, 100, 20, types.HelpPageRules)
+				return
+
+			default:
+				lw.Error("Invalid input received")
+				return
 			}
-			return
-		case window.InputLeft:
+		case types.InputLeft:
 			log.Println("Left arrow pressed")
 			lw.optionSelected = 1
 			return
-		case window.InputRight:
+		case types.InputRight:
 			log.Println("Right arrow pressed")
 			lw.optionSelected = 2
 			return
-		case window.InputReturn:
+		case types.InputReturn:
 			log.Println("Return pressed")
 			if lw.optionSelected == 1 {
 				lw.windowState = LoginWindowMenu

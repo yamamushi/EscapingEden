@@ -46,8 +46,9 @@ func (cm *ConnectionManager) Run() {
 
 // Non blocking check for messages
 func (cm *ConnectionManager) MessageParser() {
-	cm.startedNotify <- true
 	log.Println("ConnectionManager is now listening for incoming messages")
+	cm.startedNotify <- true
+
 	cm.CMReceiveMessages = make(chan string)
 	for {
 		select {

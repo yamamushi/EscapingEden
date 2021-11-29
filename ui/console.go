@@ -5,6 +5,7 @@ import (
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"github.com/yamamushi/EscapingEden/ui/window/chat"
+	"github.com/yamamushi/EscapingEden/ui/window/help"
 	"github.com/yamamushi/EscapingEden/ui/window/login"
 	"github.com/yamamushi/EscapingEden/ui/window/popupbox"
 	"github.com/yamamushi/EscapingEden/ui/window/toolbox"
@@ -13,9 +14,9 @@ import (
 	"sync"
 )
 
-var (
-	minWidth  = 155
-	minHeight = 30
+const (
+	MINWIDTH  = 155
+	MINHEIGHT = 30
 )
 
 type Console struct {
@@ -128,6 +129,16 @@ func (c *Console) CaptureWindowMessages() {
 						log.Println("Popup box options: ", options.String())
 						c.OpenPopup(options)
 					}
+				case "help":
+					options := &window.Config{}
+					err = json.Unmarshal([]byte(consoleMessage.Options), options)
+					if err != nil {
+						log.Println("Error unmarshalling help box options: ", err)
+						continue
+					} else {
+						log.Println("Help box options: ", options.String())
+						c.ToggleHelp(options)
+					}
 				case "refresh":
 					log.Println("Refresh message received")
 					//if !c.IsPopupOpen() {
@@ -139,6 +150,10 @@ func (c *Console) CaptureWindowMessages() {
 			case "popupbox":
 				log.Println("Popup box message: ", consoleMessage.Message)
 				c.HandlePopupMessage(consoleMessage)
+				continue
+			case "helpbox":
+				log.Println("Help box message: ", consoleMessage.Message)
+				c.HandleHelpMessage(consoleMessage)
 				continue
 			case "error":
 				log.Println("Error message: ", consoleMessage.Message)
@@ -247,7 +262,7 @@ func (c *Console) Draw() []byte {
 	//c.ConsoleCommands = ""
 	if !c.IsConsoleValidSize() {
 		s = s + "\033[2J"
-		s = s + "Invalid console size, Escaping Eden requires a terminal size of" + strconv.Itoa(minWidth) + "x" + strconv.Itoa(minHeight) + "or greater.\r\n"
+		s = s + "Invalid console size, Escaping Eden requires a terminal size of" + strconv.Itoa(MINWIDTH) + "x" + strconv.Itoa(MINHEIGHT) + "or greater.\r\n"
 		s = s + "Please resize your terminal, or press q to disconnect.\n"
 		s = s + "If your terminal is empty after resizing, you can press ctrl-r to force a screen refresh.\n"
 
@@ -321,7 +336,13 @@ func (c *Console) HandleInput(rawInput byte) {
 		return
 	}
 
-	//log.Println("Console received input: ", string(rawInput))
+	//log.Println("Console received input: ", int(rawInput))
+
+	if rawInput == 8 {
+		options := &window.Config{X: c.Width/2 - 25, Y: 5, Width: 50, Height: 20, Page: 0}
+		go c.ToggleHelp(options)
+		return
+	}
 
 	if rawInput == 18 {
 		// ctrl-r to force a screen refresh
@@ -350,13 +371,13 @@ func (c *Console) HandleInput(rawInput byte) {
 			c.escapeBuffer += string(rawInput)
 			switch rawInput {
 			case 'A':
-				c.InputToActiveWindow(window.Input{Type: window.InputUp})
+				c.InputToActiveWindow(types.Input{Type: types.InputUp})
 			case 'B':
-				c.InputToActiveWindow(window.Input{Type: window.InputDown})
+				c.InputToActiveWindow(types.Input{Type: types.InputDown})
 			case 'C':
-				c.InputToActiveWindow(window.Input{Type: window.InputRight})
+				c.InputToActiveWindow(types.Input{Type: types.InputRight})
 			case 'D':
-				c.InputToActiveWindow(window.Input{Type: window.InputLeft})
+				c.InputToActiveWindow(types.Input{Type: types.InputLeft})
 			default:
 				log.Println("Unknown escape sequence: ", c.escapeBuffer)
 			}
@@ -370,15 +391,15 @@ func (c *Console) HandleInput(rawInput byte) {
 
 	// If we have a backspace, we remove the last character from the input buffer.
 	if rawInput == '\b' || rawInput == '\x7f' {
-		c.InputToActiveWindow(window.Input{Type: window.InputBackspace})
+		c.InputToActiveWindow(types.Input{Type: types.InputBackspace})
 		return
 	}
 	if rawInput == '\r' {
-		c.InputToActiveWindow(window.Input{Type: window.InputReturn})
+		c.InputToActiveWindow(types.Input{Type: types.InputReturn})
 		return
 	}
 	if rawInput == '\t' {
-		if !c.IsPopupOpen() && c.userLoggedIn {
+		if !c.IsPopupOpen() && !c.IsHelpOpen() && c.userLoggedIn {
 			c.SetNextActiveWindow()
 			for _, w := range c.Windows {
 				w.ResetWindowDrawings()
@@ -389,15 +410,16 @@ func (c *Console) HandleInput(rawInput byte) {
 		return
 	}
 	if rawInput == '\n' {
-		c.InputToActiveWindow(window.Input{Type: window.InputNewline})
+		c.InputToActiveWindow(types.Input{Type: types.InputNewline})
 		return
 	}
 
-	c.InputToActiveWindow(window.Input{Type: window.InputCharacter, Data: string(rawInput)})
+	c.InputToActiveWindow(types.Input{Type: types.InputCharacter, Data: string(rawInput)})
+
 }
 
 // InputToActiveWindow sends an input to the active window.
-func (c *Console) InputToActiveWindow(input window.Input) {
+func (c *Console) InputToActiveWindow(input types.Input) {
 	for _, target := range c.Windows {
 		if target.GetActive() {
 			target.HandleInput(input)
@@ -621,6 +643,51 @@ func (c *Console) IsPopupOpen() bool {
 	return false
 }
 
+// OpenPopup opens a new popup window using the options
+func (c *Console) ToggleHelp(options *window.Config) {
+	if !c.IsHelpOpen() {
+		helpWindow := help.NewHelpWindow(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, options.Page, c.PopupBoxMessages, c.WindowMessages)
+		helpWindow.Init()
+		helpWindow.SetContents(options.Content)
+		c.LastActiveWindow = c.GetActiveWindow() // Save the last active window
+		c.AddWindow(helpWindow)                  // Add the popup to the list of windows
+		c.SetActiveWindow(helpWindow)            // Set the popup as the active window
+		//popupBox.FlushLastSent()
+		helpWindow.FlushLastSent()
+	} else {
+		c.CloseHelp()
+	}
+}
+
+func (c *Console) CloseHelp() {
+	// Loop through windows and remove the popup
+	for _, w := range c.Windows {
+		if w.GetID() == window.HELPBOX {
+			c.RemoveWindow(w.GetID())
+			c.SetActiveWindow(c.LastActiveWindow)
+			break
+		}
+	}
+	// When we close the popup, our window is all garbage so, we're going to force a re-draw on everything
+	c.ForceRedraw()
+}
+
+func (c *Console) HandleHelpMessage(message *types.ConsoleMessage) {
+	switch message.Message {
+	case "close":
+		c.CloseHelp()
+	}
+}
+
+func (c *Console) IsHelpOpen() bool {
+	for _, w := range c.Windows {
+		if w.GetID() == window.HELPBOX {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Console) ForceRedraw() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -682,6 +749,7 @@ func (c *Console) SetActiveWindowNoThread(window window.WindowType) {
 	}
 }
 
+// HandleResize handles the resize event for all windows
 func (c *Console) HandleResize(newWidth, newHeight int) {
 	c.mutex.Lock()
 	c.mutex.Unlock()
@@ -704,8 +772,9 @@ func (c *Console) HandleResize(newWidth, newHeight int) {
 	c.abortSend = true
 }
 
+// IsConsoleValidSize returns whether or not the console meets the global size requirements
 func (c *Console) IsConsoleValidSize() bool {
-	return c.Width > minWidth && c.Height > minHeight
+	return c.Width > MINWIDTH && c.Height > MINHEIGHT
 }
 
 func (c *Console) IsUserLoggedIn() bool {

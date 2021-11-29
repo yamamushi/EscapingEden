@@ -4,17 +4,9 @@ package help
 // Options to open to a specific help page.
 
 import (
+	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"sync"
-)
-
-type HelpPage int
-
-const (
-	HelpPageMain HelpPage = iota
-	HelpPageControls
-	HelpPageCredits
-	HelpPageAbout
 )
 
 // While a normal popupbox only has controls to close the window (return), the help screen
@@ -22,16 +14,15 @@ const (
 type HelpWindow struct {
 	window.Window
 
+	HelpPage types.HelpPage
+
 	// Threading stuff if we need it
 	twMutex sync.Mutex
-
-	// Vars for tracking which help page we're on
-	helpPage int
 }
 
-func NewHelpWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *HelpWindow {
+func NewHelpWindow(x, y, w, h, consoleWidth, consoleHeight int, page types.HelpPage, input, output chan string) *HelpWindow {
 	lw := &HelpWindow{}
-	lw.ID = window.HelpWindowID
+	lw.ID = window.HELPBOX
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
 		x = 1
@@ -56,6 +47,11 @@ func NewHelpWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output ch
 	lw.Bordered = true
 	lw.ConsoleReceive = input
 	lw.ConsoleSend = output
+
+	if page < 0 {
+		page = 0
+	}
+	lw.HelpPage = page
 
 	return lw
 }

@@ -16,6 +16,8 @@ import (
 	"time"
 )
 
+const EscapingEdenVersion = "0.0.1"
+
 // Variables used for command line parameters
 var (
 	ConfPath string
@@ -35,7 +37,9 @@ func init() {
 }
 
 func main() {
-	log.Println("Reading config...")
+	log.Println("Preparing to launch Escaping Eden v" + EscapingEdenVersion)
+
+	log.Println("Reading config file at ", ConfPath)
 	conf, err := edenconfig.ReadConfig(ConfPath)
 	if err != nil {
 		log.Println("Error reading config: ", err)
@@ -51,23 +55,19 @@ func main() {
 		os.Exit(1)
 	}
 	ticker := time.NewTicker(1 * time.Second)
-	go func() {
-		for {
-			select {
-			case <-startNotify:
-				log.Println("\nEscaping Eden Server started.")
-				return
-			case <-ticker.C:
-				fmt.Print(".")
-			}
-		}
-	}()
+	select {
+	case <-startNotify:
+		log.Println("Escaping Eden is now running.  Press CTRL-C to exit.")
+		break
+	case <-ticker.C:
+		fmt.Print(".")
+	}
 
 	// Wait here until CTRL-C or other term signal is received.
-	log.Println("Escaping Eden is now running.  Press CTRL-C to exit.")
+
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-osSignal
-
+	log.Println("Caught interrupt signal, shutting down...")
 	log.Println("Server exited cleanly.")
 }
