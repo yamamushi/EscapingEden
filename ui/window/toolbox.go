@@ -1,6 +1,7 @@
 package window
 
 import (
+	"github.com/yamamushi/EscapingEden/edenutil"
 	"log"
 	"sync"
 	"time"
@@ -60,7 +61,7 @@ func (tw *ToolboxWindow) UpdateContents() {
 	defer tw.twMutex.Unlock()
 
 	// current time with second accuracy as a string
-	time := time.Now().Format("15:04:05")
-
-	tw.SetContents("Current server time: " + time)
+	serverTime := time.Now().Format("15:04:05")
+	edenTime := edenutil.EdenTime.CurrentTimeString(edenutil.EdenTime{})
+	tw.SetContents("Current Server Time: " + serverTime + "\n" + "  Current Eden Time: " + edenTime)
 }

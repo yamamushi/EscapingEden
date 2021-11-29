@@ -2,9 +2,11 @@ package window
 
 import (
 	"encoding/json"
+	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/ui/console"
 	"log"
 	"sync"
+	"time"
 )
 
 // Implements a Chat Window
@@ -47,7 +49,15 @@ func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output ch
 	cw.ConsoleSend = output
 	cw.ScrollingSupported = true
 
-	cw.History = append(cw.History, "Hello World")
+	// Initializing a default chat message
+	cw.History = append(cw.History, "Welcome traveller!")
+	cw.History = append(cw.History, "The current server time is: "+time.Now().Format("2006-01-02 15:04:05"))
+	cw.History = append(cw.History, "The current time in Freeport is: "+edenutil.EdenTime.TimeStamp(edenutil.EdenTime{}))
+	//cw.History = append(cw.History, "There are currently __ players online. ")
+	cw.History = append(cw.History, "")
+	cw.History = append(cw.History, "There no current active world events.")
+	cw.History = append(cw.History, "")
+
 	cw.HistoryIndex = 0
 	go cw.Listen()
 

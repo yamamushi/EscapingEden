@@ -46,11 +46,12 @@ type Console struct {
 	abortSend          bool
 	abortSync          sync.Mutex
 	resizeActive       bool
+	userLoggedIn       bool
 }
 
 // NewConsole creates a new console with no windows.
 func NewConsole(height int, width int, connectionID string, outputChannel chan string) *Console {
-	// Setup a new Chat Window and add it to the console at the bottom.
+	// Set up a new Chat Window and add it to the console at the bottom.
 	receiver := make(chan string)
 	windowMessages := make(chan string)
 	loginMessages := make(chan string)
@@ -63,15 +64,19 @@ func NewConsole(height int, width int, connectionID string, outputChannel chan s
 		ChatMessages: chatMessages, ToolboxMessages: toolboxMessages, PopupBoxMessages: popupBoxMessage}
 }
 
+// Init is called once to initialize the console, it does things like create the default windows, and launches the
+// Capture Message goroutines. It also sets up some default console commands that should be sent on first connect.
+// These can be appended to later if we want to send a quick console command, but they are flushed after every write.
+// Ie they are single use.
 func (c *Console) Init() {
 
 	c.consoleInitialized = false
-	// First we setup our login window
+	// First we set up our login window
 	loginWindow := window.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height, c.LoginMessages, c.WindowMessages)
 	loginWindow.Init()
 	c.AddWindow(loginWindow)
 
-	// Next we setup our chat window
+	// Next we set up our chat window
 	chatWindow := window.NewChatWindow(0, c.Height-10, c.Width-50, 9, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
 	chatWindow.Init()
 	c.AddWindow(chatWindow)
@@ -90,6 +95,9 @@ func (c *Console) Init() {
 	c.ConsoleCommands += c.HideCursor() + c.ResetTerminal() // + c.DrawPrompt() + c.MoveCursorToTopLeft()
 }
 
+// CaptureWindowMessages is a goroutine that listens for messages from the windows and parses them to determine
+// Where they should go, or if any action should be taken from them. Launching a popup box, or sending a message
+// or even quitting the session. There are many types of messages the console may have to parse from a window.
 func (c *Console) CaptureWindowMessages() {
 	for {
 		select {
@@ -108,7 +116,7 @@ func (c *Console) CaptureWindowMessages() {
 				switch consoleMessage.Message {
 				case "popup":
 					options := &window.PopupBoxConfig{}
-					err := json.Unmarshal([]byte(consoleMessage.Options), options)
+					err = json.Unmarshal([]byte(consoleMessage.Options), options)
 					if err != nil {
 						log.Println("Error unmarshalling popup box options: ", err)
 						continue
@@ -148,6 +156,8 @@ func (c *Console) CaptureWindowMessages() {
 	}
 }
 
+// CaptureManagerMessages is a goroutine that listens for messages from the ConnectionManager and parses them to determine
+// Where they should go, or if any action should be taken from them.
 func (c *Console) CaptureManagerMessages() {
 	for {
 		select {
@@ -201,9 +211,9 @@ func (c *Console) AddWindow(w window.WindowType) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	for _, window := range c.Windows {
-		if window.GetID() == w.GetID() {
-			log.Println("duplicate window: ", window.GetID())
+	for _, target := range c.Windows {
+		if target.GetID() == w.GetID() {
+			log.Println("duplicate window: ", target.GetID())
 			return
 		}
 	}
@@ -215,8 +225,8 @@ func (c *Console) RemoveWindow(id int) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	for i, window := range c.Windows {
-		if window.GetID() == id {
+	for i, target := range c.Windows {
+		if target.GetID() == id {
 			c.Windows = append(c.Windows[:i], c.Windows[i+1:]...)
 			return
 		}
@@ -263,10 +273,10 @@ func (c *Console) Draw() []byte {
 	}
 
 	//log.Println("Drawing console")
-	for _, window := range c.Windows {
-		if !window.GetHidden() {
+	for _, target := range c.Windows {
+		if !target.GetHidden() {
 			//log.Println("Drawing window: ", window.GetID())
-			windowDraw := c.DrawWindow(window)
+			windowDraw := c.DrawWindow(target)
 			if windowDraw != "" {
 				s = s + windowDraw
 			}
@@ -296,7 +306,7 @@ func (c *Console) HandleInput(rawInput byte) {
 	defer c.mutex.Unlock()
 	if !c.IsConsoleValidSize() {
 		// If the console isn't valid we don't want to accept any input
-		// However if we recieve the letter q, we will exit the program
+		// However if we receive the letter q, we will exit the program
 		if rawInput == 'q' {
 			c.Shutdown = true
 		}
@@ -327,7 +337,7 @@ func (c *Console) HandleInput(rawInput byte) {
 
 	// If we have an active escape sequence, we continue parsing it.
 	if c.escapeSequence {
-		// If we have a [, we know we are starting a new escape sequence.
+		// If we have a [ symbol, we know we are starting a new escape sequence, there is no ]
 		if rawInput == '[' {
 			c.escapeBuffer += "["
 			return
@@ -364,7 +374,7 @@ func (c *Console) HandleInput(rawInput byte) {
 		return
 	}
 	if rawInput == '\t' {
-		if !c.IsPopupOpen() {
+		if !c.IsPopupOpen() && c.userLoggedIn {
 			c.SetNextActiveWindow()
 			for _, w := range c.Windows {
 				w.ResetWindowDrawings()
@@ -382,11 +392,12 @@ func (c *Console) HandleInput(rawInput byte) {
 	c.InputToActiveWindow(window.Input{Type: window.InputCharacter, Data: string(rawInput)})
 }
 
+// InputToActiveWindow sends an input to the active window.
 func (c *Console) InputToActiveWindow(input window.Input) {
-	for _, window := range c.Windows {
-		if window.GetActive() {
-			window.HandleInput(input)
-			log.Println("Input Handled on window: ", window.GetID())
+	for _, target := range c.Windows {
+		if target.GetActive() {
+			target.HandleInput(input)
+			log.Println("Input Handled on window: ", target.GetID())
 			return
 		}
 	}
@@ -408,14 +419,12 @@ func (c *Console) SetShutdown(status bool) {
 	c.Shutdown = status
 }
 
-// DisableCursor disables the cursor.
-
-// Moves the cursor to the top left corner of the console
+// MoveCursorToTopLeft Moves the cursor to the top left corner of the console
 func (c *Console) MoveCursorToTopLeft() string {
 	return "\033[1;1H"
 }
 
-// Moves the cursor to the bottom left corner of the console
+// MoveCursorToBottomLeft Moves the cursor to the bottom left corner of the console
 func (c *Console) MoveCursorToBottomLeft() string {
 	return "\033[" + strconv.Itoa(c.Height) + ";0H"
 }
@@ -436,7 +445,7 @@ func (c *Console) ScrollUnlock() string {
 	return "\033[?1049l"
 }
 
-// ClearTerminal
+// ClearTerminal clears the terminal using the escape sequence
 func (c *Console) ClearTerminal() string {
 	return "\033[2J\n"
 }
@@ -455,18 +464,22 @@ func (c *Console) ClearNotPrompt() string {
 	return s
 }
 
+// SaveCursor saves the cursor position using the escape sequence
 func (c *Console) SaveCursor() string {
 	return "\033[s"
 }
 
+// RestoreCursor restores the cursor position using the escape sequence
 func (c *Console) RestoreCursor() string {
 	return "\033[u"
 }
 
+// HideCursor sets the cursor position using the escape sequence
 func (c *Console) HideCursor() string {
 	return "\033[?25l"
 }
 
+// ShowCursor sets the cursor position using the escape sequence
 func (c *Console) ShowCursor() string {
 	return "\033[?25h"
 }
@@ -483,7 +496,7 @@ func (c *Console) HardClear() string {
 	return s
 }
 
-// ResetTerminal
+// ResetTerminal resets the terminal using the escape sequence
 func (c *Console) ResetTerminal() string {
 	return "\033c"
 }
@@ -549,6 +562,7 @@ func (c *Console) SetActiveWindow(window window.WindowType) {
 	}
 }
 
+// GetActiveWindow returns the current active window
 func (c *Console) GetActiveWindow() window.WindowType {
 	for _, w := range c.Windows {
 		if w.GetActive() {
@@ -558,9 +572,9 @@ func (c *Console) GetActiveWindow() window.WindowType {
 	return nil
 }
 
+// OpenPopup opens a new popup window using the options
 func (c *Console) OpenPopup(options *window.PopupBoxConfig) {
-	//popupBox := NewPopupBox(c.Width/2-40, c.Height/2-10, 80, 20, c.PopupBoxMessages, c.WindowMessages)
-	log.Println(options)
+	//log.Println(options)
 	popupBox := window.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxMessages, c.WindowMessages)
 	popupBox.Init()
 	popupBox.SetContents(options.Content)
@@ -580,7 +594,7 @@ func (c *Console) ClosePopup() {
 			break
 		}
 	}
-	// When we close the popup, our window is all garbage so we're going to force a redraw on everything
+	// When we close the popup, our window is all garbage so, we're going to force a re-draw on everything
 	c.ForceRedraw()
 }
 
@@ -636,7 +650,7 @@ func (c *Console) SetNextActiveWindow() {
 }
 
 func (c *Console) SetPrevActiveWindow() {
-	// Set the active window to the second to last one in the last, because the last one is always
+	// Set the active window to the second to last one in the last, because the last one is
 	// Always the active one
 
 	// If the index is less than 2, then we only have one window in the list
@@ -685,4 +699,10 @@ func (c *Console) HandleResize(newWidth, newHeight int) {
 
 func (c *Console) IsConsoleValidSize() bool {
 	return c.Width > minWidth && c.Height > minHeight
+}
+
+func (c *Console) IsUserLoggedIn() bool {
+	c.mutex.Lock()
+	c.mutex.Unlock()
+	return c.userLoggedIn
 }

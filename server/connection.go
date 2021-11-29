@@ -103,7 +103,8 @@ func (c *Connection) UpdateHandler() {
 	for {
 		if c.console.GetShutdown() {
 			log.Println("Client requested shutdown")
-			c.conn.Write([]byte("Goodbye!\n"))
+			c.conn.Write([]byte("\033[2J"))
+			c.conn.Write([]byte("\033[;H" + "See you back soon! Goodbye :)\r\n"))
 			c.conn.Close()
 			c.manager.HandleDisconnect(c)
 			return
