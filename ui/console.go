@@ -151,8 +151,8 @@ func (c *Console) CaptureWindowMessages() {
 				log.Println("Popup box message: ", consoleMessage.Message)
 				c.HandlePopupMessage(consoleMessage)
 				continue
-			case "helpbox":
-				log.Println("Help box message: ", consoleMessage.Message)
+			case "help":
+				log.Println("Help message: ", consoleMessage.Message)
 				c.HandleHelpMessage(consoleMessage)
 				continue
 			case "error":
@@ -399,7 +399,7 @@ func (c *Console) HandleInput(rawInput byte) {
 		return
 	}
 	if rawInput == '\t' {
-		if !c.IsPopupOpen() && !c.IsHelpOpen() && c.userLoggedIn {
+		if !c.IsPopupOpen() {
 			c.SetNextActiveWindow()
 			for _, w := range c.Windows {
 				w.ResetWindowDrawings()

@@ -96,10 +96,12 @@ type Window struct {
 	StartX int // When window content is rendered, it is a 2D array, so this is the starting X position of the content
 	StartY int // When window content is rendered, it is a 2D array, so this is the starting Y position of the content
 
-	Contents           string // The contents of the window
-	ContentStartPos    int    // The starting position of the content
-	ScrollingSupported bool
-	ScrollBufferHasNew bool // Indicates that the scroll buffer has new content
+	Contents            string // The contents of the window
+	ContentStartPos     int    // The starting position of the content
+	ScrollingSupported  bool
+	ScrollBufferHasNew  bool // Indicates that the scroll buffer has new content
+	ScrollBufferLimit   int  // The maximum number of lines that can be stored in the scroll buffer
+	ScrollBufferCharMod int  // The character limiter of the scroll buffer
 
 	// For Window Paging, only HELPBOX uses this
 	Page int
@@ -383,9 +385,9 @@ func (w *Window) RequestPopupFromConsole(x, y, width, height int, content string
 	w.ConsoleSend <- request.String()
 }
 
-func (w *Window) RequestHelpFromConsole(x, y, width, height int, page types.HelpPage) {
+func (w *Window) RequestHelpFromConsole(page types.HelpPage) {
 	log.Println("Requesting help from console")
-	config := NewWindowConfig(x, y, width, height, "")
+	config := NewWindowConfig(w.ConsoleWidth/2-40, w.ConsoleHeight/2-10, 100, 20, "")
 	log.Println(page)
 	config.Page = page
 	log.Println(config.String())
@@ -483,7 +485,8 @@ func (w *Window) DrawBorder(winX int, winY int) {
 }
 
 func (w *Window) ContentToLines(winX int, winY int, visibleLength int) ([]string, int) {
-	visibleLength = w.Width - 1
+	// Split the content into lines
+	visibleLength = w.Width - 1 - w.ScrollBufferCharMod
 	// maxLength is the maximum length of the window subtracting the border
 	maxLength := visibleLength
 
@@ -532,11 +535,11 @@ func (w *Window) ContentToLines(winX int, winY int, visibleLength int) ([]string
 // Parse contents reads a string one character at a time, placing it within the bounds of the window and returns the string
 func (w *Window) DrawContents(winX int, winY int) {
 	visibleLength := w.Width - 1
-	visibleHeight := w.Height - 1
+	visibleHeight := w.Height - 1 - w.ScrollBufferLimit
 	// maxHeight is the maximum height of the window subtracting the border
 	maxHeight := visibleHeight
 	lines, _ := w.ContentToLines(winX, winY, visibleLength)
-	currentLine := winY + 1
+	currentLine := winY + 1 + w.StartY // We use this for scrolling windows that want a little buffer at top
 
 	if len(lines) > maxHeight {
 		if w.ScrollingSupported {
@@ -586,7 +589,7 @@ func (w *Window) DrawContents(winX int, winY int) {
 		// Draw our arrows last
 		if len(lines)-maxHeight+contentStartPos-1 > 0 {
 			// draw an up arrow in grey
-			w.PrintChar(winX+visibleLength, winY+1, "\u2191", "\033[37m")
+			w.PrintChar(winX+visibleLength, winY+1+w.StartY, "\u2191", "\033[37m")
 		}
 		if len(lines)-maxHeight+contentStartPos-1 < len(lines)-maxHeight-1 {
 			if w.ScrollBufferHasNew {

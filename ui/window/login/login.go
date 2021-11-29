@@ -193,7 +193,7 @@ func (lw *LoginWindow) handleLoginInput(input string) {
 		return
 	}
 
-	input = strings.ToLower(input[:1])
+	//input = strings.ToLower(input[:1])
 
 	switch lw.loginState {
 	case LoginUsername:
@@ -224,17 +224,16 @@ func (lw *LoginWindow) handleRegistrationInput(input types.Input) {
 			switch input.Data {
 			case "b":
 				log.Println("Opening controls help page")
-				lw.RequestHelpFromConsole(lw.ConsoleWidth/2-40, lw.ConsoleHeight/2-10, 100, 20, types.HelpPageControls)
+				lw.RequestHelpFromConsole(types.HelpPageControls)
 				return
 			case "d":
 				log.Println("Opening death help page")
-				lw.RequestHelpFromConsole(lw.ConsoleWidth/2-40, lw.ConsoleHeight/2-10, 100, 20, types.HelpPageRules)
+				lw.RequestHelpFromConsole(types.HelpPageRules)
 				return
 			case "r":
 				log.Println("Opening rules help page")
-				lw.RequestHelpFromConsole(lw.ConsoleWidth/2-40, lw.ConsoleHeight/2-10, 100, 20, types.HelpPageRules)
+				lw.RequestHelpFromConsole(types.HelpPageRules)
 				return
-
 			default:
 				lw.Error("Invalid input received")
 				return

@@ -4,10 +4,31 @@ type HelpPage int
 
 const (
 	HelpPageMain HelpPage = iota
-	HelpPageRules
-	HelpPageDeath
-	HelpPageControls
-	HelpPageCredits
 	HelpPageAbout
+	HelpPageCredits
+	HelpPageRules
+	HelpPageControls
+	HelpPageDeath
 	HelpPageIndex
 )
+
+func (hp HelpPage) String() string {
+	switch hp {
+	case HelpPageMain:
+		return "main"
+	case HelpPageRules:
+		return "rules"
+	case HelpPageDeath:
+		return "death"
+	case HelpPageControls:
+		return "controls"
+	case HelpPageCredits:
+		return "credits"
+	case HelpPageAbout:
+		return "about"
+	case HelpPageIndex:
+		return "index"
+	default:
+		return "unknown"
+	}
+}
