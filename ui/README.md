@@ -15,5 +15,6 @@ There are two types of drawing mechanisms.
 
     - You can write to the window content, and it will be drawn as is. This accepts string input.
     - You can draw to the PointMap, and it will be drawn to the grid of points. 
-    - DO NOT mix the two, or your content will be overwritten.
-    - Drawing to the PointMap has no bounds checking, so you must ensure that you are drawing to the correct area.
+    - DO NOT mix the two, or your content will be overwritten. (Deprecated, this is now possible again)
+    - Drawing to the PointMap has no bounds checking, so you must ensure that you are drawing to the correct area. (Again, deprecated)
+
