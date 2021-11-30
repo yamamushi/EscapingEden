@@ -26,7 +26,11 @@ type HelpWindow struct {
 	// Threading stuff if we need it
 	hwMutex           sync.Mutex
 	scrollInitialized bool
-	indexPage         int
+
+	indexMutex              sync.Mutex
+	indexPage               int
+	IndexPageNames          IndexPageNames
+	currentIndexRowSelected int
 }
 
 // NewHelpWindow creates a new help window.
@@ -136,4 +140,9 @@ func (hw *HelpWindow) LoadPage(page types.HelpPage) {
 		}
 	}
 	return
+}
+
+func (hw *HelpWindow) HandleStateChange() {
+	hw.ResetWindowDrawings()
+	hw.ForceConsoleRefresh()
 }

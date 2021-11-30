@@ -15,8 +15,7 @@ func (c *Console) OpenPopup(options *config.WindowConfig) {
 	c.LastActiveWindow = c.GetActiveWindow() // Save the last active window
 	c.AddWindow(popupBox)                    // Add the popup to the list of windows
 	c.SetActiveWindow(popupBox)              // Set the popup as the active window
-	//popupBox.FlushLastSent()
-	popupBox.FlushLastSent()
+	c.ForceRedraw()
 }
 
 // ClosePopup closes the popup window

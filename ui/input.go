@@ -83,12 +83,14 @@ func (c *Console) HandleInput(rawInput byte) {
 		c.InputToActiveWindow(types.Input{Type: types.InputBackspace})
 		return
 	}
+	// return character
 	if rawInput == '\r' {
 		c.InputToActiveWindow(types.Input{Type: types.InputReturn})
 		return
 	}
+	// tab character input, tab input
 	if rawInput == '\t' {
-		if !c.IsPopupOpen() && !c.IsHelpOpen() {
+		if !c.IsPopupOpen() && !c.IsHelpOpen() && c.userLoggedIn {
 			c.SetActiveWindowNoThread(c.Windows[0])
 			for _, w := range c.Windows {
 				w.ResetWindowDrawings()

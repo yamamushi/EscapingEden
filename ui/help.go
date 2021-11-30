@@ -15,8 +15,7 @@ func (c *Console) ToggleHelp(options *config.WindowConfig) {
 		c.LastActiveWindow = c.GetActiveWindow() // Save the last active window
 		c.AddWindow(helpWindow)                  // Add the popup to the list of windows
 		c.SetActiveWindow(helpWindow)            // Set the popup as the active window
-		//popupBox.FlushLastSent()
-		helpWindow.FlushLastSent()
+		c.ForceRedraw()
 	} else {
 		c.CloseHelp()
 	}

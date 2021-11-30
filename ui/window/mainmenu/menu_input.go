@@ -13,6 +13,9 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 	if !lw.GetActive() {
 		return
 	}
+	if len(input) == 0 {
+		return
+	}
 	input = strings.ToLower(input)
 
 	input = input[:1]
