@@ -1,0 +1,43 @@
+package login
+
+import (
+	"log"
+	"strings"
+)
+
+// handleMenuInput handles input for the login window
+func (lw *LoginWindow) handleMenuInput(input string) {
+	lw.lwMutex.Lock()
+	defer lw.lwMutex.Unlock()
+
+	if !lw.GetActive() {
+		return
+	}
+	input = strings.ToLower(input)
+
+	input = input[:1]
+
+	switch input {
+	case "l":
+		log.Println("Login selected")
+		lw.windowState = LoginWindowLogin
+		lw.loginState = LoginUsername
+		//lw.ResetWindowDrawings()
+		lw.ForceConsoleRefresh()
+		return
+	case "r":
+		log.Println("Register selected")
+		lw.windowState = LoginWindowRegister
+		lw.registrationState = RegistrationMain
+		//lw.ResetWindowDrawings()
+		lw.ForceConsoleRefresh()
+		return
+	case "q":
+		log.Println("Quit selected")
+		lw.Quit()
+		return
+	default:
+		lw.Error("Invalid input received")
+		return
+	}
+}

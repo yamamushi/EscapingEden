@@ -37,6 +37,7 @@ func NewConnection(conn net.Conn, id string, manager *ConnectionManager) *Connec
 	return connection
 }
 
+// Write writes a byte to the connection
 func (c *Connection) Write(msg []byte) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -49,7 +50,7 @@ func (c *Connection) Write(msg []byte) error {
 	return nil
 }
 
-// handleConnection handles a single connection
+// Handle handles a single connection
 func (c *Connection) Handle() {
 	/*
 		We need to setup the session, and to do that we need to do some communication with the client.
@@ -119,6 +120,7 @@ func (c *Connection) Handle() {
 	log.Println("Connection successfully created for:", c.ID)
 }
 
+// ReadHandler is launched as a goroutine that handles reading bytes from the connection
 func (c *Connection) ReadHandler() {
 	// Enter our client loop
 	reader := bufio.NewReader(c.conn)
@@ -144,6 +146,8 @@ func (c *Connection) ReadHandler() {
 	}
 }
 
+// WriteHandler is launched as a goroutine that handles writing bytes to the connection
+// It is constantly pulling messages from the console and writing them to the connection
 func (c *Connection) WriteHandler() {
 	for {
 		if c.console.GetShutdown() {
@@ -168,6 +172,7 @@ func (c *Connection) WriteHandler() {
 	}
 }
 
+// HandleIAC handles IAC codes
 func (c *Connection) HandleIAC(readByte byte) {
 	log.Println("Byte: ", readByte)
 

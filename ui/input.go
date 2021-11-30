@@ -89,7 +89,7 @@ func (c *Console) HandleInput(rawInput byte) {
 	}
 	if rawInput == '\t' {
 		if !c.IsPopupOpen() && !c.IsHelpOpen() {
-			c.SetNextActiveWindow()
+			c.SetActiveWindowNoThread(c.Windows[0])
 			for _, w := range c.Windows {
 				w.ResetWindowDrawings()
 				w.FlushLastSent()

@@ -13,6 +13,7 @@ import (
 // [u - restore cursor position - discarded
 // [*m - Colors
 
+// AsciiArtFile stores various details about the contents of a loaded art file
 type AsciiArtFile struct {
 	Filename string
 	Data     types.PointMap
@@ -20,6 +21,7 @@ type AsciiArtFile struct {
 	Width    int
 }
 
+// OpenAsciiArtFile opens an art file and returns a pointer to an AsciiArtFile struct
 func OpenASCIIArtFile(filename string) (*AsciiArtFile, error) {
 	// Opens the file at filename
 	// Returns the contents of the file as a string

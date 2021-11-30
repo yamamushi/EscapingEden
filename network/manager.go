@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-// Manager synchronizes connection output globally
+// ConnectionManager synchronizes connection output globally
 type ConnectionManager struct {
 	// Mutex for locking
 	mutex         sync.Mutex
@@ -18,6 +18,7 @@ type ConnectionManager struct {
 	CMReceiveMessages chan string
 }
 
+// NewConnectionManager creates a new ConnectionManager
 func NewConnectionManager(connectionMap *sync.Map, startedNotify chan bool) *ConnectionManager {
 
 	return &ConnectionManager{
@@ -26,25 +27,26 @@ func NewConnectionManager(connectionMap *sync.Map, startedNotify chan bool) *Con
 	}
 }
 
-// Adds a connection to the manager
+// AddConnection adds a connection to the manager
 func (cm *ConnectionManager) AddConnection(connection *Connection) {
 	cm.mutex.Lock()
 	defer cm.mutex.Unlock()
 	cm.connectionMap.Store(connection.ID, connection)
 }
 
-// Handle Disconnects
+// HandleDisconnect handles disconnect events
 func (cm *ConnectionManager) HandleDisconnect(connection *Connection) {
 	cm.mutex.Lock()
 	defer cm.mutex.Unlock()
 	cm.connectionMap.Delete(connection.ID)
 }
 
+// Run launches the message parser handler
 func (cm *ConnectionManager) Run() {
 	go cm.MessageParser() // Launch our goroutine that listens for incoming messages
 }
 
-// Non blocking check for messages
+// MessageParser performs a non-blocking check for messages on cm.CMReceiveMessages
 func (cm *ConnectionManager) MessageParser() {
 	log.Println("ConnectionManager is now listening for incoming messages")
 	cm.startedNotify <- true

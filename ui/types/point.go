@@ -2,14 +2,17 @@ package types
 
 import "strconv"
 
+// Point is a 2D point.
 type Point struct {
 	X, Y       int
 	EscapeCode string
 	Character  string
 }
 
+// PointMap is a map of points.
 type PointMap [][]Point
 
+// Print prints a point as an escaped string.
 func (p *Point) Print() string {
 	var output string
 	// Move cursor to X Y
@@ -26,16 +29,7 @@ func (p *Point) Print() string {
 	return output
 }
 
-func PointMapToString(pm PointMap) string {
-	var s string
-	for _, row := range pm {
-		for _, p := range row {
-			s += p.Print()
-		}
-	}
-	return s
-}
-
+// NewPointMap creates a new PointMap.
 func NewPointMap(width, height int) PointMap {
 	pm := make([][]Point, width+1)
 	for i := range pm {

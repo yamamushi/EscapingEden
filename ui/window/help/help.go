@@ -15,6 +15,8 @@ import (
 
 // While a normal popupbox only has controls to close the window (return), the help screen
 // It is able to navigate the help pages, which are defined here as consts.
+
+// HelpWindow is a window that displays help pages.
 type HelpWindow struct {
 	window.Window
 
@@ -27,6 +29,7 @@ type HelpWindow struct {
 	indexPage         int
 }
 
+// NewHelpWindow creates a new help window.
 func NewHelpWindow(x, y, w, h, consoleWidth, consoleHeight int, page types.HelpPage, input, output chan string) *HelpWindow {
 	hw := &HelpWindow{}
 	hw.ID = config.WindowHelpBox
@@ -67,30 +70,15 @@ func NewHelpWindow(x, y, w, h, consoleWidth, consoleHeight int, page types.HelpP
 	return hw
 }
 
+// UpdateContents updates the contents of the window.
+// This method
 func (hw *HelpWindow) UpdateContents() {
 	hw.hwMutex.Lock()
 	defer hw.hwMutex.Unlock()
-
-	switch hw.HelpPage {
-	case types.HelpPageMain:
-		hw.LoadPage(types.HelpPageMain)
-	case types.HelpPageRules:
-		hw.LoadPage(types.HelpPageRules)
-	case types.HelpPageDeath:
-		hw.LoadPage(types.HelpPageDeath)
-	case types.HelpPageAbout:
-		hw.LoadPage(types.HelpPageAbout)
-	case types.HelpPageControls:
-		hw.LoadPage(types.HelpPageControls)
-	case types.HelpPageCredits:
-		hw.LoadPage(types.HelpPageCredits)
-	case types.HelpPageIndex:
-		hw.LoadPage(types.HelpPageIndex)
-	default:
-		hw.LoadPage(types.HelpPageMain)
-	}
+	hw.LoadPage(hw.HelpPage)
 }
 
+// PrintPageInfo prints the title page info to the top field of the Help window
 func (hw *HelpWindow) PrintPageInfo(page types.HelpPage) {
 	// Top Field
 	windowTitle := "Escaping Eden Help"

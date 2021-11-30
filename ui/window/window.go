@@ -17,7 +17,6 @@ type WindowType interface {
 	UpdateContents()
 	SetContents(string)
 	PrintLn(X, Y int, text string, escapeCode string)
-	PointMapToString() string
 	GetPointMap() types.PointMap
 	FlushLastSent()
 	ResetWindowDrawings()

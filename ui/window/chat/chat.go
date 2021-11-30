@@ -13,6 +13,7 @@ import (
 
 // Implements a Chat Window
 
+// ChatWindow is a chat window
 type ChatWindow struct {
 	window.Window
 	History       []string
@@ -21,6 +22,7 @@ type ChatWindow struct {
 	cwInputBuffer string
 }
 
+// NewChatWindow creates a new chat window
 func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *ChatWindow {
 	cw := new(ChatWindow)
 	cw.ID = config.WindowChatBox
@@ -66,6 +68,7 @@ func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output ch
 	return cw
 }
 
+// HandleInput handles for the chat window
 func (cw *ChatWindow) HandleInput(input types.Input) {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
@@ -134,7 +137,7 @@ func (cw *ChatWindow) ConsoleMessage(message string) {
 	cw.History = append(cw.History, message)
 }
 
-// Listens for any messages on cw.ReceiveMessages Chan and handles them
+// Listen listens for any messages on cw.ReceiveMessages Chan and handles them
 func (cw *ChatWindow) Listen() {
 	for {
 		select {
@@ -165,6 +168,7 @@ func (cw *ChatWindow) Listen() {
 	}
 }
 
+// UpdateContents updates the contents of the chat window
 func (cw *ChatWindow) UpdateContents() {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()

@@ -5,6 +5,8 @@ import (
 	"github.com/yamamushi/EscapingEden/ui/types"
 )
 
+// WindowID is the ID type of the window
+// Only one window of any given ID type can exist in the console
 type WindowID int
 
 // These are used as WindowID's for tracking drawing and other behavior.
@@ -18,6 +20,7 @@ const (
 	WindowPopupBox
 )
 
+// String returns the string representation of the WindowID
 func (w WindowID) String() string {
 	switch w {
 	case WindowDebugBox:
@@ -37,6 +40,7 @@ func (w WindowID) String() string {
 	}
 }
 
+// WindowConfig is the configuration for a window
 type WindowConfig struct {
 	X       int
 	Y       int
@@ -46,10 +50,12 @@ type WindowConfig struct {
 	Page    types.HelpPage
 }
 
+// NewWindowConfig creates a new WindowConfig
 func NewWindowConfig(x, y, width, height int, content string) *WindowConfig {
 	return &WindowConfig{X: x, Y: y, Width: width, Height: height, Content: content}
 }
 
+// String returns the string representation of the WindowConfig
 func (c *WindowConfig) String() string {
 	output, _ := json.Marshal(c)
 	return string(output)

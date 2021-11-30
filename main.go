@@ -19,10 +19,12 @@ import (
 const EscapingEdenVersion = "0.0.1"
 
 // Variables used for command line parameters
+
 var (
 	ConfPath string
 )
 
+// init is called before main()
 func init() {
 	// Read our command line options
 	flag.StringVar(&ConfPath, "c", "server.conf", "Path to Config File")
@@ -36,6 +38,7 @@ func init() {
 	}
 }
 
+// main is the entry point for Escaping Eden
 func main() {
 	log.Println("Preparing to launch Escaping Eden v" + EscapingEdenVersion)
 

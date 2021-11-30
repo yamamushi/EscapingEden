@@ -93,6 +93,7 @@ func (c *Console) UpdateWindow(window window.WindowType) {
 	window.DrawBorder(winX, winY)
 }
 
+// GenerateScreenFromPointMap generates the screen from the point map
 func (c *Console) GenerateScreenFromPointMap() string {
 	for _, target := range c.Windows {
 		c.FlushWindowArea(target.GetID())
@@ -107,6 +108,7 @@ func (c *Console) GenerateScreenFromPointMap() string {
 	return c.PrintPointMap()
 }
 
+// ClearPointMap clears the point map
 func (c *Console) ClearPointMap() {
 	// First clear the console before we redraw it
 	for i := 0; i < c.Height+1; i++ {
@@ -119,6 +121,7 @@ func (c *Console) ClearPointMap() {
 	}
 }
 
+// FlushLastSent flushes the last sent output
 func (c *Console) FlushLastSent() {
 	c.pmapMutex.Lock()
 	defer c.pmapMutex.Unlock()
@@ -126,12 +129,14 @@ func (c *Console) FlushLastSent() {
 	c.LastSentPointMap = types.NewPointMap(c.Width, c.Height)
 }
 
+// ResetWindowDrawings resets the pointmap
 func (c *Console) ResetWindowDrawings() {
 	log.Println("console reset called")
 	c.FlushLastSent()
 	c.ClearPointMap()
 }
 
+// PrintLn prints a line of text to the pointmap
 func (c *Console) PrintLn(X int, Y int, text string, escapeCode string) {
 	c.pmapMutex.Lock()
 	defer c.pmapMutex.Unlock()
@@ -148,6 +153,7 @@ func (c *Console) PrintLn(X int, Y int, text string, escapeCode string) {
 	}
 }
 
+// PrintChar prints a character to the pointmap
 func (c *Console) PrintChar(X int, Y int, text string, escapeCode string) {
 	c.pmapMutex.Lock()
 	defer c.pmapMutex.Unlock()
@@ -160,6 +166,7 @@ func (c *Console) PrintChar(X int, Y int, text string, escapeCode string) {
 	c.PointMap[X][Y] = types.Point{X: X, Y: Y, Character: text, EscapeCode: escapeCode}
 }
 
+// GetHoveredWindowConfig gets the config of the hovered window
 func (c *Console) GetHoveredWindowConfig() *config.WindowConfig {
 	var hoveredWindowConfig *config.WindowConfig
 	if c.IsHelpOpen() {
@@ -220,16 +227,7 @@ func (c *Console) FlushWindowArea(winID config.WindowID) {
 	}
 }
 
-func (c *Console) MergeLastSentPointMap() {
-	c.pmapMutex.Lock()
-	defer c.pmapMutex.Unlock()
-	for i := 0; i < c.Height+1; i++ {
-		for j := 0; j < c.Width; j++ {
-			c.LastSentPointMap[i][j] = c.PointMap[j][i]
-		}
-	}
-}
-
+// AddToPointMap adds a window's pointmap to the console's PointMap
 func (c *Console) AddToPointMap(input types.PointMap, inputConfig *config.WindowConfig, windowID config.WindowID) {
 	c.pmapMutex.Lock()
 	defer c.pmapMutex.Unlock()
@@ -253,6 +251,9 @@ func (c *Console) AddToPointMap(input types.PointMap, inputConfig *config.Window
 	}
 }
 
+// PrintPointMap prints the points to the console of the content that has changed.
+// Only new content should ever be leaving this function. If we see the length of output increase
+// Dramatically, this is a good place to start debugging from.
 func (c *Console) PrintPointMap() string {
 	c.pmapMutex.Lock()
 	defer c.pmapMutex.Unlock()

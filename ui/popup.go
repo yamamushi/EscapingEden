@@ -19,6 +19,7 @@ func (c *Console) OpenPopup(options *config.WindowConfig) {
 	popupBox.FlushLastSent()
 }
 
+// ClosePopup closes the popup window
 func (c *Console) ClosePopup() {
 	// Loop through windows and remove the popup
 	for _, w := range c.Windows {
@@ -32,6 +33,7 @@ func (c *Console) ClosePopup() {
 	c.ForceRedraw()
 }
 
+// HandlePopupMessage handles the messages sent to the popup window
 func (c *Console) HandlePopupMessage(message *types.ConsoleMessage) {
 	switch message.Message {
 	case "close":
@@ -39,6 +41,7 @@ func (c *Console) HandlePopupMessage(message *types.ConsoleMessage) {
 	}
 }
 
+// IsPopupOpen returns true if a popup window is open
 func (c *Console) IsPopupOpen() bool {
 	for _, w := range c.Windows {
 		if w.GetID() == config.WindowPopupBox {
@@ -48,6 +51,7 @@ func (c *Console) IsPopupOpen() bool {
 	return false
 }
 
+// GetPopupWindowConfig returns the config of the popup window
 func (c *Console) GetPopupWindowConfig() *config.WindowConfig {
 	for _, w := range c.Windows {
 		if w.GetID() == config.WindowPopupBox {

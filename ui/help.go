@@ -36,6 +36,7 @@ func (c *Console) CloseHelp() {
 	c.ForceRedraw()
 }
 
+// HandleHelpMessage handles messages for the help window
 func (c *Console) HandleHelpMessage(message *types.ConsoleMessage) {
 	switch message.Message {
 	case "close":
@@ -43,6 +44,7 @@ func (c *Console) HandleHelpMessage(message *types.ConsoleMessage) {
 	}
 }
 
+// IsHelpOpen returns true if the help window is open
 func (c *Console) IsHelpOpen() bool {
 	for _, w := range c.Windows {
 		if w.GetID() == config.WindowHelpBox {
@@ -52,6 +54,7 @@ func (c *Console) IsHelpOpen() bool {
 	return false
 }
 
+// GetHelpWindowConfig returns the help window config
 func (c *Console) GetHelpWindowConfig() *config.WindowConfig {
 	for _, w := range c.Windows {
 		if w.GetID() == config.WindowHelpBox {

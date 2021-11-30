@@ -10,11 +10,13 @@ import (
 	"time"
 )
 
+// ToolboxWindow is a window that contains a toolbox for misc use
 type ToolboxWindow struct {
 	window.Window
 	twMutex sync.Mutex
 }
 
+// NewToolboxWindow creates a new toolbox window
 func NewToolboxWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *ToolboxWindow {
 	lw := &ToolboxWindow{}
 	lw.ID = config.WindowToolBox
@@ -46,6 +48,7 @@ func NewToolboxWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output
 	return lw
 }
 
+// HandleInput handles input for the toolbox window
 func (tw *ToolboxWindow) HandleInput(input types.Input) {
 	tw.twMutex.Lock()
 	defer tw.twMutex.Unlock()
@@ -59,6 +62,7 @@ func (tw *ToolboxWindow) HandleInput(input types.Input) {
 	}
 }
 
+// UpdateContents updates the contents of the toolbox window
 func (tw *ToolboxWindow) UpdateContents() {
 	tw.twMutex.Lock()
 	defer tw.twMutex.Unlock()

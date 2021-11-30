@@ -33,6 +33,7 @@ const (
 	EdenMonthEquius
 )
 
+// String returns a string representation of the EdenMonth.
 func (em EdenMonth) String() string {
 	switch em {
 	case EdenMonthCapris:
@@ -95,6 +96,7 @@ const (
 	EdenDayBedu
 )
 
+// String returns a string representation of the EdenDay.
 func (ed EdenDay) String() string {
 	switch ed {
 	case EdenDaySandu:

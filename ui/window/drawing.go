@@ -11,7 +11,7 @@ func (w *Window) Draw(X int, Y int) {
 	w.DrawContents(X, Y)
 }
 
-// Parse contents reads a string one character at a time, placing it within the bounds of the window and returns the string
+// DrawContents reads a string one character at a time, placing it within the bounds of the window and returns the string
 func (w *Window) DrawContents(winX int, winY int) {
 	visibleLength := w.Width - 1
 	visibleHeight := w.Height - 1 - w.ScrollBufferLimit
@@ -108,6 +108,8 @@ func (w *Window) DrawContents(winX int, winY int) {
 	}
 }
 
+// ContentToLines converts w.Content into lines that fit into the window size.
+// It is an extremely important internal function.
 func (w *Window) ContentToLines(winX int, winY int, visibleLength int) ([]string, int) {
 	// Split the content into lines
 	visibleLength = w.Width - 1 - w.ScrollBufferCharMod

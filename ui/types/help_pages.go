@@ -1,6 +1,9 @@
 package types
 
+// HelpPage is a help page enum
 type HelpPage int
+
+// A list of our help pages
 
 const (
 	HelpPageMain HelpPage = iota
@@ -12,6 +15,7 @@ const (
 	HelpPageIndex
 )
 
+// String returns the string representation of a HelpPage
 func (hp HelpPage) String() string {
 	switch hp {
 	case HelpPageMain:

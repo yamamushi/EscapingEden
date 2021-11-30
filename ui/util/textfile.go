@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// OpenFileAsText opens a file as a string
 func OpenFileAsText(filename string) (string, error) {
 	file, err := os.Open(filename)
 	if err != nil {

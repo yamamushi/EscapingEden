@@ -1,12 +1,13 @@
 package help
 
-// DrawIndex is a wrapper around the functions necessary to draw the current index page
+// DrawHome is a wrapper around the functions necessary to draw the home screen of the Help Window.
 func (hw *HelpWindow) DrawHome() {
 	//hw.SetContents(strconv.Itoa(hw.indexPage))
 	hw.DrawHomeInfo()
 	hw.PrintControls()
 }
 
+// DrawHomeInfo draws the content for the top of field of the Help Window on the home screen.
 func (hw *HelpWindow) DrawHomeInfo() {
 	// Top Field
 	windowTitle := "Escaping Eden Help"

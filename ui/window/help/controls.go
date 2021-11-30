@@ -5,6 +5,7 @@ import (
 	"log"
 )
 
+// HandleInput handles input events for HelpWindow.
 func (hw *HelpWindow) HandleInput(input types.Input) {
 	hw.hwMutex.Lock()
 	defer hw.hwMutex.Unlock()

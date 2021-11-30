@@ -7,6 +7,7 @@ import (
 	"log"
 )
 
+// ForceRedrawOn forces redrawing of the given window.
 func (c *Console) ForceRedrawOn(windowType config.WindowID) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -20,25 +21,18 @@ func (c *Console) ForceRedrawOn(windowType config.WindowID) {
 	//c.forceScreenRefresh = true
 }
 
+// SetNextActiveWindow sets the next active window.
+// This is used to switch between windows, and is thread safe
 func (c *Console) SetNextActiveWindow() {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	// Set the active window to the first one in the list, because we know the last one is
 	// Always the active one
 	c.SetActiveWindowNoThread(c.Windows[0])
 }
 
-func (c *Console) SetPrevActiveWindow() {
-	// Set the active window to the second to last one in the last, because the last one is
-	// Always the active one
-
-	// If the index is less than 2, then we only have one window in the list
-	// In which case we don't want to do anything
-	if len(c.Windows) < 2 {
-		return
-	}
-	c.SetActiveWindowNoThread(c.Windows[len(c.Windows)-2])
-}
-
 // SetActiveWindowNoThread sets the active window and sets all other windows to inactive without locking
+// This is not thread safe!
 func (c *Console) SetActiveWindowNoThread(window window.WindowType) {
 	for i, w := range c.Windows {
 		if w.GetID() == window.GetID() {
@@ -110,6 +104,7 @@ func (c *Console) RemoveWindow(id config.WindowID) {
 	}
 }
 
+// GetAllButActiveWindow returns all windows except the active window
 func (c *Console) GetAllButActiveWindow() (inactive []window.WindowType) {
 	for _, win := range c.Windows {
 		if !win.GetActive() {

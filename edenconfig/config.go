@@ -5,6 +5,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+// Config is the main configuration struct
 type Config struct {
 	Server serverConfig `toml:"server"`
 	DB     dbConfig     `toml:"database"`

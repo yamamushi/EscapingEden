@@ -2,6 +2,7 @@ package help
 
 import "github.com/yamamushi/EscapingEden/ui/types"
 
+// PrintControls prints the default controls for the Help window.
 func (hw *HelpWindow) PrintControls() {
 	// Bottom Field
 	separator := " | "

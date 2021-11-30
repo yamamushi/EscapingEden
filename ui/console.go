@@ -5,7 +5,7 @@ import (
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"github.com/yamamushi/EscapingEden/ui/window/chat"
-	"github.com/yamamushi/EscapingEden/ui/window/login"
+	"github.com/yamamushi/EscapingEden/ui/window/mainmenu"
 	"github.com/yamamushi/EscapingEden/ui/window/toolbox"
 	"log"
 	"sync"
@@ -16,6 +16,7 @@ const (
 	MINHEIGHT = 30
 )
 
+// Console is the main UI object.
 type Console struct {
 	ConnectionID string // The ID of the connection using this console
 	Height       int    // The height of the console
@@ -162,6 +163,7 @@ func (c *Console) GetWindowAttrs(window window.WindowType) (X int, Y int, visibl
 	return window.GetX(), window.GetY(), visibleLength, visibleHeight
 }
 
+// ForceRedraw forces a redraw of the console.
 func (c *Console) ForceRedraw() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -174,6 +176,8 @@ func (c *Console) ForceRedraw() {
 	c.forceScreenRefresh = true
 }
 
+// AbortSend tells the console to abort sending the last content it has in its buffer.
+// We do this when we flush the console to avoid sending duplicate content.
 func (c *Console) AbortSend() {
 	c.abortSync.Lock()
 	defer c.abortSync.Unlock()
@@ -211,6 +215,7 @@ func (c *Console) IsConsoleValidSize() bool {
 	return c.Width > MINWIDTH && c.Height > MINHEIGHT
 }
 
+// IsUserLoggedIn returns whether or not the user is logged in
 func (c *Console) IsUserLoggedIn() bool {
 	c.mutex.Lock()
 	c.mutex.Unlock()

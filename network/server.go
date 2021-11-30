@@ -11,6 +11,7 @@ import (
 Server manages connections
 */
 
+// Server manages new connections
 type Server struct {
 	Host string
 	Port string
@@ -42,6 +43,7 @@ func (s *Server) Start(startedNotify chan bool) error {
 	return nil
 }
 
+// Listen listens for new connections and adds them to the connection manager
 func (s *Server) Listen(l net.Listener) {
 	defer l.Close()
 	for {
