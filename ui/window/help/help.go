@@ -8,7 +8,6 @@ import (
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/util"
 	"github.com/yamamushi/EscapingEden/ui/window"
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -100,12 +99,20 @@ func (hw *HelpWindow) PrintPageInfo(page types.HelpPage) {
 	hw.PrintLn(hw.X+hw.Width-len(pageInfo)-1, hw.Y+1, pageInfo, "")
 }
 
+// LoadPage takes a types.HelpPage and loads the corresponding help page into the window.
 func (hw *HelpWindow) LoadPage(page types.HelpPage) {
 	if page == types.HelpPageIndex {
-		log.Println("Help Window Loading page index")
+		//log.Println("Help Window Loading index page")
 		hw.DrawIndex()
 		return
 	}
+	if page == types.HelpPageMain {
+		//log.Println("Help Window Loading main page")
+		hw.DrawHome()
+		return
+	}
+
+	// If we're not on the Index or the Main page, we need to load some content :D
 	// Prints our top field content
 	hw.PrintPageInfo(page)
 
@@ -113,9 +120,10 @@ func (hw *HelpWindow) LoadPage(page types.HelpPage) {
 	hw.PrintControls()
 
 	// We load the text file for the help page
-	content, err := util.OpenFileAsText("assets/text/" + page.String() + ".txt")
+	content, err := util.OpenFileAsText("assets/text/help/" + page.String() + ".txt")
 	if err != nil {
-		hw.Error("Error opening file:" + err.Error())
+		//hw.Error("Error opening file:" + err.Error())
+
 		return
 	}
 	// Now we set the content accordingly

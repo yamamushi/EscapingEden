@@ -67,6 +67,12 @@ func (w *Window) IsPointBlank(X, Y int) bool {
 	}
 }
 
+func (w *Window) GetPointMap() types.PointMap {
+	w.pmapMutex.Lock()
+	defer w.pmapMutex.Unlock()
+	return w.pointMap
+}
+
 func (w *Window) PointMapToString() string {
 	w.pmapMutex.Lock()
 	defer w.pmapMutex.Unlock()
@@ -144,7 +150,7 @@ func (w *Window) FlushLastSent() {
 }
 
 func (w *Window) ResetWindowDrawings() {
+	w.ClearMap(w.X, w.Y, w.Width, w.Height, 0, 0)
 	w.FlushLastSent()
 	w.SetContents("")
-	w.ClearMap(w.X, w.Y, w.Width, w.Height, 0, 0)
 }

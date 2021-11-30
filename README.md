@@ -9,7 +9,9 @@ It implements a unique xterm-256 based UI over telnet, and as such, supported te
   * [Introduction](#introduction)
   * [About](#about)
   * [Roadmap](#roadmap)
+  * [Connecting](#connecting)
   * [Building](#building)
+  * [Running](#running)
   * [Contributing](#contributing)
   * [License](#license)
 
@@ -55,7 +57,54 @@ errors when they occur.
 
 Once I am satisfied with the state of a working UI, I will continue to expand the project to add more gameplay features.
 
+## Connecting
 
+Connect to the server with telnet, using a terminal with type xterm-256color. No other methods of connecting are
+currently supported. There are plans to add other terminal types, and eventually a standalone client, but this is a long
+way off.
+
+By default, the development server launches on port 8080.
+
+```bash
+$ telnet localhost 8080
+```
+
+**Note that the official server runs on port 23 @ world.eden.sh**
+
+### Windows
+
+It may be possible to connect with PuTTY on Windows with the following steps, but results may vary:
+
+`Settings -> Connection > Data > Terminal-type change to xterm-256color`
+
+Assistance with adding putty-256color support would be appreciated!
+
+
+## Building
+
+Building and running the current version of Escaping Eden is relatively straightforward, however as the project matures
+expect the configuration to grow more complex as customization features are added.
+
+```bash
+$ go build . 
+```
+
+## Running
+
+At bare minimum you will need a configuration file with the following options (an example `server.conf.example` is 
+provided in the root directory).
+
+```toml
+[server]
+host = "localhost"
+port = "8080"
+```
+
+After this file has been created, you can reference it while running the server (by default it searches for `server.conf`):
+
+```bash
+$ ./EscapingEden -c example-name.conf 
+```
 
 ## Contributing
 

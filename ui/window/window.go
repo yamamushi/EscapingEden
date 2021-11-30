@@ -12,14 +12,13 @@ type WindowType interface {
 	HandleInput(input types.Input)
 	Init()
 
-	HandleReceive(message types.ConsoleMessage)
-
 	DrawBorder(X, Y int)
 	DrawContents(X, Y int)
 	UpdateContents()
 	SetContents(string)
 	PrintLn(X, Y int, text string, escapeCode string)
 	PointMapToString() string
+	GetPointMap() types.PointMap
 	FlushLastSent()
 	ResetWindowDrawings()
 

@@ -78,11 +78,13 @@ func (cw *ChatWindow) HandleInput(input types.Input) {
 		log.Println("ChatWindow Up")
 		cw.DecreaseContentPos()
 		cw.ResetWindowDrawings()
+		cw.RequestFlushFromConsole()
 		return
 	case types.InputDown:
 		log.Println("ChatWindow Down")
 		cw.IncreaseContentPos()
 		cw.ResetWindowDrawings()
+		cw.RequestFlushFromConsole()
 		return
 	case types.InputLeft:
 		log.Println("ChatWindow Left")
@@ -152,9 +154,9 @@ func (cw *ChatWindow) Listen() {
 				} else {
 					cw.SetScrollBufferNew(false)
 					cw.ResetWindowDrawings()
+					cw.RequestFlushFromConsole()
 				}
-
-				log.Println("content start pos: ", cw.GetContentStartPos())
+				//log.Println("content start pos: ", cw.GetContentStartPos())
 				cw.cwMutex.Unlock()
 			} else {
 				log.Println(err.Error())

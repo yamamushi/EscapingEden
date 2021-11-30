@@ -2,14 +2,14 @@ package help
 
 import "strconv"
 
-func (hw *HelpWindow) DrawIndexInfo() {
-	// Top Field
-	windowTitle := "Escaping Eden Help"
-	pageInfo := "Index  (Page " + strconv.Itoa(hw.indexPage+1) + ")"
-	hw.PrintLn(hw.X+1, hw.Y+1, windowTitle, "\033[1m")
-	hw.PrintLn(hw.X+hw.Width-len(pageInfo)-1, hw.Y+1, pageInfo, "")
+// DrawIndex is a wrapper around the functions necessary to draw the current index page
+func (hw *HelpWindow) DrawIndex() {
+	hw.SetContents(strconv.Itoa(hw.indexPage))
+	hw.DrawIndexInfo()
+	hw.PrintIndexControls()
 }
 
+// PrintIndexControls prints the controls for the help index
 func (hw *HelpWindow) PrintIndexControls() {
 	// Bottom Field
 	separator := " | "
@@ -20,12 +20,12 @@ func (hw *HelpWindow) PrintIndexControls() {
 	var prevDistance, nextDistance int
 
 	if hw.indexPage > 0 {
-		prevCommand = "[ / ]revious"
+		prevCommand = "[ ] Previous"
 		prevDistance = len(homeCommand+separator) + homeDistance
-		nextCommand = "[ / ]ext"
+		nextCommand = "[ ] Next"
 		nextDistance = len(prevCommand+separator) + prevDistance
 	} else {
-		nextCommand = "[ / ]ext"
+		nextCommand = "[ ] Next"
 		nextDistance = len(homeCommand+separator) + homeDistance
 	}
 
@@ -51,18 +51,24 @@ func (hw *HelpWindow) PrintIndexControls() {
 
 	if hw.indexPage > 0 {
 		hw.PrintChar(hw.X+shift+prevDistance, hw.Y+hw.Height, "\u25C4", "\033[1m")
-		hw.PrintChar(hw.X+shift+prevDistance+2, hw.Y+hw.Height, "p", "\033[1m")
+		//hw.PrintChar(hw.X+shift+prevDistance+2, hw.Y+hw.Height, "p", "\033[1m")
 	}
 
 	hw.PrintChar(hw.X+shift+nextDistance, hw.Y+hw.Height, "\u25BA", "\033[1m")
-	hw.PrintChar(hw.X+shift+nextDistance+2, hw.Y+hw.Height, "n", "\033[1m")
+	//hw.PrintChar(hw.X+shift+nextDistance+2, hw.Y+hw.Height, "n", "\033[1m")
 	hw.PrintChar(hw.X+shift+closeDistance, hw.Y+hw.Height, "c", "\033[1m")
 }
 
-func (hw *HelpWindow) DrawIndex() {
-	hw.SetContents(strconv.Itoa(hw.indexPage))
-	hw.DrawIndexInfo()
-	hw.PrintIndexControls()
+// DrawIndexInfo draws the index page scraping from types.HelpPage const types
+func (hw *HelpWindow) DrawIndexInfo() {
+	// Top Field
+	windowTitle := "Escaping Eden Help"
+	var pageInfo string
+	if hw.indexPage > 0 {
+		pageInfo = "Index  (Page " + strconv.Itoa(hw.indexPage) + ")"
+	} else {
+		pageInfo = "Index Main"
+	}
+	hw.PrintLn(hw.X+1, hw.Y+1, windowTitle, "\033[1m")
+	hw.PrintLn(hw.X+hw.Width-len(pageInfo)-1, hw.Y+1, pageInfo, "")
 }
-
-//Need to finish index generation

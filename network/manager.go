@@ -60,7 +60,7 @@ func (cm *ConnectionManager) MessageParser() {
 			if err != nil {
 				continue
 			}
-			log.Println("Message received from manager: ", managerMessage.Message)
+			//log.Println("Message received from manager: ", managerMessage.Message)
 
 			switch managerMessage.Type {
 			case "chat":

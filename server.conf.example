@@ -1,12 +1,12 @@
 # The server config section
 [server]
-host = localhost
-port = 8080
+host = "localhost"
+port = "8080"
 
 # The database config section
 [database]
-host = localhost
-port = 3306
-user = example
-password = example
-dbname = exampleDBName
+host = "localhost"
+port = "3306"
+user = "example"
+password = "example"
+dbname = "exampleDBName"

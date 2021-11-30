@@ -18,6 +18,25 @@ const (
 	WindowPopupBox
 )
 
+func (w WindowID) String() string {
+	switch w {
+	case WindowDebugBox:
+		return "WindowDebugBox"
+	case WindowHelpBox:
+		return "WindowHelpBox"
+	case WindowChatBox:
+		return "WindowChatBox"
+	case WindowLoginMenu:
+		return "WindowLoginMenu"
+	case WindowToolBox:
+		return "WindowToolBox"
+	case WindowPopupBox:
+		return "WindowPopupBox"
+	default:
+		return "WindowID"
+	}
+}
+
 type WindowConfig struct {
 	X       int
 	Y       int

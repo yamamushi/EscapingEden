@@ -142,6 +142,10 @@ func (w *Window) ContentToLines(winX int, winY int, visibleLength int) ([]string
 			lines = append(lines, currentLineOfText)
 			currentLineOfText = ""
 		}
+		if i == len(w.Contents)-1 {
+			currentLineOfText += currentWord
+			lines = append(lines, currentLineOfText)
+		}
 		currentColumn++
 	}
 	return lines, len(lines)
