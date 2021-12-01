@@ -16,8 +16,10 @@ type LoginWindow struct {
 	loginState        LoginState
 	registrationState RegistrationState
 
-	optionSelected     int
-	currentOptionCount int
+	// Vars for registration navigation
+	// These have long names to be as verbose as possible
+	registrationNavOptionSelected      int
+	registrationUserInfoOptionSelected int
 }
 
 // LoginCreds is a struct for storing login credentials
@@ -42,14 +44,6 @@ const (
 	LoginUsername LoginState = iota
 	LoginPassword
 	LoginSubmit
-)
-
-// RegistrationState is an enum for storing registration state
-type RegistrationState int
-
-const (
-	RegistrationMain RegistrationState = iota
-	RegistrationUserInfo
 )
 
 // NewLoginWindow creates a new login window

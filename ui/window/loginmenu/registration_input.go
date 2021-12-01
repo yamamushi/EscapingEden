@@ -45,23 +45,24 @@ func (lw *LoginWindow) handleRegistrationMainInput(input types.Input) {
 		}
 	case types.InputLeft:
 		log.Println("Left arrow pressed")
-		lw.optionSelected = 1
+		lw.registrationNavOptionSelected = 1
 		return
 	case types.InputRight:
 		log.Println("Right arrow pressed")
-		lw.optionSelected = 2
+		lw.registrationNavOptionSelected = 2
 		return
 	case types.InputReturn:
 		log.Println("Return pressed")
-		if lw.optionSelected == 1 {
+		if lw.registrationNavOptionSelected == 1 {
 			lw.windowState = LoginWindowMenu
 		}
-		if lw.optionSelected == 2 {
+		if lw.registrationNavOptionSelected == 2 {
 			lw.registrationState = RegistrationUserInfo
 		}
-		lw.optionSelected = 0
+		lw.registrationNavOptionSelected = 0
 		//lw.ResetWindowDrawings()
-		lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
+		//lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
+		lw.RequestFlushFromConsole()
 		return
 	default:
 		return
@@ -79,24 +80,36 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		}
 	case types.InputLeft:
 		log.Println("Left arrow pressed")
-		lw.optionSelected = 1
+		lw.registrationNavOptionSelected = 1
 	case types.InputRight:
 		log.Println("Right arrow pressed")
-		lw.optionSelected = 2
+		lw.registrationNavOptionSelected = 2
 	case types.InputUp:
 		log.Println("Up arrow pressed")
+		if lw.registrationUserInfoOptionSelected > 0 {
+			lw.registrationUserInfoOptionSelected--
+		}
+		lw.registrationNavOptionSelected = 0
+		lw.RequestFlushFromConsole()
 	case types.InputDown:
 		log.Println("Down arrow pressed")
+		if lw.registrationUserInfoOptionSelected < int(UserInfoNULL-1) {
+			lw.registrationUserInfoOptionSelected++
+		}
+		lw.registrationNavOptionSelected = 0
+		lw.RequestFlushFromConsole()
 	case types.InputReturn:
 		log.Println("Return pressed")
-		if lw.optionSelected == 1 {
+		if lw.registrationNavOptionSelected == 1 {
 			lw.registrationState = RegistrationMain
 		}
-		if lw.optionSelected == 2 {
+		if lw.registrationNavOptionSelected == 2 {
 			log.Println("Unimplemented state")
 		}
-		lw.optionSelected = 0
-		lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
+		lw.registrationNavOptionSelected = 0
+		lw.registrationUserInfoOptionSelected = 0
+		lw.RequestFlushFromConsole()
+		//lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
 
 	}
 }

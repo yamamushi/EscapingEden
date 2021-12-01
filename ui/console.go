@@ -5,7 +5,7 @@ import (
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"github.com/yamamushi/EscapingEden/ui/window/chat"
-	"github.com/yamamushi/EscapingEden/ui/window/mainmenu"
+	"github.com/yamamushi/EscapingEden/ui/window/loginmenu"
 	"github.com/yamamushi/EscapingEden/ui/window/toolbox"
 	"log"
 	"sync"

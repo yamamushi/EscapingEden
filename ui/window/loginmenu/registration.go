@@ -2,6 +2,24 @@ package login
 
 import "github.com/yamamushi/EscapingEden/ui/util"
 
+// RegistrationState is an enum for storing registration state
+type RegistrationState int
+
+const (
+	RegistrationMain RegistrationState = iota
+	RegistrationUserInfo
+)
+
+type RegistrationUserInfoState int
+
+const (
+	UserInfoUsername RegistrationUserInfoState = iota
+	UserInfoPassword
+	UserInfoPasswordConfirm
+	UserInfoEmail
+	UserInfoNULL
+)
+
 // drawRegistrationMenu draws the registration window
 func (lw *LoginWindow) drawRegistrationMenu() {
 	lw.lwMutex.Lock()
@@ -38,14 +56,14 @@ func (lw *LoginWindow) drawRegistrationWelcome() {
 	lw.PrintLn(lw.X+67, lw.Y+lw.Height-2, "<Continue>", "\033[1m")
 	lw.PrintChar(lw.X+45, lw.Y+lw.Height-2, "r", "\033[1m")
 	// Bold the text for the back and continue buttons
-	if lw.optionSelected == 1 {
+	if lw.registrationNavOptionSelected == 1 {
 		fg := util.RGBCode(0, 0, 0)
 		bg := util.RGBCode(255, 255, 255)
 		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", fg.FG()+bg.BG())
 	} else {
 		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", "\033[1m")
 	}
-	if lw.optionSelected == 2 {
+	if lw.registrationNavOptionSelected == 2 {
 		fg := util.RGBCode(0, 0, 0)
 		bg := util.RGBCode(255, 255, 255)
 		lw.PrintLn(lw.X+lw.Width-15, lw.Y+lw.Height, "<Continue>", fg.FG()+bg.BG())
@@ -60,9 +78,8 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	lw.PrintLn(lw.X+4, lw.Y+3, "(You can use your arrow keys to navigate between fields)", "")
 
 	lw.PrintLn(lw.X+12, lw.Y+7, "Username:", "\033[1m")
-	fg := util.RGBCode(0, 255, 0)
 	//bg := util.RGBCode(0, 255, 0)
-	lw.PrintLn(lw.X+21, lw.Y+7, "         ", fg.FG()+"\033[4m")
+	lw.PrintLn(lw.X+21, lw.Y+7, "         ", "\033[4m")
 
 	lw.PrintLn(lw.X+12, lw.Y+8, "Password:", "\033[1m")
 	lw.PrintLn(lw.X+21, lw.Y+8, "         ", "\033[4m")
@@ -73,12 +90,16 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	lw.PrintLn(lw.X+15, lw.Y+10, "Email:", "\033[1m")
 	lw.PrintLn(lw.X+21, lw.Y+10, "         ", "\033[4m")
 
-	lw.PrintLn(lw.X+13, lw.Y+11, "Discord:", "\033[1m")
-	lw.PrintLn(lw.X+21, lw.Y+11, "         ", "\033[4m")
+	//lw.PrintLn(lw.X+13, lw.Y+11, "Discord:", "\033[1m")
+	//lw.PrintLn(lw.X+21, lw.Y+11, "         ", "\033[4m")
 
-	lw.PrintLn(lw.X+13, lw.Y+13, "(Discord usernames accepted in the form of Username#0001)", "")
+	fg := util.RGBCode(0, 255, 0)
 
-	if lw.optionSelected == 1 {
+	lw.PrintLn(lw.X+21, lw.Y+7+lw.registrationUserInfoOptionSelected, "         ", fg.FG()+"\033[4m")
+
+	//lw.PrintLn(lw.X+13, lw.Y+13, "(Discord usernames accepted in the form of Username#0001)", "")
+
+	if lw.registrationNavOptionSelected == 1 {
 		fg := util.RGBCode(0, 0, 0)
 		bg := util.RGBCode(255, 255, 255)
 		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", fg.FG()+bg.BG())
@@ -86,7 +107,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", "\033[1m")
 	}
 
-	if lw.optionSelected == 2 {
+	if lw.registrationNavOptionSelected == 2 {
 		fg := util.RGBCode(0, 0, 0)
 		bg := util.RGBCode(255, 255, 255)
 		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", fg.FG()+bg.BG())

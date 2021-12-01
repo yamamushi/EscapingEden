@@ -26,14 +26,17 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 		lw.windowState = LoginWindowLogin
 		lw.loginState = LoginUsername
 		//lw.ResetWindowDrawings()
-		lw.ForceConsoleRefresh()
+		//lw.ForceConsoleRefresh()
+		lw.RequestFlushFromConsole()
+
 		return
 	case "r":
 		log.Println("Register selected")
 		lw.windowState = LoginWindowRegister
 		lw.registrationState = RegistrationMain
 		//lw.ResetWindowDrawings()
-		lw.ForceConsoleRefresh()
+		//lw.ForceConsoleRefresh()
+		lw.RequestFlushFromConsole()
 		return
 	case "q":
 		log.Println("Quit selected")
