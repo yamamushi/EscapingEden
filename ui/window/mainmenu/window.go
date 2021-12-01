@@ -49,12 +49,7 @@ type RegistrationState int
 
 const (
 	RegistrationMain RegistrationState = iota
-	RegistrationUsername
-	RegistrationPassword
-	RegistrationPasswordConfirm
-	RegistrationEmail
-	RegistrationDiscord
-	RegistrationSubmit
+	RegistrationUserInfo
 )
 
 // NewLoginWindow creates a new login window

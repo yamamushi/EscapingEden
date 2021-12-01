@@ -7,6 +7,16 @@ func (lw *LoginWindow) drawRegistrationMenu() {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
 
+	switch lw.registrationState {
+	case RegistrationMain:
+		lw.drawRegistrationWelcome()
+	case RegistrationUserInfo:
+		lw.drawRegistrationUserInfo()
+	}
+
+}
+
+func (lw *LoginWindow) drawRegistrationWelcome() {
 	content, err := util.OpenFileAsText("assets/text/welcome.txt")
 	if err != nil {
 		lw.Error("Error opening rules file:" + err.Error())
@@ -41,5 +51,46 @@ func (lw *LoginWindow) drawRegistrationMenu() {
 		lw.PrintLn(lw.X+lw.Width-15, lw.Y+lw.Height, "<Continue>", fg.FG()+bg.BG())
 	} else {
 		lw.PrintLn(lw.X+lw.Width-15, lw.Y+lw.Height, "<Continue>", "\033[1m")
+	}
+}
+
+func (lw *LoginWindow) drawRegistrationUserInfo() {
+
+	lw.PrintLn(lw.X+4, lw.Y+2, "Please enter your user registration information below.", "")
+	lw.PrintLn(lw.X+4, lw.Y+3, "(You can use your arrow keys to navigate between fields)", "")
+
+	lw.PrintLn(lw.X+12, lw.Y+7, "Username:", "\033[1m")
+	fg := util.RGBCode(0, 255, 0)
+	//bg := util.RGBCode(0, 255, 0)
+	lw.PrintLn(lw.X+21, lw.Y+7, "         ", fg.FG()+"\033[4m")
+
+	lw.PrintLn(lw.X+12, lw.Y+8, "Password:", "\033[1m")
+	lw.PrintLn(lw.X+21, lw.Y+8, "         ", "\033[4m")
+
+	lw.PrintLn(lw.X+4, lw.Y+9, "Confirm Password:", "\033[1m")
+	lw.PrintLn(lw.X+21, lw.Y+9, "         ", "\033[4m")
+
+	lw.PrintLn(lw.X+15, lw.Y+10, "Email:", "\033[1m")
+	lw.PrintLn(lw.X+21, lw.Y+10, "         ", "\033[4m")
+
+	lw.PrintLn(lw.X+13, lw.Y+11, "Discord:", "\033[1m")
+	lw.PrintLn(lw.X+21, lw.Y+11, "         ", "\033[4m")
+
+	lw.PrintLn(lw.X+13, lw.Y+13, "(Discord usernames accepted in the form of Username#0001)", "")
+
+	if lw.optionSelected == 1 {
+		fg := util.RGBCode(0, 0, 0)
+		bg := util.RGBCode(255, 255, 255)
+		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", fg.FG()+bg.BG())
+	} else {
+		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", "\033[1m")
+	}
+
+	if lw.optionSelected == 2 {
+		fg := util.RGBCode(0, 0, 0)
+		bg := util.RGBCode(255, 255, 255)
+		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", fg.FG()+bg.BG())
+	} else {
+		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", "\033[1m")
 	}
 }
