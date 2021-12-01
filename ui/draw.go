@@ -40,7 +40,9 @@ func (c *Console) Draw() []byte {
 		c.forceScreenRefresh = false
 		s = s + c.ClearTerminal()
 		return []byte(s)
-	} else if c.resizeActive {
+	}
+
+	if c.resizeActive {
 		log.Println("Handling resize in buffer")
 		for _, w := range c.Windows {
 			w.FlushLastSent()

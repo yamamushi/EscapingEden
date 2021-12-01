@@ -17,6 +17,11 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 		return
 	}
 
+	if hw.HelpPage == types.HelpPageIndex {
+		hw.handleIndexInput(input)
+		return
+	}
+
 	switch input.Type {
 
 	case types.InputUp:
@@ -32,29 +37,29 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 	case types.InputRight:
 		log.Println("Help Window Handling input right")
 		if hw.HelpPage == types.HelpPageIndex {
-			hw.indexPage += 1
-			hw.ForceConsoleRefresh()
+			//hw.indexPage += 1  - Commented out right now because our index generation is very simple
+			//hw.ForceConsoleRefresh()
 		} else if hw.HelpPage != types.HelpPageIndex-1 {
 			hw.HelpPage += 1
-			hw.ForceConsoleRefresh()
+			hw.HandleStateChange()
 		}
 		return
 	case types.InputLeft:
 		log.Println("Help Window Handling input left")
 		if hw.HelpPage == types.HelpPageIndex {
 			if hw.indexPage > 0 {
-				hw.indexPage -= 1
-				hw.ForceConsoleRefresh()
+				//hw.indexPage -= 1 - Commented out right now because our index generation is very simple
+				//hw.ForceConsoleRefresh()
 			} else {
 				if hw.HelpPage == types.HelpPageMain {
 					hw.HelpPage -= 1
-					hw.ForceConsoleRefresh()
+					hw.HandleStateChange()
 				}
 			}
 		} else {
 			if hw.HelpPage != types.HelpPageMain {
 				hw.HelpPage -= 1
-				hw.ForceConsoleRefresh()
+				hw.HandleStateChange()
 			}
 		}
 		return
@@ -72,30 +77,28 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 
 		case "h":
 			hw.HelpPage = types.HelpPageMain
-			hw.ResetWindowDrawings()
 			hw.scrollInitialized = false
-			hw.ForceConsoleRefresh()
+			hw.HandleStateChange()
 			return
 		case "i":
 			// If we're not on the index then load it, otherwise toss it
 			if hw.HelpPage != types.HelpPageIndex {
 				hw.LastHelpPage = hw.HelpPage
 				hw.HelpPage = types.HelpPageIndex
-				hw.ResetWindowDrawings()
 				hw.scrollInitialized = false
-				hw.ForceConsoleRefresh()
+				hw.HandleStateChange()
 			}
 			return
 		case "n":
 			if hw.HelpPage != types.HelpPageIndex {
 				hw.HelpPage += 1
-				hw.ForceConsoleRefresh()
+				hw.HandleStateChange()
 			}
 			return
 		case "p":
 			if hw.HelpPage != types.HelpPageMain && hw.HelpPage != types.HelpPageIndex {
 				hw.HelpPage -= 1
-				hw.ForceConsoleRefresh()
+				hw.HandleStateChange()
 			}
 			return
 		default:

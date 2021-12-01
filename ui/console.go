@@ -187,7 +187,9 @@ func (c *Console) AbortSend() {
 // HandleResize handles the resize event for all windows
 func (c *Console) HandleResize(newWidth, newHeight int) {
 	c.mutex.Lock()
-	c.mutex.Unlock()
+	defer c.mutex.Unlock()
+	c.pmapMutex.Lock()
+	defer c.pmapMutex.Unlock()
 
 	c.Width = newWidth
 	c.Height = newHeight
@@ -200,7 +202,10 @@ func (c *Console) HandleResize(newWidth, newHeight int) {
 		case config.WindowToolBox:
 			w.UpdateParams(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height)
 		}
+	}
 
+	for _, w := range c.Windows {
+		w.ResetWindowDrawings()
 	}
 	c.PointMap = types.NewPointMap(c.Width, c.Height)
 	c.LastSentPointMap = types.NewPointMap(c.Width, c.Height)

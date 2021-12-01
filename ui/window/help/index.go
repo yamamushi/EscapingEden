@@ -1,10 +1,16 @@
 package help
 
-import "strconv"
+import (
+	"github.com/yamamushi/EscapingEden/ui/types"
+	"strconv"
+	"strings"
+)
+
+type IndexPageNames []string
 
 // DrawIndex is a wrapper around the functions necessary to draw the current index page
 func (hw *HelpWindow) DrawIndex() {
-	hw.SetContents(strconv.Itoa(hw.indexPage))
+	//hw.SetContents(strconv.Itoa(hw.indexPage))
 	hw.DrawIndexInfo()
 	hw.PrintIndexControls()
 }
@@ -13,49 +19,24 @@ func (hw *HelpWindow) DrawIndex() {
 func (hw *HelpWindow) PrintIndexControls() {
 	// Bottom Field
 	separator := " | "
-	homeCommand := "[h]ome"
+	homeCommand := "[H]ome"
 	homeDistance := 1
 
-	var prevCommand, nextCommand string
-	var prevDistance, nextDistance int
-
-	if hw.indexPage > 0 {
-		prevCommand = "[ ] Previous"
-		prevDistance = len(homeCommand+separator) + homeDistance
-		nextCommand = "[ ] Next"
-		nextDistance = len(prevCommand+separator) + prevDistance
-	} else {
-		nextCommand = "[ ] Next"
-		nextDistance = len(homeCommand+separator) + homeDistance
-	}
+	selectCommand := "[Enter] Select Entry"
+	selectDistance := len(separator) + len(homeCommand) + homeDistance
 
 	closeCommand := "[ ]lose index"
-	closeDistance := len(nextCommand+separator) + nextDistance
+	closeDistance := len(separator) + len(selectCommand) + selectDistance
 
-	var commandList string
 	var shift int
-	if hw.indexPage > 0 {
-		commandList = homeCommand + separator + prevCommand + separator + nextCommand +
-			separator + closeCommand
-
-	} else {
-		commandList = homeCommand + separator + nextCommand +
-			separator + closeCommand
-	}
+	commandList := homeCommand + separator + selectCommand + separator + closeCommand
 
 	//hw.PrintLn(hw.X+(hw.Width/2)-(len(commandList)/2)-1, hw.Y+hw.Height, commandList, "")
 	shift = (hw.Width / 2) - (len(commandList) / 2) - 1
 
 	hw.PrintLn(hw.X+shift, hw.Y+hw.Height, commandList, "")
-	hw.PrintChar(hw.X+shift+homeDistance, hw.Y+hw.Height, "h", "\033[1m")
-
-	if hw.indexPage > 0 {
-		hw.PrintChar(hw.X+shift+prevDistance, hw.Y+hw.Height, "\u25C4", "\033[1m")
-		//hw.PrintChar(hw.X+shift+prevDistance+2, hw.Y+hw.Height, "p", "\033[1m")
-	}
-
-	hw.PrintChar(hw.X+shift+nextDistance, hw.Y+hw.Height, "\u25BA", "\033[1m")
-	//hw.PrintChar(hw.X+shift+nextDistance+2, hw.Y+hw.Height, "n", "\033[1m")
+	hw.PrintChar(hw.X+shift+homeDistance, hw.Y+hw.Height, "H", "\033[1m")
+	hw.PrintLn(hw.X+shift+selectDistance, hw.Y+hw.Height, "Enter", "\033[1m")
 	hw.PrintChar(hw.X+shift+closeDistance, hw.Y+hw.Height, "c", "\033[1m")
 }
 
@@ -71,4 +52,34 @@ func (hw *HelpWindow) DrawIndexInfo() {
 	}
 	hw.PrintLn(hw.X+1, hw.Y+1, windowTitle, "\033[1m")
 	hw.PrintLn(hw.X+hw.Width-len(pageInfo)-1, hw.Y+1, pageInfo, "")
+
+	hw.PrintLn(hw.X+3, hw.Y+4, "Welcome to the help index, you can use your arrow keys or h/j/k/l keys to navigate", "")
+	hw.PrintChar(hw.X+61, hw.Y+4, "h", "\033[1m")
+	hw.PrintChar(hw.X+63, hw.Y+4, "j", "\033[1m")
+	hw.PrintChar(hw.X+65, hw.Y+4, "k", "\033[1m")
+	hw.PrintChar(hw.X+67, hw.Y+4, "l", "\033[1m")
+
+	hw.generateIndexCommands()
+
+}
+
+// Right now we don't have that many help pages so the index generation is going to be very simple
+// As we add more pages, I'll update this to do more interesting things :)
+
+func (hw *HelpWindow) generateIndexCommands() {
+	hw.indexMutex.Lock()
+	defer hw.indexMutex.Unlock()
+
+	var pageNames []string
+
+	for i := 0; i < int(types.HelpPageIndex); i++ {
+		helpPageName := types.HelpPage(i).String()
+		pageNames = append(pageNames, helpPageName)
+	}
+
+	for i := 0; i < len(pageNames); i++ {
+		hw.PrintLn(hw.X+3, hw.Y+7+i, "[ ] "+strings.Title(pageNames[i]), "")
+	}
+
+	hw.PrintChar(hw.X+4, hw.Y+7+hw.indexSelection, "*", "\033[1m")
 }

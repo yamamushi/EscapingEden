@@ -1,10 +1,5 @@
 package login
 
-import (
-	"github.com/yamamushi/EscapingEden/ui/util"
-	"log"
-)
-
 // drawMenu draws the default login menu
 func (lw *LoginWindow) drawMenu() {
 	lw.lwMutex.Lock()
@@ -28,7 +23,7 @@ func (lw *LoginWindow) drawMenu() {
 	lw.PrintLn(lw.X+11, lw.Y+10, "(", "")
 	lw.PrintLn(lw.X+12, lw.Y+10, "q", "\033[1m")
 	lw.PrintLn(lw.X+13, lw.Y+10, ")uit", "")
-
+	/* Disabling this testing logo for now!
 	artFile, err := util.OpenASCIIArtFile("assets/ascii/logo.txt")
 	if err != nil {
 		log.Println(err)
@@ -43,6 +38,6 @@ func (lw *LoginWindow) drawMenu() {
 			}
 		}
 	}
-
+	*/
 	return
 }

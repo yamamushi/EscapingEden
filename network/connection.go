@@ -17,13 +17,16 @@ type Connection struct {
 	manager *ConnectionManager
 
 	// These are for working with IAC commands coming into the handler
-	iacBuffer              string
-	iacActive              bool
-	iacSubnegotationActive bool
-	iacResizeActive        bool
-	iacParamIndex          int
-	iacWindowResizeX       int
-	iacWindowResizeY       int
+	iacBuffer               string
+	iacActive               bool
+	iacSubnegotationActive  bool
+	iacResizeActive         bool
+	cleanupAfterResize      bool
+	cleanupStage            int
+	cleanupAfterResizeMutex sync.Mutex
+	iacParamIndex           int
+	iacWindowResizeX        int
+	iacWindowResizeY        int
 }
 
 // NewConnection creates a new connection
@@ -169,6 +172,32 @@ func (c *Connection) WriteHandler() {
 				return
 			}
 		}
+
+		if c.GetResizeCleanup() {
+			log.Println("Cleanup requested")
+			log.Println(c.cleanupStage)
+			switch c.cleanupStage {
+			case 0:
+				//c.console.ForceRedraw()
+				c.cleanupStage++
+			case 1:
+				//c.console.ForceRedraw()
+				c.cleanupStage++
+			case 2:
+				c.console.ResetWindowDrawings()
+				c.cleanupStage++
+			case 3:
+				c.console.ClearPointMap()
+				c.cleanupStage++
+			case 4:
+				c.console.FlushLastSent()
+				c.cleanupStage++
+			case 5:
+				c.ResizeCleanupComplete()
+				c.cleanupStage = 0
+			}
+
+		}
 	}
 }
 
@@ -218,6 +247,7 @@ func (c *Connection) HandleIAC(readByte byte) {
 				//if c.iacWindowResizeX
 				if c.iacWindowResizeX > 0 && c.iacWindowResizeY > 0 {
 					c.console.HandleResize(c.iacWindowResizeX, c.iacWindowResizeY)
+					c.NotifyCleanupResize()
 				}
 				c.iacWindowResizeX = 0
 				c.iacWindowResizeY = 0
@@ -231,4 +261,22 @@ func (c *Connection) HandleIAC(readByte byte) {
 			"you're about to see garbage get sent to your windows. Unhandled IAC command: ", int(readByte))
 		c.iacActive = false
 	}
+}
+
+func (c *Connection) NotifyCleanupResize() {
+	c.cleanupAfterResizeMutex.Lock()
+	defer c.cleanupAfterResizeMutex.Unlock()
+	c.cleanupAfterResize = true
+}
+
+func (c *Connection) GetResizeCleanup() bool {
+	c.cleanupAfterResizeMutex.Lock()
+	defer c.cleanupAfterResizeMutex.Unlock()
+	return c.cleanupAfterResize
+}
+
+func (c *Connection) ResizeCleanupComplete() {
+	c.cleanupAfterResizeMutex.Lock()
+	defer c.cleanupAfterResizeMutex.Unlock()
+	c.cleanupAfterResize = false
 }
