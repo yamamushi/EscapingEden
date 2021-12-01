@@ -3,6 +3,7 @@ package help
 import (
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"strconv"
+	"strings"
 )
 
 type IndexPageNames []string
@@ -76,4 +77,9 @@ func (hw *HelpWindow) generateIndexCommands() {
 		pageNames = append(pageNames, helpPageName)
 	}
 
+	for i := 0; i < len(pageNames); i++ {
+		hw.PrintLn(hw.X+3, hw.Y+7+i, "[ ] "+strings.Title(pageNames[i]), "")
+	}
+
+	hw.PrintChar(hw.X+4, hw.Y+7+hw.indexSelection, "*", "\033[1m")
 }

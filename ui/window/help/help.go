@@ -29,6 +29,7 @@ type HelpWindow struct {
 
 	indexMutex              sync.Mutex
 	indexPage               int
+	indexSelection          int
 	IndexPageNames          IndexPageNames
 	currentIndexRowSelected int
 }
@@ -145,4 +146,24 @@ func (hw *HelpWindow) LoadPage(page types.HelpPage) {
 func (hw *HelpWindow) HandleStateChange() {
 	hw.ResetWindowDrawings()
 	hw.ForceConsoleRefresh()
+}
+
+func (hw *HelpWindow) NumberOfHelpPages() int {
+	return int(types.HelpPageIndex - 1) // The index is always the last page, we don't count it
+}
+
+func (hw *HelpWindow) IndexSelectionUp() {
+	hw.indexMutex.Lock()
+	defer hw.indexMutex.Unlock()
+	if hw.indexSelection > 0 {
+		hw.indexSelection--
+	}
+}
+
+func (hw *HelpWindow) IndexSelectionDown() {
+	hw.indexMutex.Lock()
+	defer hw.indexMutex.Unlock()
+	if hw.indexSelection < hw.NumberOfHelpPages() {
+		hw.indexSelection++
+	}
 }
