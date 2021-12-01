@@ -1,6 +1,6 @@
 package login
 
-type RegistrationErrorData struct {
+type RegistrationError struct {
 	UsernameError        string
 	PasswordError        string
 	PasswordConfirmError string
@@ -15,13 +15,13 @@ type RegistrationSubmitData struct {
 	Email           string
 }
 
-func (lw *LoginWindow) RegistrationSubmit(RegistrationSubmitData) RegistrationErrorData {
+func (lw *LoginWindow) RegistrationSubmit(RegistrationSubmitData) *RegistrationError {
 	lw.registrationSubmitMutex.Lock()
 	defer lw.registrationSubmitMutex.Unlock()
 	// We need to lock to make sure no requests are happening twice, and that
 	// Our registration data is locked
 
-	return RegistrationErrorData{
+	return &RegistrationError{
 		UsernameError:        "This is a test error",
 		PasswordError:        "",
 		PasswordConfirmError: "",

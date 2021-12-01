@@ -100,21 +100,44 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		lw.RequestFlushFromConsole()
 	case types.InputReturn:
 		log.Println("Return pressed")
-		if lw.registrationNavOptionSelected == 0 && lw.registrationUserInfoOptionSelected == UserInfoEmail {
-			// If we have no option selected, and we're at the email line, we may as well just submit
-			// To make it easier for the user
-			lw.registrationErrorData = lw.RegistrationSubmit(lw.registrationSubmitData)
-		}
 		if lw.registrationNavOptionSelected == 0 {
-			// If we have no option selected, and not at the email line, just ignore this and return
+			switch lw.registrationUserInfoOptionSelected {
+			case UserInfoUsername:
+				lw.registrationUserInfoOptionSelected = UserInfoPassword
+			case UserInfoPassword:
+				lw.registrationUserInfoOptionSelected = UserInfoPasswordConfirm
+			case UserInfoPasswordConfirm:
+				lw.registrationUserInfoOptionSelected = UserInfoEmail
+			case UserInfoEmail:
+				// If we have no option selected, and we're at the email line, we may as well just submit
+				// To make it easier for the user
+				registrationError := lw.RegistrationSubmit(lw.registrationSubmitData)
+				if registrationError != nil {
+					// If we got an error, we're just going to update our error state
+					lw.registrationErrorData = *registrationError
+				} else {
+					// Otherwise we succeeded (yay!) and we can go to the success screen
+					lw.registrationState = RegistrationSuccess
+				}
+			}
 			return
 		}
 		if lw.registrationNavOptionSelected == 1 {
+			// If we're going back, we're going to flush our registration error and data
 			lw.registrationState = RegistrationMain
+			lw.registrationErrorData = RegistrationError{}
+			lw.registrationSubmitData = RegistrationSubmitData{}
 		}
 		if lw.registrationNavOptionSelected == 2 {
 			// This is where we submit our entered user data
-			lw.registrationErrorData = lw.RegistrationSubmit(lw.registrationSubmitData)
+			registrationError := lw.RegistrationSubmit(lw.registrationSubmitData)
+			if registrationError != nil {
+				// If we got an error, we're just going to update our error state
+				lw.registrationErrorData = *registrationError
+			} else {
+				// Otherwise we succeeded (yay!) and we can go to the success screen
+				lw.registrationState = RegistrationSuccess
+			}
 		}
 		lw.registrationNavOptionSelected = 0
 		lw.registrationUserInfoOptionSelected = 0

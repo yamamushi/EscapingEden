@@ -8,6 +8,7 @@ type RegistrationState int
 const (
 	RegistrationMain RegistrationState = iota
 	RegistrationUserInfo
+	RegistrationSuccess
 )
 
 type RegistrationUserInfoState int
