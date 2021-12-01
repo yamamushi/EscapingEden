@@ -1,6 +1,7 @@
 package login
 
 import (
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
@@ -54,7 +55,7 @@ const (
 )
 
 // NewLoginWindow creates a new login window
-func NewLoginWindow(x, y, width, height, consoleWidth, consoleHeight int, input, output chan string) *LoginWindow {
+func NewLoginWindow(x, y, width, height, consoleWidth, consoleHeight int, input, output chan messages.WindowMessage) *LoginWindow {
 	lw := &LoginWindow{}
 	lw.ID = config.WindowLoginMenu
 	// if x or y are less than 1 set them to 1

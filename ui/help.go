@@ -1,15 +1,15 @@
 package ui
 
 import (
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/config"
-	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window/help"
 )
 
 // ToggleHelp opens a new help window using the options
 func (c *Console) ToggleHelp(options *config.WindowConfig) {
 	if !c.IsHelpOpen() {
-		helpWindow := help.NewHelpWindow(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, options.Page, c.PopupBoxMessages, c.WindowMessages)
+		helpWindow := help.NewHelpWindow(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, options.Page, c.PopupBoxWindowMessages, c.WindowMessages)
 		helpWindow.Init()
 		helpWindow.SetContents(options.Content)
 		c.LastActiveWindow = c.GetActiveWindow() // Save the last active window
@@ -36,8 +36,8 @@ func (c *Console) CloseHelp() {
 }
 
 // HandleHelpMessage handles messages for the help window
-func (c *Console) HandleHelpMessage(message *types.ConsoleMessage) {
-	switch message.Message {
+func (c *Console) HandleHelpMessage(message messages.WindowMessage) {
+	switch message.MessageContent {
 	case "close":
 		c.CloseHelp()
 	}

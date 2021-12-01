@@ -2,6 +2,7 @@ package network
 
 import (
 	"bufio"
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui"
 	"log"
@@ -290,4 +291,8 @@ func (c *Connection) ResizeCleanupComplete() {
 	c.cleanupAfterResizeMutex.Lock()
 	defer c.cleanupAfterResizeMutex.Unlock()
 	c.cleanupAfterResize = false
+}
+
+func (c *Connection) SendToConsole(message messages.ConsoleMessage) {
+	c.console.ReceiveMessages <- message
 }

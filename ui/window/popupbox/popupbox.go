@@ -1,6 +1,7 @@
 package popupbox
 
 import (
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"sync"
@@ -13,7 +14,7 @@ type PopupBox struct {
 }
 
 // NewPopupBox creates a new PopupBox.
-func NewPopupBox(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *PopupBox {
+func NewPopupBox(x, y, w, h, consoleWidth, consoleHeight int, input, output chan messages.WindowMessage) *PopupBox {
 	pb := &PopupBox{}
 	pb.ID = config.WindowPopupBox
 	// if x or y are less than 1 set them to 1

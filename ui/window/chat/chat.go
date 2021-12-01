@@ -1,8 +1,8 @@
 package chat
 
 import (
-	"encoding/json"
 	"github.com/yamamushi/EscapingEden/edenutil"
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
@@ -20,10 +20,11 @@ type ChatWindow struct {
 	HistoryIndex  int
 	cwMutex       sync.Mutex
 	cwInputBuffer string
+	ChatReceiver  chan messages.ChatMessage
 }
 
 // NewChatWindow creates a new chat window
-func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan string) *ChatWindow {
+func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, chatInput chan messages.ChatMessage, windowInput, output chan messages.WindowMessage) *ChatWindow {
 	cw := new(ChatWindow)
 	cw.ID = config.WindowChatBox
 	// if x or y are less than 1 set them to 1
@@ -49,7 +50,8 @@ func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output ch
 	cw.ConsoleHeight = consoleHeight
 	cw.Bordered = true
 
-	cw.ConsoleReceive = input
+	cw.ChatReceiver = chatInput
+	cw.ConsoleReceive = windowInput
 	cw.ConsoleSend = output
 	cw.ScrollingSupported = true
 
@@ -108,26 +110,17 @@ func (cw *ChatWindow) HandleInput(input types.Input) {
 		log.Println("ChatWindow Return")
 		if cw.cwInputBuffer != "" {
 			// Send a console message to the ConsoleSend channel
-			message := types.ConsoleMessage{Message: cw.cwInputBuffer, Type: "chat"}
-			log.Println("Message: " + message.Message)
-			output, err := json.Marshal(message)
-			if err == nil {
-				log.Println("Sending message on cw.ConsoleSend")
-				cw.ConsoleSend <- string(output)
-				log.Println("Message Sent")
-			} else {
-				log.Println(err.Error())
-			}
+			consoleMessage := messages.WindowMessage{MessageContent: cw.cwInputBuffer, Type: messages.WM_ParseChat}
+			cw.ConsoleSend <- consoleMessage
 			cw.cwInputBuffer = ""
 		} else {
 			log.Println("cw.cwInputBuffer is empty during InputReturn chat request")
 		}
 		return
+	case types.InputCharacter:
+		cw.cwInputBuffer += input.Data
 	}
-
-	log.Println("Chatwindow Receive: ", input.Data)
-	cw.cwInputBuffer += input.Data
-
+	//log.Println("Chatwindow Receive: ", input.Data)
 }
 
 // ConsoleMessage is called by console to manually write a console message to the history
@@ -141,29 +134,22 @@ func (cw *ChatWindow) ConsoleMessage(message string) {
 func (cw *ChatWindow) Listen() {
 	for {
 		select {
-		case msg := <-cw.ConsoleReceive:
-			log.Println("Chat window received message from console")
-
-			message := types.ConsoleMessage{}
-			err := json.Unmarshal([]byte(msg), &message)
-			if err == nil {
-				cw.cwMutex.Lock()
-				cw.History = append(cw.History, message.Message)
-				// We know if our starting position is less than 0, and we append a new message, then there is
-				// Content in the scroll buffer that has not been displayed yet.
-				if cw.GetContentStartPos() < 0 {
-					cw.DecreaseContentPos()
-					cw.SetScrollBufferNew(true)
-				} else {
-					cw.SetScrollBufferNew(false)
-					cw.ResetWindowDrawings()
-					cw.RequestFlushFromConsole()
-				}
-				//log.Println("content start pos: ", cw.GetContentStartPos())
-				cw.cwMutex.Unlock()
+		case chatMessage := <-cw.ChatReceiver:
+			log.Println("Chat Window received chat message from console")
+			cw.cwMutex.Lock()
+			cw.History = append(cw.History, chatMessage.Content)
+			// We know if our starting position is less than 0, and we append a new message, then there is
+			// Content in the scroll buffer that has not been displayed yet.
+			if cw.GetContentStartPos() < 0 {
+				cw.DecreaseContentPos()
+				cw.SetScrollBufferNew(true)
 			} else {
-				log.Println(err.Error())
+				cw.SetScrollBufferNew(false)
+				cw.ResetWindowDrawings()
+				cw.RequestFlushFromConsole()
 			}
+			//log.Println("content start pos: ", cw.GetContentStartPos())
+			cw.cwMutex.Unlock()
 		}
 	}
 }

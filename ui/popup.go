@@ -1,15 +1,15 @@
 package ui
 
 import (
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/config"
-	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window/popupbox"
 )
 
 // OpenPopup opens a new popup window using the options
 func (c *Console) OpenPopup(options *config.WindowConfig) {
 	//log.Println(options)
-	popupBox := popupbox.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxMessages, c.WindowMessages)
+	popupBox := popupbox.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxWindowMessages, c.WindowMessages)
 	popupBox.Init()
 	popupBox.SetContents(options.Content)
 	c.LastActiveWindow = c.GetActiveWindow() // Save the last active window
@@ -33,8 +33,8 @@ func (c *Console) ClosePopup() {
 }
 
 // HandlePopupMessage handles the messages sent to the popup window
-func (c *Console) HandlePopupMessage(message *types.ConsoleMessage) {
-	switch message.Message {
+func (c *Console) HandlePopupMessage(message messages.WindowMessage) {
+	switch message.MessageContent {
 	case "close":
 		c.ClosePopup()
 	}

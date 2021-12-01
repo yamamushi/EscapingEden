@@ -4,6 +4,7 @@ package help
 // Options to open to a specific help page.
 
 import (
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/util"
@@ -35,7 +36,7 @@ type HelpWindow struct {
 }
 
 // NewHelpWindow creates a new help window.
-func NewHelpWindow(x, y, w, h, consoleWidth, consoleHeight int, page types.HelpPage, input, output chan string) *HelpWindow {
+func NewHelpWindow(x, y, w, h, consoleWidth, consoleHeight int, page types.HelpPage, input, output chan messages.WindowMessage) *HelpWindow {
 	hw := &HelpWindow{}
 	hw.ID = config.WindowHelpBox
 	// if x or y are less than 1 set them to 1
