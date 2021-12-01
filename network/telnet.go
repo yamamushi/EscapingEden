@@ -49,8 +49,8 @@ func RequestTerminalType(conn net.Conn) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if b[0] != IAC && b[0] != SE && b[0] != WILL && b[0] != WONT && b[0] != DO && b[0] != DONT && b[0] != SB && b[0] != NAWS {
-			//log.Println(b[0])
+		if b[0] != IAC && b[0] != SE && b[0] != WILL && b[0] != WONT && b[0] != TTYPE &&
+			b[0] != DO && b[0] != DONT && b[0] != SB && b[0] != NAWS && b[0] != 0 {
 			buf = append(buf[:], b[0])
 		}
 

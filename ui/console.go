@@ -1,11 +1,14 @@
 package ui
 
 import (
+	"github.com/yamamushi/EscapingEden/messages"
+	"github.com/yamamushi/EscapingEden/terminals"
+	xterm_256color "github.com/yamamushi/EscapingEden/terminals/xterm-256color"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"github.com/yamamushi/EscapingEden/ui/window/chat"
-	"github.com/yamamushi/EscapingEden/ui/window/mainmenu"
+	"github.com/yamamushi/EscapingEden/ui/window/loginmenu"
 	"github.com/yamamushi/EscapingEden/ui/window/toolbox"
 	"log"
 	"sync"
@@ -19,8 +22,10 @@ const (
 // Console is the main UI object.
 type Console struct {
 	ConnectionID string // The ID of the connection using this console
-	Height       int    // The height of the console
-	Width        int    // The width of the console
+	TermType     terminals.TerminalType
+
+	Height int // The height of the console
+	Width  int // The width of the console
 
 	Windows            []window.WindowType // The list of windows that are currently in the console
 	ConsoleCommands    string
@@ -32,15 +37,16 @@ type Console struct {
 	initConsole        sync.Once
 
 	// Channels for communicating with ConnectionManager
-	WindowMessages  chan string
-	SendMessages    chan string
-	ReceiveMessages chan string
+	WindowMessages  chan messages.WindowMessage
+	SendMessages    chan messages.ConnectionManagerMessage
+	ReceiveMessages chan messages.ConsoleMessage
 
 	// Channels for communicating with windows
-	LoginMessages    chan string
-	ChatMessages     chan string
-	ToolboxMessages  chan string
-	PopupBoxMessages chan string
+	LoginWindowMessages    chan messages.WindowMessage
+	ChatMessageReceive     chan messages.ChatMessage
+	ChatWindowMessages     chan messages.WindowMessage
+	ToolboxWindowMessages  chan messages.WindowMessage
+	PopupBoxWindowMessages chan messages.WindowMessage
 
 	// Our console character map
 	// Memory is cheap with these
@@ -61,18 +67,28 @@ type Console struct {
 }
 
 // NewConsole creates a new console with no windows.
-func NewConsole(height int, width int, connectionID string, outputChannel chan string) *Console {
+func NewConsole(height int, width int, connectionID string, outputChannel chan messages.ConnectionManagerMessage) *Console {
 	// Set up a new Chat Window and add it to the console at the bottom.
-	receiver := make(chan string)
-	windowMessages := make(chan string)
-	loginMessages := make(chan string)
-	chatMessages := make(chan string)
-	toolboxMessages := make(chan string)
-	popupBoxMessage := make(chan string)
+	receiveFromConnectionManager := make(chan messages.ConsoleMessage)
+	windowMessages := make(chan messages.WindowMessage)
+	loginMessages := make(chan messages.WindowMessage)
+	chatMessageReceive := make(chan messages.ChatMessage)
+	chatMessageSend := make(chan messages.WindowMessage)
+	toolboxMessages := make(chan messages.WindowMessage)
+	popupBoxMessage := make(chan messages.WindowMessage)
 
 	return &Console{Height: height, Width: width, ConnectionID: connectionID, SendMessages: outputChannel,
-		ReceiveMessages: receiver, WindowMessages: windowMessages, LoginMessages: loginMessages,
-		ChatMessages: chatMessages, ToolboxMessages: toolboxMessages, PopupBoxMessages: popupBoxMessage}
+		ReceiveMessages: receiveFromConnectionManager, WindowMessages: windowMessages, LoginWindowMessages: loginMessages,
+		ChatMessageReceive: chatMessageReceive, ChatWindowMessages: chatMessageSend, ToolboxWindowMessages: toolboxMessages, PopupBoxWindowMessages: popupBoxMessage}
+}
+
+func (c *Console) SetupTerminalType(termType terminals.TermTypeID) {
+	// Set up the terminal type
+	switch termType {
+	case terminals.TermTypeXTerm256Color:
+		c.TermType = xterm_256color.New()
+	}
+	c.TermType.Init()
 }
 
 // Init is called once to initialize the console, it does things like create the default windows, and launches the
@@ -83,17 +99,17 @@ func (c *Console) Init() {
 
 	c.consoleInitialized = false
 	// First we set up our login window
-	loginWindow := login.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height, c.LoginMessages, c.WindowMessages)
+	loginWindow := login.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height, c.LoginWindowMessages, c.WindowMessages)
 	loginWindow.Init()
 	c.AddWindow(loginWindow)
 
 	// Next we set up our chat window
-	chatWindow := chat.NewChatWindow(0, c.Height-10, c.Width-50, 9, c.Width, c.Height, c.ChatMessages, c.WindowMessages)
+	chatWindow := chat.NewChatWindow(0, c.Height-10, c.Width-50, 9, c.Width, c.Height, c.ChatMessageReceive, c.ChatWindowMessages, c.WindowMessages)
 	chatWindow.Init()
 	c.AddWindow(chatWindow)
 
 	// Then we add our toolbox last
-	toolboxWindow := toolbox.NewToolboxWindow(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height, c.ToolboxMessages, c.WindowMessages)
+	toolboxWindow := toolbox.NewToolboxWindow(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height, c.ToolboxWindowMessages, c.WindowMessages)
 	toolboxWindow.Init()
 	c.AddWindow(toolboxWindow)
 
@@ -110,7 +126,7 @@ func (c *Console) Init() {
 }
 
 // SetManagerSendChannel sets the channel for sending messages to the ConnectionManager.
-func (c *Console) SetManagerSendChannel(ch chan string) {
+func (c *Console) SetManagerSendChannel(ch chan messages.ConnectionManagerMessage) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -118,7 +134,7 @@ func (c *Console) SetManagerSendChannel(ch chan string) {
 }
 
 // SetManagerReceiveChannel sets the channel for receiving messages from the ConnectionManager.
-func (c *Console) SetManagerReceiveChannel(ch chan string) {
+func (c *Console) SetManagerReceiveChannel(ch chan messages.ConsoleMessage) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 

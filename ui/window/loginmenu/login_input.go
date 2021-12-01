@@ -19,7 +19,7 @@ func (lw *LoginWindow) handleLoginInput(input string) {
 		lw.credentials.Hash = input
 		lw.loginState = LoginSubmit
 	case LoginSubmit:
-		lw.ConsoleSend <- "login:" + lw.credentials.Username + ":" + lw.credentials.Hash
+		//lw.ConsoleSend <- "login:" + lw.credentials.Username + ":" + lw.credentials.Hash
 		lw.loginState = LoginUsername
 	}
 }

@@ -1,6 +1,7 @@
 package help
 
 import (
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"log"
 )
@@ -69,10 +70,10 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 			if hw.HelpPage == types.HelpPageIndex {
 				hw.HelpPage = hw.LastHelpPage
 			} else {
-				message := types.ConsoleMessage{Type: "help", Message: "close"}
+				message := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_ToggleHelp}
 				hw.scrollInitialized = false
-				hw.ConsoleSend <- message.String()
-				log.Println("Help sent close message to console")
+				hw.ConsoleSend <- message
+				log.Println("Help sent toggle window message to console")
 			}
 
 		case "h":

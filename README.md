@@ -7,8 +7,9 @@ It implements a unique xterm-256 based UI over telnet, and as such, supported te
 ## Table of Contents
 
   * [Introduction](#introduction)
-  * [About](#about)
+  * [Eden](#Eden)
   * [Roadmap](#roadmap)
+  * [Development](#development)
   * [Connecting](#connecting)
   * [Building](#building)
   * [Running](#running)
@@ -29,7 +30,7 @@ then lacking in the actual gameplay I was hoping to find.
 
 Thus, Escaping Eden was born.
 
-## About 
+## Eden 
 
 The goal of Escaping Eden is to have a Roguelike with MUD-like features. That is to say, imagine a Dwarf Fortress-style
 Map, with MUD-like combat, crafting, building, and other features.
@@ -51,11 +52,26 @@ it!
 
 The current project is still in its infancy, and almost all gameplay features are missing.
 
-Work is ongoing to bring the User Interface to a more polished state, and to add more features overall to the server and
-general project cleanup. I intend to implement an actual safe logging mechanism, as well as a more robust way to handle
-errors when they occur. 
+The UI is being stabilized, and the game engine component is being planned. I say planned, because there are 
+different methods of communicating with the game engine that I am attempting before settling on one. 
 
-Once I am satisfied with the state of a working UI, I will continue to expand the project to add more gameplay features.
+This is important for the long term goals of EE, because I want to be able to be able to distribute the game processing
+to a separate cluster in the future if necessary. This is a very long term goal, but it's essential that the game
+engine and the networking/UI are complete separate entities. The connection manager can send messages to the game engine
+on behalf of a console, but a console can never communicate directly with the game engine.
+
+The game engine can _never_ have any notion of what a console is, nor should it ever care. 
+
+Most of the work ongoing at the moment is to get the overall engine in a state where it can be tested by 
+players in a live environment.
+
+## Development
+
+Escaping Eden is currently built on Go 1.17, and relies on xterm-color256 support in the terminal.
+
+It relies heavily on ANSI escape sequences, and will not work on terminals that do not support them. If you are 
+planning on contributing to any of the UI work, it is basically mandatory that you review 
+the [ANSI escape code documentation](https://en.wikipedia.org/wiki/ANSI_escape_code) before you start.
 
 ## Connecting
 
@@ -86,6 +102,7 @@ Building and running the current version of Escaping Eden is relatively straight
 expect the configuration to grow more complex as customization features are added.
 
 ```bash
+$ go mod download  
 $ go build . 
 ```
 

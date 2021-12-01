@@ -1,6 +1,7 @@
 package login
 
 import (
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
@@ -16,8 +17,17 @@ type LoginWindow struct {
 	loginState        LoginState
 	registrationState RegistrationState
 
-	optionSelected     int
-	currentOptionCount int
+	// Vars for registration navigation
+	// These have long names to be as verbose as possible
+	registrationNavOptionSelected          int
+	registrationUserInfoOptionSelected     RegistrationUserInfoState
+	registrationUserInfoLastOptionSelected RegistrationUserInfoState
+
+	registrationSubmitMutex sync.Mutex
+	registrationSubmitData  RegistrationSubmitData
+	registrationErrorData   RegistrationError
+	registrationAgreeRules  bool
+	registrationComplete    bool
 }
 
 // LoginCreds is a struct for storing login credentials
@@ -44,21 +54,8 @@ const (
 	LoginSubmit
 )
 
-// RegistrationState is an enum for storing registration state
-type RegistrationState int
-
-const (
-	RegistrationMain RegistrationState = iota
-	RegistrationUsername
-	RegistrationPassword
-	RegistrationPasswordConfirm
-	RegistrationEmail
-	RegistrationDiscord
-	RegistrationSubmit
-)
-
 // NewLoginWindow creates a new login window
-func NewLoginWindow(x, y, width, height, consoleWidth, consoleHeight int, input, output chan string) *LoginWindow {
+func NewLoginWindow(x, y, width, height, consoleWidth, consoleHeight int, input, output chan messages.WindowMessage) *LoginWindow {
 	lw := &LoginWindow{}
 	lw.ID = config.WindowLoginMenu
 	// if x or y are less than 1 set them to 1

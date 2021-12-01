@@ -1,11 +1,8 @@
 package ui
 
 import (
-	"encoding/json"
-	"github.com/yamamushi/EscapingEden/ui/config"
-	"github.com/yamamushi/EscapingEden/ui/types"
+	"github.com/yamamushi/EscapingEden/messages"
 	"log"
-	"strconv"
 )
 
 // CaptureWindowMessages is a goroutine that listens for messages from the windows and parses them to determine
@@ -14,83 +11,64 @@ import (
 func (c *Console) CaptureWindowMessages() {
 	for {
 		select {
-		case message := <-c.WindowMessages:
+		case windowMessage := <-c.WindowMessages:
 			log.Println("Console received window message")
-			consoleMessage := &types.ConsoleMessage{}
-			err := json.Unmarshal([]byte(message), consoleMessage)
-			if err != nil {
-				log.Println("Error unmarshalling consoleMessage: ", err)
-				continue
-			}
 			//log.Println("MessageType: ", consoleMessage.Type)
-			switch consoleMessage.Type {
-			case "console":
+			switch windowMessage.Type {
+			case messages.WM_ConsoleCommand:
 				//log.Println("Received console message from a window")
-				switch consoleMessage.Message {
-				case "popup":
-					options := &config.WindowConfig{}
-					err = json.Unmarshal([]byte(consoleMessage.Options), options)
-					if err != nil {
-						log.Println("Error unmarshalling popup box options: ", err)
-						continue
-					} else {
-						//log.Println("Popup box options: ", options.String())
-						c.OpenPopup(options)
-						continue
-					}
-				case "help":
-					options := &config.WindowConfig{}
-					err = json.Unmarshal([]byte(consoleMessage.Options), options)
-					if err != nil {
-						log.Println("Error unmarshalling help box options: ", err)
-						continue
-					} else {
-						//log.Println("Help box options: ", options.String())
-						c.ToggleHelp(options)
-					}
-				case "refresh":
-					//log.Println("Refresh message received")
-					//if !c.IsPopupOpen() {
+				switch windowMessage.Command {
+				case messages.WMC_NewPopup:
+					c.OpenPopup(&windowMessage.PopupOptions)
+					continue
+					// These following messages are sent into their respective windows
+				case messages.WMC_ClosePopup:
+					c.HandlePopupMessage(windowMessage)
+					continue
+				case messages.WMC_ToggleHelp:
+					c.ToggleHelp(&windowMessage.HelpOptions)
+					continue
+				case messages.WMC_RefreshConsole:
 					c.AbortSend()
 					c.ForceRedraw()
 					continue
-					//}
-				case "flush":
+				case messages.WMC_FlushConsoleBuffer:
 					log.Println("Flush message received")
-					windowID, err := strconv.Atoi(consoleMessage.Options)
-					if err != nil {
-						log.Println("Could not parse flush options", err)
-					}
-					c.flushWindowList = append(c.flushWindowList, config.WindowID(windowID))
+					c.flushWindowList = append(c.flushWindowList, windowMessage.TargetID)
 					continue
-
 				default:
 					continue
 				}
 
-			case "popupbox":
-				log.Println("Popup box message: ", consoleMessage.Message)
-				c.HandlePopupMessage(consoleMessage)
+			case messages.WM_ParseChat:
+				log.Println("Sending Chat message: ", windowMessage.MessageContent)
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_Chat,
+					Message:         windowMessage.MessageContent,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
 				continue
-			case "help":
-				log.Println("Help message: ", consoleMessage.Message)
-				c.HandleHelpMessage(consoleMessage)
+
+				// These messages require serializing to send to ConnectionManager
+			case messages.WM_Error:
+				log.Println("Sending Error message to Connection Manager: ", windowMessage.MessageContent)
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_Error,
+					Message:         windowMessage.MessageContent,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
 				continue
-			case "error":
-				log.Println("Error message: ", consoleMessage.Message)
-				consoleMessage.RecipientID = c.ConnectionID
-				c.SendMessages <- consoleMessage.String()
-				continue
-			case "quit":
+			case messages.WM_QuitConsole:
 				log.Println("Sending Quit request to ConnectionManager")
-				consoleMessage.RecipientID = c.ConnectionID
-				c.SendMessages <- consoleMessage.String()
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:               messages.ConnectManager_Message_Quit,
+					RecipientConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
 				continue
-			case "chat":
-				log.Println("Chat message: ", consoleMessage.Message)
-				consoleMessage.SenderID = c.ConnectionID
-				c.SendMessages <- consoleMessage.String()
-				continue
+
 			default:
 				continue
 			}

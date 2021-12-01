@@ -1,6 +1,7 @@
 package popupbox
 
 import (
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"log"
 )
@@ -25,8 +26,8 @@ func (pb *PopupBox) HandleInput(input types.Input) {
 		return
 	case types.InputReturn:
 		log.Println("PopupBox Handling input return - attempting to close popup")
-		message := types.ConsoleMessage{Type: "popupbox", Message: "close"}
-		pb.ConsoleSend <- message.String()
+		message := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_ClosePopup}
+		pb.ConsoleSend <- message
 		log.Println("PopupBox sent close message to console")
 	}
 

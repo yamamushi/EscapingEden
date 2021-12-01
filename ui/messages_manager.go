@@ -1,8 +1,7 @@
 package ui
 
 import (
-	"encoding/json"
-	"github.com/yamamushi/EscapingEden/ui/types"
+	"github.com/yamamushi/EscapingEden/messages"
 	"log"
 )
 
@@ -11,31 +10,26 @@ import (
 func (c *Console) CaptureManagerMessages() {
 	for {
 		select {
-		case message := <-c.ReceiveMessages:
+		case consoleMessage := <-c.ReceiveMessages:
 			log.Println("Console received message from manager")
-			consoleMessage := &types.ConsoleMessage{}
-			err := json.Unmarshal([]byte(message), consoleMessage)
-			if err != nil {
-				log.Println("Error unmarshalling consoleMessage: ", err)
-				continue
-			}
 
 			switch consoleMessage.Type {
-			case "chat":
+			case messages.Console_Message_Chat:
 				log.Println("Chat message received from manager")
-				c.ChatMessages <- consoleMessage.String()
+				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: consoleMessage.Message}
+				c.ChatMessageReceive <- chatMessage
 				continue
-			case "error":
+			case messages.Console_Message_Error:
 				log.Println("Error message received from manager")
-				consoleMessage.Message = "Error: " + consoleMessage.Message
-				c.ChatMessages <- consoleMessage.String()
+				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: "Error: " + consoleMessage.Message}
+				c.ChatMessageReceive <- chatMessage
 				continue
-			case "broadcast":
+			case messages.Console_Message_Broadcast:
 				log.Println("Broadcast message received from manager")
-				consoleMessage.Message = "Server Message: " + consoleMessage.Message
-				c.ChatMessages <- consoleMessage.String()
+				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: "Broadcast: " + consoleMessage.Message}
+				c.ChatMessageReceive <- chatMessage
 				continue
-			case "quit":
+			case messages.Console_Message_Quit:
 				log.Println("Quit message received from manager")
 				c.SetShutdown(true)
 				continue

@@ -2,9 +2,12 @@ package network
 
 import (
 	"bufio"
+	"github.com/yamamushi/EscapingEden/messages"
+	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui"
 	"log"
 	"net"
+	"strings"
 	"sync"
 )
 
@@ -67,9 +70,16 @@ func (c *Connection) Handle() {
 		c.manager.HandleDisconnect(c)
 		return
 	}
+	termType = strings.ToLower(termType)
+	var termTypeID terminals.TermTypeID
 	if termType == "xterm-256color" {
+		termTypeID = terminals.TermTypeXTerm256Color
+	} else {
 		log.Println("Unsupported terminal type:", c.ID, " TermType:", termType, " Closing connection")
 		c.manager.HandleDisconnect(c)
+		c.conn.Write([]byte("Unsupported terminal type, sorry only xterm-256color is supported at the " +
+			"moment and you're using " + termType + " >_>\r\n"))
+		c.conn.Close()
 		return
 	}
 
@@ -112,6 +122,8 @@ func (c *Connection) Handle() {
 	}
 
 	c.console = ui.NewConsole(width, height, c.ID, c.manager.CMReceiveMessages)
+	log.Println("Initializing terminal type for:", c.ID)
+	c.console.SetupTerminalType(termTypeID)
 	log.Println("Initializing Console for:", c.ID)
 	c.console.Init()
 	log.Println("Console Initialized for:", c.ID)
@@ -279,4 +291,8 @@ func (c *Connection) ResizeCleanupComplete() {
 	c.cleanupAfterResizeMutex.Lock()
 	defer c.cleanupAfterResizeMutex.Unlock()
 	c.cleanupAfterResize = false
+}
+
+func (c *Connection) SendToConsole(message messages.ConsoleMessage) {
+	c.console.ReceiveMessages <- message
 }

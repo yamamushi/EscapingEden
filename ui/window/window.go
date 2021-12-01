@@ -1,6 +1,7 @@
 package window
 
 import (
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"sync"
@@ -86,8 +87,8 @@ type Window struct {
 	BorderBG int // The background color of the Window Border
 
 	// Channels for communicating with ConnectionManager
-	ConsoleSend    chan string // Send messages to the Console
-	ConsoleReceive chan string // Receive messages from the Console
+	ConsoleSend    chan messages.WindowMessage // Send messages to the Console
+	ConsoleReceive chan messages.WindowMessage // Receive messages from the Console
 
 	DirectionInput types.InputType // The last direction input from the user
 
