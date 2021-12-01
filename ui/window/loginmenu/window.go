@@ -19,7 +19,10 @@ type LoginWindow struct {
 	// Vars for registration navigation
 	// These have long names to be as verbose as possible
 	registrationNavOptionSelected      int
-	registrationUserInfoOptionSelected int
+	registrationUserInfoOptionSelected RegistrationUserInfoState
+	registrationSubmitMutex            sync.Mutex
+	registrationSubmitData             RegistrationSubmitData
+	registrationErrorData              RegistrationErrorData
 }
 
 // LoginCreds is a struct for storing login credentials

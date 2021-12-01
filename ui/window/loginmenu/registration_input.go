@@ -75,7 +75,7 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 	case types.InputCharacter:
 		switch input.Data {
 		default:
-			lw.Error("Invalid input received")
+			lw.registrationUserInfoCharInput(input.Data)
 			return
 		}
 	case types.InputLeft:
@@ -93,23 +93,75 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		lw.RequestFlushFromConsole()
 	case types.InputDown:
 		log.Println("Down arrow pressed")
-		if lw.registrationUserInfoOptionSelected < int(UserInfoNULL-1) {
+		if lw.registrationUserInfoOptionSelected < UserInfoNULL-1 {
 			lw.registrationUserInfoOptionSelected++
 		}
 		lw.registrationNavOptionSelected = 0
 		lw.RequestFlushFromConsole()
 	case types.InputReturn:
 		log.Println("Return pressed")
+		if lw.registrationNavOptionSelected == 0 && lw.registrationUserInfoOptionSelected == UserInfoEmail {
+			// If we have no option selected, and we're at the email line, we may as well just submit
+			// To make it easier for the user
+			lw.registrationErrorData = lw.RegistrationSubmit(lw.registrationSubmitData)
+		}
+		if lw.registrationNavOptionSelected == 0 {
+			// If we have no option selected, and not at the email line, just ignore this and return
+			return
+		}
 		if lw.registrationNavOptionSelected == 1 {
 			lw.registrationState = RegistrationMain
 		}
 		if lw.registrationNavOptionSelected == 2 {
-			log.Println("Unimplemented state")
+			// This is where we submit our entered user data
+			lw.registrationErrorData = lw.RegistrationSubmit(lw.registrationSubmitData)
 		}
 		lw.registrationNavOptionSelected = 0
 		lw.registrationUserInfoOptionSelected = 0
 		lw.RequestFlushFromConsole()
 		//lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
+	case types.InputBackspace:
+		log.Println("Backspace pressed")
+		lw.registrationUserInfoBackspaceInput()
+		lw.RequestFlushFromConsole()
+		return
+	}
+}
 
+func (lw *LoginWindow) registrationUserInfoCharInput(input string) {
+	switch lw.registrationUserInfoOptionSelected {
+	case UserInfoUsername:
+		lw.registrationSubmitData.Username += input
+		return
+	case UserInfoPassword:
+		lw.registrationSubmitData.Password += input
+		return
+	case UserInfoPasswordConfirm:
+		lw.registrationSubmitData.PasswordConfirm += input
+		return
+	case UserInfoEmail:
+		lw.registrationSubmitData.Email += input
+		return
+	}
+}
+
+func (lw *LoginWindow) registrationUserInfoBackspaceInput() {
+	switch lw.registrationUserInfoOptionSelected {
+	case UserInfoUsername:
+		if lw.registrationSubmitData.Username != "" {
+			lw.registrationSubmitData.Username = lw.registrationSubmitData.Username[:len(lw.registrationSubmitData.Username)-1]
+		}
+	case UserInfoPassword:
+		if lw.registrationSubmitData.Password != "" {
+			lw.registrationSubmitData.Password = lw.registrationSubmitData.Password[:len(lw.registrationSubmitData.Password)-1]
+		}
+	case UserInfoPasswordConfirm:
+		if lw.registrationSubmitData.PasswordConfirm != "" {
+			lw.registrationSubmitData.PasswordConfirm = lw.registrationSubmitData.PasswordConfirm[:len(lw.registrationSubmitData.PasswordConfirm)-1]
+		}
+	case UserInfoEmail:
+		if lw.registrationSubmitData.Email != "" {
+			lw.registrationSubmitData.Email = lw.registrationSubmitData.Email[:len(lw.registrationSubmitData.Email)-1]
+		}
 	}
 }
