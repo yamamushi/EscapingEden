@@ -20,6 +20,8 @@ func (lw *LoginWindow) handleRegistrationInput(input types.Input) {
 		lw.handleRegistrationMainInput(input)
 	case RegistrationUserInfo:
 		lw.handleRegistrationUserInfo(input)
+	case RegistrationSuccess:
+		lw.handleRegistrationSuccess(input)
 	}
 }
 
@@ -80,13 +82,26 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		}
 	case types.InputLeft:
 		log.Println("Left arrow pressed")
+		if lw.registrationNavOptionSelected != 2 {
+			lw.registrationUserInfoLastOptionSelected = lw.registrationUserInfoOptionSelected
+			lw.registrationUserInfoOptionSelected = UserInfoNULL
+		}
 		lw.registrationNavOptionSelected = 1
+
 	case types.InputRight:
 		log.Println("Right arrow pressed")
+		if lw.registrationNavOptionSelected != 1 {
+			lw.registrationUserInfoLastOptionSelected = lw.registrationUserInfoOptionSelected
+			lw.registrationUserInfoOptionSelected = UserInfoNULL
+		}
 		lw.registrationNavOptionSelected = 2
 	case types.InputUp:
 		log.Println("Up arrow pressed")
-		if lw.registrationUserInfoOptionSelected > 0 {
+		if lw.registrationNavOptionSelected == 2 {
+			lw.registrationUserInfoOptionSelected = lw.registrationUserInfoLastOptionSelected
+		} else if lw.registrationNavOptionSelected == 1 {
+			lw.registrationUserInfoOptionSelected = lw.registrationUserInfoLastOptionSelected
+		} else if lw.registrationUserInfoOptionSelected > 0 {
 			lw.registrationUserInfoOptionSelected--
 		}
 		lw.registrationNavOptionSelected = 0
@@ -95,8 +110,12 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		log.Println("Down arrow pressed")
 		if lw.registrationUserInfoOptionSelected < UserInfoNULL-1 {
 			lw.registrationUserInfoOptionSelected++
+		} else {
+			lw.registrationUserInfoLastOptionSelected = lw.registrationUserInfoOptionSelected
+			lw.registrationUserInfoOptionSelected = UserInfoNULL
+			lw.registrationNavOptionSelected = 2
 		}
-		lw.registrationNavOptionSelected = 0
+		//lw.registrationNavOptionSelected = 0
 		lw.RequestFlushFromConsole()
 	case types.InputReturn:
 		log.Println("Return pressed")
@@ -111,22 +130,16 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 			case UserInfoEmail:
 				lw.registrationUserInfoOptionSelected = UserInfoAgreeRules
 			case UserInfoAgreeRules:
-				// If we have no option selected, and we're at the email line, we may as well just submit
-				// To make it easier for the user
-				registrationError := lw.RegistrationSubmit(lw.registrationSubmitData)
-				if registrationError != nil {
-					// If we got an error, we're just going to update our error state
-					lw.registrationErrorData = *registrationError
-				} else {
-					// Otherwise we succeeded (yay!) and we can go to the success screen
-					lw.registrationState = RegistrationSuccess
-				}
+				// If we have no option selected, and we're at the email line, we may as well just go to the submit button
+				lw.registrationUserInfoOptionSelected = UserInfoNULL
+				lw.registrationNavOptionSelected = 2
 			}
 			return
 		}
 		if lw.registrationNavOptionSelected == 1 {
 			// If we're going back, we're going to flush our registration error and data
 			lw.registrationState = RegistrationMain
+			lw.registrationAgreeRules = false
 			lw.registrationErrorData = RegistrationError{}
 			lw.registrationSubmitData = RegistrationSubmitData{}
 		}
@@ -139,6 +152,10 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 			} else {
 				// Otherwise we succeeded (yay!) and we can go to the success screen
 				lw.registrationState = RegistrationSuccess
+				// Let's also cleanup our registration data
+				lw.registrationAgreeRules = false
+				lw.registrationErrorData = RegistrationError{}
+				lw.registrationSubmitData = RegistrationSubmitData{}
 			}
 		}
 		lw.registrationNavOptionSelected = 0
@@ -189,4 +206,8 @@ func (lw *LoginWindow) registrationUserInfoBackspaceInput() {
 			lw.registrationSubmitData.Email = lw.registrationSubmitData.Email[:len(lw.registrationSubmitData.Email)-1]
 		}
 	}
+}
+
+func (lw *LoginWindow) handleRegistrationSuccess(input types.Input) {
+
 }

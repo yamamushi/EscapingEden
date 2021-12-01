@@ -32,6 +32,8 @@ func (lw *LoginWindow) drawRegistrationMenu() {
 		lw.drawRegistrationWelcome()
 	case RegistrationUserInfo:
 		lw.drawRegistrationUserInfo()
+	case RegistrationSuccess:
+		lw.drawRegistrationSuccess()
 	}
 
 }
@@ -80,7 +82,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	// If we're touching lw.registrationErrorData, we need to lock it
 
 	lw.PrintLn(lw.X+4, lw.Y+4, "Please enter your user registration information below.", "")
-	lw.PrintLn(lw.X+4, lw.Y+5, "(You can use your arrow keys to navigate between fields)", "")
+	lw.PrintLn(lw.X+4, lw.Y+5, "(You can use your arrow keys, or enter, to navigate between fields)", "")
 
 	errorFG := util.RGBCode(255, 255, 255)
 	errorBG := util.RGBCode(255, 0, 0)
@@ -144,4 +146,8 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	} else {
 		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", "\033[1m")
 	}
+}
+
+func (lw *LoginWindow) drawRegistrationSuccess() {
+
 }
