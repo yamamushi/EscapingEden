@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"github.com/yamamushi/EscapingEden/terminals"
+	xterm_256color "github.com/yamamushi/EscapingEden/terminals/xterm-256color"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
@@ -19,8 +21,10 @@ const (
 // Console is the main UI object.
 type Console struct {
 	ConnectionID string // The ID of the connection using this console
-	Height       int    // The height of the console
-	Width        int    // The width of the console
+	TermType     terminals.TerminalType
+
+	Height int // The height of the console
+	Width  int // The width of the console
 
 	Windows            []window.WindowType // The list of windows that are currently in the console
 	ConsoleCommands    string
@@ -73,6 +77,15 @@ func NewConsole(height int, width int, connectionID string, outputChannel chan s
 	return &Console{Height: height, Width: width, ConnectionID: connectionID, SendMessages: outputChannel,
 		ReceiveMessages: receiver, WindowMessages: windowMessages, LoginMessages: loginMessages,
 		ChatMessages: chatMessages, ToolboxMessages: toolboxMessages, PopupBoxMessages: popupBoxMessage}
+}
+
+func (c *Console) SetupTerminalType(termType terminals.TermTypeID) {
+	// Set up the terminal type
+	switch termType {
+	case terminals.TermTypeXTerm256Color:
+		c.TermType = xterm_256color.New()
+	}
+	c.TermType.Init()
 }
 
 // Init is called once to initialize the console, it does things like create the default windows, and launches the
