@@ -18,6 +18,7 @@ const (
 	UserInfoPassword
 	UserInfoPasswordConfirm
 	UserInfoEmail
+	UserInfoAgreeRules
 	UserInfoNULL
 )
 
@@ -78,36 +79,55 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	defer lw.registrationSubmitMutex.Unlock()
 	// If we're touching lw.registrationErrorData, we need to lock it
 
-	lw.PrintLn(lw.X+4, lw.Y+2, "Please enter your user registration information below.", "")
-	lw.PrintLn(lw.X+4, lw.Y+3, "(You can use your arrow keys to navigate between fields)", "")
+	lw.PrintLn(lw.X+4, lw.Y+4, "Please enter your user registration information below.", "")
+	lw.PrintLn(lw.X+4, lw.Y+5, "(You can use your arrow keys to navigate between fields)", "")
 
 	errorFG := util.RGBCode(255, 255, 255)
 	errorBG := util.RGBCode(255, 0, 0)
 
-	lw.PrintLn(lw.X+12, lw.Y+7, "Username:", "\033[1m")
-	//bg := util.RGBCode(0, 255, 0)
+	if lw.registrationUserInfoOptionSelected == UserInfoUsername {
+		lw.PrintLn(lw.X+12, lw.Y+7, "Username:", "\033[1m")
+	} else {
+		lw.PrintLn(lw.X+12, lw.Y+7, "Username:", "")
+	}
 	lw.PrintLn(lw.X+22, lw.Y+7, lw.registrationSubmitData.Username, "")
-	lw.PrintLn(lw.X+36, lw.Y+7, lw.registrationErrorData.UsernameError, errorFG.FG()+errorBG.BG())
+	lw.PrintLn(lw.X+36, lw.Y+7, lw.registrationErrorData.UsernameError(), errorFG.FG()+errorBG.BG())
 
-	lw.PrintLn(lw.X+12, lw.Y+8, "Password:", "\033[1m")
+	if lw.registrationUserInfoOptionSelected == UserInfoPassword {
+		lw.PrintLn(lw.X+12, lw.Y+8, "Password:", "\033[1m")
+	} else {
+		lw.PrintLn(lw.X+12, lw.Y+8, "Password:", "")
+	}
 	lw.PrintLn(lw.X+22, lw.Y+8, lw.registrationSubmitData.Password, "")
-	lw.PrintLn(lw.X+36, lw.Y+8, lw.registrationErrorData.PasswordError, errorFG.FG()+errorBG.BG())
+	lw.PrintLn(lw.X+36, lw.Y+8, lw.registrationErrorData.PasswordError(), errorFG.FG()+errorBG.BG())
 
-	lw.PrintLn(lw.X+4, lw.Y+9, "Confirm Password:", "\033[1m")
+	if lw.registrationUserInfoOptionSelected == UserInfoPasswordConfirm {
+		lw.PrintLn(lw.X+4, lw.Y+9, "Confirm Password:", "\033[1m")
+	} else {
+		lw.PrintLn(lw.X+4, lw.Y+9, "Confirm Password:", "")
+	}
 	lw.PrintLn(lw.X+22, lw.Y+9, lw.registrationSubmitData.PasswordConfirm, "")
-	lw.PrintLn(lw.X+36, lw.Y+9, lw.registrationErrorData.PasswordConfirmError, errorFG.FG()+errorBG.BG())
+	lw.PrintLn(lw.X+36, lw.Y+9, lw.registrationErrorData.PasswordConfirmError(), errorFG.FG()+errorBG.BG())
 
-	lw.PrintLn(lw.X+15, lw.Y+10, "Email:", "\033[1m")
+	if lw.registrationUserInfoOptionSelected == UserInfoEmail {
+		lw.PrintLn(lw.X+15, lw.Y+10, "Email:", "\033[1m")
+	} else {
+		lw.PrintLn(lw.X+15, lw.Y+10, "Email:", "")
+	}
 	lw.PrintLn(lw.X+22, lw.Y+10, lw.registrationSubmitData.Email, "")
-	lw.PrintLn(lw.X+36, lw.Y+10, lw.registrationErrorData.EmailError, errorFG.FG()+errorBG.BG())
+	lw.PrintLn(lw.X+36, lw.Y+10, lw.registrationErrorData.EmailError(), errorFG.FG()+errorBG.BG())
 
-	//lw.PrintLn(lw.X+13, lw.Y+11, "Discord:", "\033[1m")
-	//lw.PrintLn(lw.X+21, lw.Y+11, "         ", "\033[4m")
+	lw.PrintLn(lw.X+20, lw.Y+14, "Do you agree to the rules?     (Space to toggle)", "")
+	lw.PrintLn(lw.X+20, lw.Y+13, lw.registrationErrorData.RulesError(), errorFG.FG()+errorBG.BG())
 
-	fg := util.RGBCode(0, 255, 0)
-	lw.PrintLn(lw.X+21, lw.Y+7+int(lw.registrationUserInfoOptionSelected), ">", fg.FG()+"\033[4m")
-
-	//lw.PrintLn(lw.X+13, lw.Y+13, "(Discord usernames accepted in the form of Username#0001)", "")
+	if lw.registrationUserInfoOptionSelected == UserInfoAgreeRules {
+		lw.PrintLn(lw.X+47, lw.Y+14, "[ ]", "\033[1m")
+	} else {
+		lw.PrintLn(lw.X+47, lw.Y+14, "[ ]", "")
+	}
+	if lw.registrationAgreeRules {
+		lw.PrintChar(lw.X+48, lw.Y+14, "\u2666", "\033[1m")
+	}
 
 	if lw.registrationNavOptionSelected == 1 {
 		fg := util.RGBCode(0, 0, 0)

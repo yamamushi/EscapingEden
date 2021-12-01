@@ -23,6 +23,8 @@ type LoginWindow struct {
 	registrationSubmitMutex            sync.Mutex
 	registrationSubmitData             RegistrationSubmitData
 	registrationErrorData              RegistrationError
+	registrationAgreeRules             bool
+	registrationComplete               bool
 }
 
 // LoginCreds is a struct for storing login credentials

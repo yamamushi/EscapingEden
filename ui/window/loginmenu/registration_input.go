@@ -109,6 +109,8 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 			case UserInfoPasswordConfirm:
 				lw.registrationUserInfoOptionSelected = UserInfoEmail
 			case UserInfoEmail:
+				lw.registrationUserInfoOptionSelected = UserInfoAgreeRules
+			case UserInfoAgreeRules:
 				// If we have no option selected, and we're at the email line, we may as well just submit
 				// To make it easier for the user
 				registrationError := lw.RegistrationSubmit(lw.registrationSubmitData)
@@ -155,16 +157,16 @@ func (lw *LoginWindow) registrationUserInfoCharInput(input string) {
 	switch lw.registrationUserInfoOptionSelected {
 	case UserInfoUsername:
 		lw.registrationSubmitData.Username += input
-		return
 	case UserInfoPassword:
 		lw.registrationSubmitData.Password += input
-		return
 	case UserInfoPasswordConfirm:
 		lw.registrationSubmitData.PasswordConfirm += input
-		return
 	case UserInfoEmail:
 		lw.registrationSubmitData.Email += input
-		return
+	case UserInfoAgreeRules:
+		if input == " " {
+			lw.registrationAgreeRules = !lw.registrationAgreeRules
+		}
 	}
 }
 
