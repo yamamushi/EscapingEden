@@ -57,7 +57,7 @@ different methods of communicating with the game engine that I am attempting bef
 
 This is important for the long term goals of EE, because I want to be able to be able to distribute the game processing
 to a separate cluster in the future if necessary. This is a very long term goal, but it's essential that the game
-engine and the networking/UI are complete separate entities. The connection manager can send messages to the game engine
+engine and the networking/UI are completely separate entities. The connection manager can send messages to the game engine
 on behalf of a console, but a console can never communicate directly with the game engine.
 
 The game engine can _never_ have any notion of what a console is, nor should it ever care. 

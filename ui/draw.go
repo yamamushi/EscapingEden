@@ -217,7 +217,7 @@ func (c *Console) FlushWindowArea(winID config.WindowID) {
 		log.Println("GetWidth, GetHeight: ", win.GetWidth(), win.GetHeight())
 		for j := win.GetY(); j < win.GetY()+win.GetHeight()+2; j++ {
 			for i := win.GetX(); i < win.GetX()+win.GetWidth()+1; i++ {
-				log.Println("Flushing point: ", i, j)
+				//log.Println("Flushing point: ", i, j)
 				//if w.GetCharAt(i, j) != " " { // && w.GetEscapeCodeAt(i, j) != "" {
 				//log.Println("Blank point found: ", i, j)'
 				c.PointMap[i][j] = types.Point{X: i, Y: i, Character: " ", EscapeCode: ""}

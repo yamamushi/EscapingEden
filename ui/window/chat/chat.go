@@ -110,7 +110,7 @@ func (cw *ChatWindow) HandleInput(input types.Input) {
 		log.Println("ChatWindow Return")
 		if cw.cwInputBuffer != "" {
 			// Send a console message to the ConsoleSend channel
-			consoleMessage := messages.WindowMessage{MessageContent: cw.cwInputBuffer, Type: messages.WM_ParseChat}
+			consoleMessage := messages.WindowMessage{Data: cw.cwInputBuffer, Type: messages.WM_ParseChat}
 			cw.ConsoleSend <- consoleMessage
 			cw.cwInputBuffer = ""
 		} else {

@@ -37,7 +37,7 @@ func (c *Console) CloseHelp() {
 
 // HandleHelpMessage handles messages for the help window
 func (c *Console) HandleHelpMessage(message messages.WindowMessage) {
-	switch message.MessageContent {
+	switch message.Data.(string) {
 	case "close":
 		c.CloseHelp()
 	}

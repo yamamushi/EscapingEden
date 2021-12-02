@@ -7,7 +7,9 @@ Escaping Eden is a simple text adventure mud ;)
 import (
 	"flag"
 	"fmt"
+	"github.com/yamamushi/EscapingEden/accounts"
 	"github.com/yamamushi/EscapingEden/edenconfig"
+	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/network"
 	"log"
 	"os"
@@ -49,15 +51,34 @@ func main() {
 		os.Exit(1)
 	}
 
-	server := network.NewServer(conf.Server.Host, conf.Server.Port)
-	log.Println("Starting Escaping Eden server...")
 	startNotify := make(chan bool)
-	err = server.Start(startNotify)
+
+	accountManagerReceiver := make(chan messages.AccountManagerMessage)
+	connectionManagerReceive := make(chan messages.ConnectionManagerMessage)
+
+	log.Println("Starting Account Manager...")
+	accountManager := accounts.NewAccountManager(accountManagerReceiver, connectionManagerReceive)
+	err = accountManager.Start(startNotify)
+	if err != nil {
+		log.Println("Error starting Account Manager: ", err)
+		os.Exit(1)
+	}
+	ticker := time.NewTicker(1 * time.Second)
+	select {
+	case <-startNotify:
+		log.Println("Account Manager started.")
+		break
+	case <-ticker.C:
+		fmt.Print(".")
+	}
+
+	server := network.NewServer(conf.Server.Host, conf.Server.Port)
+	log.Println("Starting Connection Manager...")
+	err = server.Start(startNotify, connectionManagerReceive)
 	if err != nil {
 		log.Println("Error starting server: ", err)
 		os.Exit(1)
 	}
-	ticker := time.NewTicker(1 * time.Second)
 	select {
 	case <-startNotify:
 		log.Println("Escaping Eden is now running.  Press CTRL-C to exit.")

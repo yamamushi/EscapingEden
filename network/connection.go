@@ -16,7 +16,7 @@ type Connection struct {
 	ID      string
 	conn    net.Conn
 	mutex   sync.Mutex
-	console *ui.Console
+	Console *ui.Console
 	manager *ConnectionManager
 
 	// These are for working with IAC commands coming into the handler
@@ -121,11 +121,11 @@ func (c *Connection) Handle() {
 		return
 	}
 
-	c.console = ui.NewConsole(width, height, c.ID, c.manager.CMReceiveMessages)
+	c.Console = ui.NewConsole(width, height, c.ID, c.manager.CMReceiveMessages)
 	log.Println("Initializing terminal type for:", c.ID)
-	c.console.SetupTerminalType(termTypeID)
+	c.Console.SetupTerminalType(termTypeID)
 	log.Println("Initializing Console for:", c.ID)
-	c.console.Init()
+	c.Console.Init()
 	log.Println("Console Initialized for:", c.ID)
 
 	log.Println("Launching Write Handler for:", c.ID)
@@ -157,15 +157,15 @@ func (c *Connection) ReadHandler() {
 			continue
 		}
 
-		c.console.HandleInput(readByte)
+		c.Console.HandleInput(readByte)
 	}
 }
 
 // WriteHandler is launched as a goroutine that handles writing bytes to the connection
-// It is constantly pulling messages from the console and writing them to the connection
+// It is constantly pulling messages from the Console and writing them to the connection
 func (c *Connection) WriteHandler() {
 	for {
-		if c.console.GetShutdown() {
+		if c.Console.GetShutdown() {
 			log.Println("Client requested shutdown")
 			c.conn.Write([]byte("\033[2J"))
 			c.conn.Write([]byte("\033[;H" + "See you back soon! Goodbye :)\r\n"))
@@ -174,7 +174,7 @@ func (c *Connection) WriteHandler() {
 			return
 		}
 
-		output := c.console.Draw()
+		output := c.Console.Draw()
 		if len(output) > 0 {
 			err := c.Write(output)
 			if err != nil {
@@ -190,19 +190,19 @@ func (c *Connection) WriteHandler() {
 			log.Println(c.cleanupStage)
 			switch c.cleanupStage {
 			case 0:
-				//c.console.ForceRedraw()
+				//c.Console.ForceRedraw()
 				c.cleanupStage++
 			case 1:
-				//c.console.ForceRedraw()
+				//c.Console.ForceRedraw()
 				c.cleanupStage++
 			case 2:
-				c.console.ResetWindowDrawings()
+				c.Console.ResetWindowDrawings()
 				c.cleanupStage++
 			case 3:
-				c.console.ClearPointMap()
+				c.Console.ClearPointMap()
 				c.cleanupStage++
 			case 4:
-				c.console.FlushLastSent()
+				c.Console.FlushLastSent()
 				c.cleanupStage++
 			case 5:
 				c.ResizeCleanupComplete()
@@ -258,7 +258,7 @@ func (c *Connection) HandleIAC(readByte byte) {
 				c.iacParamIndex = 0
 				//if c.iacWindowResizeX
 				if c.iacWindowResizeX > 0 && c.iacWindowResizeY > 0 {
-					c.console.HandleResize(c.iacWindowResizeX, c.iacWindowResizeY)
+					c.Console.HandleResize(c.iacWindowResizeX, c.iacWindowResizeY)
 					c.NotifyCleanupResize()
 				}
 				c.iacWindowResizeX = 0
@@ -294,5 +294,7 @@ func (c *Connection) ResizeCleanupComplete() {
 }
 
 func (c *Connection) SendToConsole(message messages.ConsoleMessage) {
-	c.console.ReceiveMessages <- message
+	go func() {
+		c.Console.ReceiveMessages <- message
+	}()
 }

@@ -14,19 +14,23 @@ func (c *Console) CaptureManagerMessages() {
 			log.Println("Console received message from manager")
 
 			switch consoleMessage.Type {
+			case messages.Console_Message_RegistrationResponse:
+				log.Println("Console received registration response")
+				loginMessage := messages.WindowMessage{Type: messages.WM_RegistrationResponse, Data: consoleMessage.Data}
+				c.LoginWindowMessages <- loginMessage
 			case messages.Console_Message_Chat:
 				log.Println("Chat message received from manager")
-				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: consoleMessage.Message}
+				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: consoleMessage.Data.(string)}
 				c.ChatMessageReceive <- chatMessage
 				continue
 			case messages.Console_Message_Error:
 				log.Println("Error message received from manager")
-				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: "Error: " + consoleMessage.Message}
+				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: "Error: " + consoleMessage.Data.(string)}
 				c.ChatMessageReceive <- chatMessage
 				continue
 			case messages.Console_Message_Broadcast:
 				log.Println("Broadcast message received from manager")
-				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: "Broadcast: " + consoleMessage.Message}
+				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: "Broadcast: " + consoleMessage.Data.(string)}
 				c.ChatMessageReceive <- chatMessage
 				continue
 			case messages.Console_Message_Quit:

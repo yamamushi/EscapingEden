@@ -34,7 +34,7 @@ func (c *Console) ClosePopup() {
 
 // HandlePopupMessage handles the messages sent to the popup window
 func (c *Console) HandlePopupMessage(message messages.WindowMessage) {
-	switch message.MessageContent {
+	switch message.Data.(string) {
 	case "close":
 		c.ClosePopup()
 	}

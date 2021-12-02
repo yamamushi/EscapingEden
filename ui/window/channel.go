@@ -12,7 +12,7 @@ import (
 
 // Error sends a message with type error to the console
 func (w *Window) Error(err string) {
-	request := messages.WindowMessage{Type: messages.WM_Error, MessageContent: err}
+	request := messages.WindowMessage{Type: messages.WM_Error, Data: err}
 	w.ConsoleSend <- request
 }
 

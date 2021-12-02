@@ -2,6 +2,7 @@ package network
 
 import (
 	"github.com/google/uuid"
+	"github.com/yamamushi/EscapingEden/messages"
 	"log"
 	"net"
 	"sync"
@@ -30,15 +31,15 @@ func NewServer(host string, port string) *Server {
 }
 
 // Start starts the server
-func (s *Server) Start(startedNotify chan bool) error {
+func (s *Server) Start(startedNotify chan bool, cmReceiveMessage chan messages.ConnectionManagerMessage) error {
 	l, err := net.Listen("tcp", s.Host+":"+s.Port)
 	if err != nil {
 		return err
 	}
 
 	// Using sync.Map to not deal with concurrency slice/map issues
-	s.ConnectionManager = NewConnectionManager(s.ConnectMap, startedNotify)
-	go s.ConnectionManager.Run()
+	s.ConnectionManager = NewConnectionManager(s.ConnectMap, cmReceiveMessage)
+	go s.ConnectionManager.Run(startedNotify)
 	go s.Listen(l)
 	return nil
 }
