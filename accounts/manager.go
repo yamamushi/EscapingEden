@@ -22,11 +22,11 @@ func (am *AccountManager) Start(started chan bool) error {
 
 func (am *AccountManager) HandleMessages(started chan bool) {
 	log.Println("Account Manager now handling messages")
-
 	started <- true
 	for {
 		select {
 		case managerMessage := <-am.ReceiveChannel:
+			log.Println("Account Manager received message")
 			switch managerMessage.Type {
 			case messages.AccountManager_Message_Register:
 				registrationResponse := messages.AccountRegistrationResponse{Success: true, Message: "Registration Successful"}
@@ -35,6 +35,7 @@ func (am *AccountManager) HandleMessages(started chan bool) {
 					RecipientConsoleID: managerMessage.SenderSessionID,
 					Data:               registrationResponse,
 				}
+				log.Println("Sending registration response")
 				am.SendChannel <- response
 			}
 		}

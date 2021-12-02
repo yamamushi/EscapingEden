@@ -74,7 +74,7 @@ func main() {
 
 	server := network.NewServer(conf.Server.Host, conf.Server.Port)
 	log.Println("Starting Connection Manager...")
-	err = server.Start(startNotify, connectionManagerReceive)
+	err = server.Start(startNotify, connectionManagerReceive, accountManagerReceiver)
 	if err != nil {
 		log.Println("Error starting server: ", err)
 		os.Exit(1)

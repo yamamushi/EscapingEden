@@ -20,6 +20,7 @@ const (
 	// These messages are sent to the connection manager for processing upstream
 	// We can't do anything with them here, so we just pass them along
 	WM_ParseChat
+	WM_RequestRegistration
 
 	// These are messages that are parsed by the windows themselves if they receive an event
 	WM_RegistrationResponse

@@ -31,14 +31,14 @@ func NewServer(host string, port string) *Server {
 }
 
 // Start starts the server
-func (s *Server) Start(startedNotify chan bool, cmReceiveMessage chan messages.ConnectionManagerMessage) error {
+func (s *Server) Start(startedNotify chan bool, cmReceiveMessage chan messages.ConnectionManagerMessage, amReceiveMessages chan messages.AccountManagerMessage) error {
 	l, err := net.Listen("tcp", s.Host+":"+s.Port)
 	if err != nil {
 		return err
 	}
 
 	// Using sync.Map to not deal with concurrency slice/map issues
-	s.ConnectionManager = NewConnectionManager(s.ConnectMap, cmReceiveMessage)
+	s.ConnectionManager = NewConnectionManager(s.ConnectMap, cmReceiveMessage, amReceiveMessages)
 	go s.ConnectionManager.Run(startedNotify)
 	go s.Listen(l)
 	return nil

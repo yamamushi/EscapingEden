@@ -1,12 +1,15 @@
 package login
 
+import "github.com/yamamushi/EscapingEden/messages"
+
 func (lw *LoginWindow) RegistrationSubmit(RegistrationSubmitData) *RegistrationError {
 	lw.registrationSubmitMutex.Lock()
 	defer lw.registrationSubmitMutex.Unlock()
+
 	// We need to lock to make sure no requests are happening twice, and that
 	// Our registration data is locked
 	regError := &RegistrationError{
-		usernameError:        "Everything went fine, this is a test",
+		usernameError:        "",
 		passwordError:        "",
 		passwordConfirmError: "",
 		emailError:           "",
@@ -14,7 +17,6 @@ func (lw *LoginWindow) RegistrationSubmit(RegistrationSubmitData) *RegistrationE
 		errorRequest:         "",
 	}
 
-	var inputError bool
 	if lw.registrationSubmitData.Username == "" {
 		regError.usernameError = "You must enter a username."
 	}
@@ -31,9 +33,19 @@ func (lw *LoginWindow) RegistrationSubmit(RegistrationSubmitData) *RegistrationE
 	if !lw.registrationAgreeRules {
 		regError.rulesError = "You must agree to the rules before you can register."
 	}
-	if inputError {
+	if !regError.Empty() {
 		return regError
 	}
 
-	return regError
+	registrationData := messages.AccountRegistrationRequest{
+		Username: lw.registrationSubmitData.Username,
+		Password: lw.registrationSubmitData.Password,
+		Email:    lw.registrationSubmitData.Email,
+	}
+	windowMessage := messages.WindowMessage{Type: messages.WM_RequestRegistration, Data: registrationData}
+	lw.SendToConsole(windowMessage)
+
+	go lw.HandleReceiveChannel() // We're going to start listening for responses now
+
+	return nil
 }

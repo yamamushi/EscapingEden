@@ -57,6 +57,14 @@ func (r RegistrationError) ErrorRequest() string {
 	}
 }
 
+func (r RegistrationError) Empty() bool {
+	if r.usernameError != "" || r.passwordError != "" || r.passwordConfirmError != "" || r.emailError != "" || r.rulesError != "" {
+		return false
+	} else {
+		return true
+	}
+}
+
 type RegistrationSubmitData struct {
 	Username        string
 	Password        string

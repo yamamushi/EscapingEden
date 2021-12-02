@@ -50,6 +50,14 @@ func (c *Console) CaptureWindowMessages() {
 				c.SendMessages <- managerMessage
 				continue
 
+			case messages.WM_RequestRegistration:
+				log.Println("Sending registration request to connection manager")
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_Register,
+					Data:            windowMessage.Data,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
 				// These messages require serializing to send to ConnectionManager
 			case messages.WM_Error:
 				log.Println("Sending Error message to Connection Manager: ", windowMessage.Data.(string))

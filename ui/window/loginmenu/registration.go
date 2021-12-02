@@ -149,5 +149,11 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 }
 
 func (lw *LoginWindow) drawRegistrationSuccess() {
-
+	lw.registrationStatusMutex.Lock()
+	defer lw.registrationStatusMutex.Unlock()
+	if lw.registrationResponse.Success {
+		lw.PrintLn(lw.X+2, lw.Y+4, "Registration successful!", "")
+	} else {
+		lw.PrintLn(lw.X+2, lw.Y+4, "Something went wrong!: "+lw.registrationResponse.Message, "")
+	}
 }

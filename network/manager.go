@@ -23,10 +23,11 @@ type ConnectionManager struct {
 }
 
 // NewConnectionManager creates a new ConnectionManager
-func NewConnectionManager(connectionMap *sync.Map, receiveMessages chan messages.ConnectionManagerMessage) *ConnectionManager {
+func NewConnectionManager(connectionMap *sync.Map, receiveMessages chan messages.ConnectionManagerMessage, accountManagerMessages chan messages.AccountManagerMessage) *ConnectionManager {
 	return &ConnectionManager{
 		connectionMap:     connectionMap,
 		CMReceiveMessages: receiveMessages,
+		AMSendMessages:    accountManagerMessages,
 	}
 }
 
@@ -110,10 +111,10 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Register, RegistrationRequest: registrationRequest, SenderSessionID: managerMessage.SenderConsoleID}
 				}()
 			case messages.ConnectManager_Message_RegisterResponse:
-				log.Println("Sending registration response to Console that requested registration")
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
+							log.Println("Sending registration response to Console that requested registration")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_RegistrationResponse, Data: managerMessage.Data}
 							conn.SendToConsole(consoleMessage)
 						}

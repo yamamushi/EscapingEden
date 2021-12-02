@@ -11,12 +11,12 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 		case windowMessage := <-lw.ConsoleReceive:
 			switch windowMessage.Type {
 			case messages.WM_RegistrationResponse:
-				log.Println("Registration response received")
-				if windowMessage.Data.(*messages.AccountRegistrationResponse).Success {
-					log.Println(windowMessage.Data.(*messages.AccountRegistrationResponse).Message)
-				} else {
-					log.Println("Something went wrong")
-				}
+				lw.registrationStatusMutex.Lock()
+				defer lw.registrationStatusMutex.Unlock()
+
+				log.Println("Login Window received registration response from console")
+				lw.registrationResponse = windowMessage.Data.(messages.AccountRegistrationResponse)
+				return // We launched when our registration request was submitted, now we can return since we got a response
 			}
 		}
 	}
