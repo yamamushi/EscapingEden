@@ -154,6 +154,11 @@ type TerminalType interface {
 	NotOverlined() string
 
 	// 58 - 107 : Reserved for future standardization, few terminals support things in this range.
+
+	// These are terminal independent and will need to be implemented per terminal type.
+
+	// HideCursor hides the cursor
+	HideCursor() string
 }
 
 type Terminal struct {
@@ -362,4 +367,10 @@ func (t *Terminal) NeitherFrameNorEncircled() string {
 // int 55
 func (t *Terminal) NotOverlined() string {
 	return "\033[55m"
+}
+
+// HideCursor should hide the cursor on the screen, this is platform independent
+// So it is not implemented here.
+func (t *Terminal) HideCursor() string {
+	return ""
 }

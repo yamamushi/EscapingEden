@@ -4,6 +4,7 @@ import (
 	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
+	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
@@ -25,9 +26,10 @@ type ChatWindow struct {
 
 // NewChatWindow creates a new chat window
 func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, chatInput chan messages.ChatMessage,
-	windowInput, output chan messages.WindowMessage, log logging.LoggerType) *ChatWindow {
+	windowInput, output chan messages.WindowMessage, log logging.LoggerType, term terminals.TerminalType) *ChatWindow {
 	cw := new(ChatWindow)
 	cw.Log = log
+	cw.Terminal = term
 	cw.ID = config.WindowChatBox
 	// if x or y are less than 1 set them to 1
 	if x < 1 {

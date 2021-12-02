@@ -38,7 +38,7 @@ func (c *Console) Draw() []byte {
 	if c.forceScreenRefresh {
 		//log.Println("force screen refresh")
 		c.forceScreenRefresh = false
-		s = s + c.ClearTerminal()
+		s = s + c.ResetTerminal()
 		return []byte(s)
 	}
 

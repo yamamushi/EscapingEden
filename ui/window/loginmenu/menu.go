@@ -13,15 +13,15 @@ func (lw *LoginWindow) drawMenu() {
 	lw.PrintLn(lw.X+10, lw.Y+6, "Please select a menu option from below:", "")
 
 	lw.PrintLn(lw.X+11, lw.Y+8, "(", "")
-	lw.PrintLn(lw.X+12, lw.Y+8, "l", "\033[1m")
+	lw.PrintLn(lw.X+12, lw.Y+8, "l", lw.Terminal.Bold())
 	lw.PrintLn(lw.X+13, lw.Y+8, ")ogin", "")
 
 	lw.PrintLn(lw.X+11, lw.Y+9, "(", "")
-	lw.PrintLn(lw.X+12, lw.Y+9, "r", "\033[1m")
+	lw.PrintLn(lw.X+12, lw.Y+9, "r", lw.Terminal.Bold())
 	lw.PrintLn(lw.X+13, lw.Y+9, ")egister", "")
 
 	lw.PrintLn(lw.X+11, lw.Y+10, "(", "")
-	lw.PrintLn(lw.X+12, lw.Y+10, "q", "\033[1m")
+	lw.PrintLn(lw.X+12, lw.Y+10, "q", lw.Terminal.Bold())
 	lw.PrintLn(lw.X+13, lw.Y+10, ")uit", "")
 	/* Disabling this testing logo for now!
 	artFile, err := util.OpenASCIIArtFile("assets/ascii/logo.txt")

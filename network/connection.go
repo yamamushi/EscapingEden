@@ -85,7 +85,7 @@ func (c *Connection) Handle() {
 	if termType == "xterm-256color" {
 		termTypeID = terminals.TermTypeXTerm256Color
 	} else {
-		c.Log.Println(logging.LogWarn, "Unsupported terminal type:", c.ID, " TermType:", termType, " Closing connection")
+		c.Log.Println(logging.LogWarn, "Unsupported terminal type:", c.ID, " Terminal:", termType, " Closing connection")
 		c.manager.HandleDisconnect(c)
 		c.Write([]byte("\033cUnsupported terminal type, sorry only xterm-256color is supported at the " +
 			"moment and you're using " + termType + " >_>\r\n"))

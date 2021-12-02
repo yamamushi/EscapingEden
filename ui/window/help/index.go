@@ -35,9 +35,9 @@ func (hw *HelpWindow) PrintIndexControls() {
 	shift = (hw.Width / 2) - (len(commandList) / 2) - 1
 
 	hw.PrintLn(hw.X+shift, hw.Y+hw.Height, commandList, "")
-	hw.PrintChar(hw.X+shift+homeDistance, hw.Y+hw.Height, "H", "\033[1m")
-	hw.PrintLn(hw.X+shift+selectDistance, hw.Y+hw.Height, "Enter", "\033[1m")
-	hw.PrintChar(hw.X+shift+closeDistance, hw.Y+hw.Height, "c", "\033[1m")
+	hw.PrintChar(hw.X+shift+homeDistance, hw.Y+hw.Height, "H", hw.Terminal.Bold())
+	hw.PrintLn(hw.X+shift+selectDistance, hw.Y+hw.Height, "Enter", hw.Terminal.Bold())
+	hw.PrintChar(hw.X+shift+closeDistance, hw.Y+hw.Height, "c", hw.Terminal.Bold())
 }
 
 // DrawIndexInfo draws the index page scraping from types.HelpPage const types
@@ -50,14 +50,14 @@ func (hw *HelpWindow) DrawIndexInfo() {
 	} else {
 		pageInfo = "Index Main"
 	}
-	hw.PrintLn(hw.X+1, hw.Y+1, windowTitle, "\033[1m")
+	hw.PrintLn(hw.X+1, hw.Y+1, windowTitle, hw.Terminal.Bold())
 	hw.PrintLn(hw.X+hw.Width-len(pageInfo)-1, hw.Y+1, pageInfo, "")
 
 	hw.PrintLn(hw.X+3, hw.Y+4, "Welcome to the help index, you can use your arrow keys or h/j/k/l keys to navigate", "")
-	hw.PrintChar(hw.X+61, hw.Y+4, "h", "\033[1m")
-	hw.PrintChar(hw.X+63, hw.Y+4, "j", "\033[1m")
-	hw.PrintChar(hw.X+65, hw.Y+4, "k", "\033[1m")
-	hw.PrintChar(hw.X+67, hw.Y+4, "l", "\033[1m")
+	hw.PrintChar(hw.X+61, hw.Y+4, "h", hw.Terminal.Bold())
+	hw.PrintChar(hw.X+63, hw.Y+4, "j", hw.Terminal.Bold())
+	hw.PrintChar(hw.X+65, hw.Y+4, "k", hw.Terminal.Bold())
+	hw.PrintChar(hw.X+67, hw.Y+4, "l", hw.Terminal.Bold())
 
 	hw.generateIndexCommands()
 
@@ -81,5 +81,5 @@ func (hw *HelpWindow) generateIndexCommands() {
 		hw.PrintLn(hw.X+3, hw.Y+7+i, "[ ] "+strings.Title(pageNames[i]), "")
 	}
 
-	hw.PrintChar(hw.X+4, hw.Y+7+hw.indexSelection, "*", "\033[1m")
+	hw.PrintChar(hw.X+4, hw.Y+7+hw.indexSelection, "*", hw.Terminal.Bold())
 }

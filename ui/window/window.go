@@ -3,6 +3,7 @@ package window
 import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
+	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"sync"
@@ -57,7 +58,8 @@ type WindowType interface {
 type Window struct {
 	ID config.WindowID
 
-	Log logging.LoggerType
+	Log      logging.LoggerType
+	Terminal terminals.TerminalType
 
 	X int // The X position of the Window
 	Y int // The Y position of the Window

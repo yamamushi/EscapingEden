@@ -9,9 +9,11 @@ type XTerm256Color struct {
 }
 
 func New() *XTerm256Color {
-	return &XTerm256Color{}
+	term := &XTerm256Color{}
+	term.Type = terminals.TermTypeXTerm256Color
+	return term
 }
 
-func (t *XTerm256Color) Init() {
-	t.Type = terminals.TermTypeXTerm256Color
+func (t *XTerm256Color) HideCursor() string {
+	return "\033[?25l"
 }

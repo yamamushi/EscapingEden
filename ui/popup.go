@@ -9,7 +9,8 @@ import (
 // OpenPopup opens a new popup window using the options
 func (c *Console) OpenPopup(options *config.WindowConfig) {
 	//log.Println(options)
-	popupBox := popupbox.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxWindowMessages, c.WindowMessages)
+	popupBox := popupbox.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height,
+		c.PopupBoxWindowMessages, c.WindowMessages, c.Log, c.Terminal)
 	popupBox.Init()
 	popupBox.SetContents(options.Content)
 	c.LastActiveWindow = c.GetActiveWindow() // Save the last active window

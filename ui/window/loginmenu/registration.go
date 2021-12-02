@@ -48,31 +48,31 @@ func (lw *LoginWindow) drawRegistrationWelcome() {
 	// Perhaps in the future we can have embedded text file reading
 	// Technically we could pull this off with the art reader too
 	// But that's a bit more overkill for this
-	lw.PrintChar(lw.X+43, lw.Y+5, "r", "\033[1m")
-	lw.PrintLn(lw.X+45, lw.Y+8, "ctrl-r", "\033[1m")
-	lw.PrintLn(lw.X+20, lw.Y+9, "ctrl-h", "\033[1m")
-	lw.PrintChar(lw.X+20, lw.Y+7, "b", "\033[1m")
-	lw.PrintChar(lw.X+2, lw.Y+12, "d", "\033[1m")
+	lw.PrintChar(lw.X+43, lw.Y+5, "r", lw.Terminal.Bold())
+	lw.PrintLn(lw.X+45, lw.Y+8, "ctrl-r", lw.Terminal.Bold())
+	lw.PrintLn(lw.X+20, lw.Y+9, "ctrl-h", lw.Terminal.Bold())
+	lw.PrintChar(lw.X+20, lw.Y+7, "b", lw.Terminal.Bold())
+	lw.PrintChar(lw.X+2, lw.Y+12, "d", lw.Terminal.Bold())
 	lw.SetContents(content)
 
 	// We eventually want to embed all of this in an easier to use way
 	lw.PrintLn(lw.X+1, lw.Y+lw.Height-2, "When you are ready, and have agreed to the [r]ules, please select <Continue> below.", "")
-	lw.PrintLn(lw.X+67, lw.Y+lw.Height-2, "<Continue>", "\033[1m")
-	lw.PrintChar(lw.X+45, lw.Y+lw.Height-2, "r", "\033[1m")
+	lw.PrintLn(lw.X+67, lw.Y+lw.Height-2, "<Continue>", lw.Terminal.Bold())
+	lw.PrintChar(lw.X+45, lw.Y+lw.Height-2, "r", lw.Terminal.Bold())
 	// Bold the text for the back and continue buttons
 	if lw.registrationNavOptionSelected == 1 {
 		fg := util.RGBCode(0, 0, 0)
 		bg := util.RGBCode(255, 255, 255)
 		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", fg.FG()+bg.BG())
 	} else {
-		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", "\033[1m")
+		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", lw.Terminal.Bold())
 	}
 	if lw.registrationNavOptionSelected == 2 {
 		fg := util.RGBCode(0, 0, 0)
 		bg := util.RGBCode(255, 255, 255)
 		lw.PrintLn(lw.X+lw.Width-15, lw.Y+lw.Height, "<Continue>", fg.FG()+bg.BG())
 	} else {
-		lw.PrintLn(lw.X+lw.Width-15, lw.Y+lw.Height, "<Continue>", "\033[1m")
+		lw.PrintLn(lw.X+lw.Width-15, lw.Y+lw.Height, "<Continue>", lw.Terminal.Bold())
 	}
 }
 
@@ -88,7 +88,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	errorBG := util.RGBCode(255, 0, 0)
 
 	if lw.registrationUserInfoOptionSelected == UserInfoUsername {
-		lw.PrintLn(lw.X+12, lw.Y+7, "Username:", "\033[1m")
+		lw.PrintLn(lw.X+12, lw.Y+7, "Username:", lw.Terminal.Bold())
 	} else {
 		lw.PrintLn(lw.X+12, lw.Y+7, "Username:", "")
 	}
@@ -96,7 +96,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	lw.PrintLn(lw.X+36, lw.Y+7, lw.registrationErrorData.UsernameError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoPassword {
-		lw.PrintLn(lw.X+12, lw.Y+8, "Password:", "\033[1m")
+		lw.PrintLn(lw.X+12, lw.Y+8, "Password:", lw.Terminal.Bold())
 	} else {
 		lw.PrintLn(lw.X+12, lw.Y+8, "Password:", "")
 	}
@@ -104,7 +104,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	lw.PrintLn(lw.X+36, lw.Y+8, lw.registrationErrorData.PasswordError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoPasswordConfirm {
-		lw.PrintLn(lw.X+4, lw.Y+9, "Confirm Password:", "\033[1m")
+		lw.PrintLn(lw.X+4, lw.Y+9, "Confirm Password:", lw.Terminal.Bold())
 	} else {
 		lw.PrintLn(lw.X+4, lw.Y+9, "Confirm Password:", "")
 	}
@@ -112,7 +112,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	lw.PrintLn(lw.X+36, lw.Y+9, lw.registrationErrorData.PasswordConfirmError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoEmail {
-		lw.PrintLn(lw.X+15, lw.Y+10, "Email:", "\033[1m")
+		lw.PrintLn(lw.X+15, lw.Y+10, "Email:", lw.Terminal.Bold())
 	} else {
 		lw.PrintLn(lw.X+15, lw.Y+10, "Email:", "")
 	}
@@ -123,12 +123,12 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	lw.PrintLn(lw.X+20, lw.Y+13, lw.registrationErrorData.RulesError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoAgreeRules {
-		lw.PrintLn(lw.X+47, lw.Y+14, "[ ]", "\033[1m")
+		lw.PrintLn(lw.X+47, lw.Y+14, "[ ]", lw.Terminal.Bold())
 	} else {
 		lw.PrintLn(lw.X+47, lw.Y+14, "[ ]", "")
 	}
 	if lw.registrationAgreeRules {
-		lw.PrintChar(lw.X+48, lw.Y+14, "\u2666", "\033[1m")
+		lw.PrintChar(lw.X+48, lw.Y+14, "\u2666", lw.Terminal.Bold())
 	}
 
 	if lw.registrationNavOptionSelected == 1 {
@@ -136,7 +136,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 		bg := util.RGBCode(255, 255, 255)
 		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", fg.FG()+bg.BG())
 	} else {
-		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", "\033[1m")
+		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", lw.Terminal.Bold())
 	}
 
 	if lw.registrationNavOptionSelected == 2 {
@@ -144,7 +144,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 		bg := util.RGBCode(255, 255, 255)
 		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", fg.FG()+bg.BG())
 	} else {
-		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", "\033[1m")
+		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", lw.Terminal.Bold())
 	}
 }
 

@@ -22,7 +22,7 @@ const (
 // Console is the main UI object.
 type Console struct {
 	ConnectionID string // The ID of the connection using this console
-	TermType     terminals.TerminalType
+	Terminal     terminals.TerminalType
 
 	Log logging.LoggerType
 
@@ -89,9 +89,9 @@ func (c *Console) SetupTerminalType(termType terminals.TermTypeID) {
 	// Set up the terminal type
 	switch termType {
 	case terminals.TermTypeXTerm256Color:
-		c.TermType = xterm_256color.New()
+		c.Terminal = xterm_256color.New()
 	}
-	c.TermType.Init()
+	c.Terminal.Init()
 }
 
 // Init is called once to initialize the console, it does things like create the default windows, and launches the
@@ -102,17 +102,20 @@ func (c *Console) Init() {
 
 	c.consoleInitialized = false
 	// First we set up our login window
-	loginWindow := login.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height, c.LoginWindowMessages, c.WindowMessages, c.Log)
+	loginWindow := login.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height,
+		c.LoginWindowMessages, c.WindowMessages, c.Log, c.Terminal)
 	loginWindow.Init()
 	c.AddWindow(loginWindow)
 
 	// Next we set up our chat window
-	chatWindow := chat.NewChatWindow(0, c.Height-10, c.Width-50, 9, c.Width, c.Height, c.ChatMessageReceive, c.ChatWindowMessages, c.WindowMessages, c.Log)
+	chatWindow := chat.NewChatWindow(0, c.Height-10, c.Width-50, 9, c.Width, c.Height,
+		c.ChatMessageReceive, c.ChatWindowMessages, c.WindowMessages, c.Log, c.Terminal)
 	chatWindow.Init()
 	c.AddWindow(chatWindow)
 
 	// Then we add our toolbox last
-	toolboxWindow := toolbox.NewToolboxWindow(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height, c.ToolboxWindowMessages, c.WindowMessages, c.Log)
+	toolboxWindow := toolbox.NewToolboxWindow(c.Width-48, 0, 48, c.Height-2, c.Width,
+		c.Height, c.ToolboxWindowMessages, c.WindowMessages, c.Log, c.Terminal)
 	toolboxWindow.Init()
 	c.AddWindow(toolboxWindow)
 
@@ -125,7 +128,7 @@ func (c *Console) Init() {
 	c.SetActiveWindow(loginWindow) // Set our default active window to the login window, we will pass this to another
 	// window after we log in.
 
-	c.ConsoleCommands += c.HideCursor() + c.ResetTerminal() // + c.DrawPrompt() + c.MoveCursorToTopLeft()
+	c.ConsoleCommands += c.Terminal.HideCursor() + c.ResetTerminal() // + c.DrawPrompt() + c.MoveCursorToTopLeft()
 }
 
 // SetManagerSendChannel sets the channel for sending messages to the ConnectionManager.
@@ -158,12 +161,6 @@ func (c *Console) SetShutdown(status bool) {
 	defer c.mutex.Unlock()
 
 	c.Shutdown = status
-}
-
-// DrawPrompt returns the prompt for the console
-func (c *Console) DrawPrompt() string {
-	output := c.MoveCursorToBottomLeft()
-	return output + "> "
 }
 
 // GetWindowAttrs Takes window as an argument and returns the x,y position and visible height and length of the window

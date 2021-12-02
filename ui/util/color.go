@@ -37,17 +37,3 @@ func SetRGB(cc *ColorCode, s string) []*types.Point {
 func RGBCode(r, g, b int) *ColorCode {
 	return &ColorCode{r, g, b}
 }
-
-// ResetStyle outputs a black on white code string
-func ResetStyle() string {
-	return "\033[0m"
-}
-
-// BoldText outputs a bold code string as Points
-func BoldText(s string) []*types.Point {
-	var output []*types.Point
-	for _, character := range s {
-		output = append(output, &types.Point{0, 0, "\033[1m", string(character)})
-	}
-	return output
-}
