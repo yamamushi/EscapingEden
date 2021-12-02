@@ -59,6 +59,13 @@ func (c *Connection) Write(msg []byte) error {
 	return nil
 }
 
+func (c *Connection) Close() {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	c.conn.Close()
+}
+
 // Handle handles a single connection
 func (c *Connection) Handle() {
 	/*
@@ -80,9 +87,9 @@ func (c *Connection) Handle() {
 	} else {
 		c.Log.Println(logging.LogWarn, "Unsupported terminal type:", c.ID, " TermType:", termType, " Closing connection")
 		c.manager.HandleDisconnect(c)
-		c.conn.Write([]byte("Unsupported terminal type, sorry only xterm-256color is supported at the " +
+		c.Write([]byte("\033cUnsupported terminal type, sorry only xterm-256color is supported at the " +
 			"moment and you're using " + termType + " >_>\r\n"))
-		c.conn.Close()
+		c.Close()
 		return
 	}
 
@@ -170,9 +177,10 @@ func (c *Connection) WriteHandler() {
 	for {
 		if c.Console.GetShutdown() {
 			c.Log.Println(logging.LogInfo, "Client "+c.ID+" requested shutdown")
-			c.conn.Write([]byte("\033[2J"))
-			c.conn.Write([]byte("\033[;H" + "See you back soon! Goodbye :)\r\n"))
-			c.conn.Close()
+			c.Write([]byte("\033c"))
+			c.Write([]byte("\r\nFor the latest updates, be sure to check the Escaping Eden Discord at: https://discord.gg/uMxZnjJGGu\r\n" +
+				"\r\nSee you back soon! Goodbye :)\r\n\r\n"))
+			c.Close()
 			c.manager.HandleDisconnect(c)
 			return
 		}
@@ -182,7 +190,7 @@ func (c *Connection) WriteHandler() {
 			err := c.Write(output)
 			if err != nil {
 				c.Log.Println(logging.LogInfo, "Client "+c.ID+" disconnected")
-				c.conn.Close()
+				c.Close()
 				c.manager.HandleDisconnect(c)
 				return
 			}

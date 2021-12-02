@@ -99,6 +99,14 @@ func main() {
 	}
 	server.ConnectionManagerSend <- managerMessage
 
+	// We sleep for the configured ShutdownTimeout
+	time.Sleep(time.Second * time.Duration(conf.Server.ShutdownTimeout))
+
+	// Now we tell the connection manager we're shutting down and to close all connections
+	managerMessage = messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_ServerShutdown}
+	server.ConnectionManagerSend <- managerMessage
+
+	// We sleep for the configured ShutdownTimeout
 	time.Sleep(time.Second * time.Duration(conf.Server.ShutdownTimeout))
 
 	log.Println(logging.LogInfo, "Server exited cleanly.")

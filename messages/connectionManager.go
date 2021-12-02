@@ -6,6 +6,7 @@ const (
 	ConnectManager_Message_Null ConnectManagerMessageType = iota
 	ConnectManager_Message_Error
 	ConnectManager_Message_Broadcast
+	ConnectManager_Message_ServerShutdown
 	ConnectManager_Message_Quit
 	ConnectManager_Message_Chat
 	ConnectManager_Message_Register

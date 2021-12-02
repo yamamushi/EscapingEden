@@ -74,12 +74,22 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				})
 			case messages.ConnectManager_Message_Broadcast:
 				// For every connection, send the message to the Console channel
+				cm.Log.Println(logging.LogInfo, "Broadcast message received on Connection Manager, sending to all connected clients: ", managerMessage.Data)
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
-						// json marshal message to string
-						cm.Log.Println(logging.LogInfo, "Broadcast message found, sending to conn.Console.ReceiveMessages")
 						consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_Broadcast, Data: managerMessage.Data}
 						conn.SendToConsole(consoleMessage)
+					}
+					return true
+				})
+			case messages.ConnectManager_Message_ServerShutdown:
+				cm.Log.Println(logging.LogInfo, "Server shutdown message received on Connection Manager, disconnecting all clients.")
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						cm.HandleDisconnect(conn)
+						conn.Write([]byte("\033c\r\nThe Escaping Eden server has shut down for maintenance.\r\n" +
+							"For the latest status updates, be sure to check the Escaping Eden Discord at: https://discord.gg/uMxZnjJGGu\r\n\r\n"))
+						conn.Close()
 					}
 					return true
 				})
