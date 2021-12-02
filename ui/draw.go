@@ -1,10 +1,10 @@
 package ui
 
 import (
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
-	"log"
 	"strconv"
 )
 
@@ -36,14 +36,14 @@ func (c *Console) Draw() []byte {
 	}
 
 	if c.forceScreenRefresh {
-		log.Println("force screen refresh")
+		//log.Println("force screen refresh")
 		c.forceScreenRefresh = false
 		s = s + c.ClearTerminal()
 		return []byte(s)
 	}
 
 	if c.resizeActive {
-		log.Println("Handling resize in buffer")
+		//log.Println("Handling resize in buffer")
 		for _, w := range c.Windows {
 			w.FlushLastSent()
 		}
@@ -67,7 +67,7 @@ func (c *Console) Draw() []byte {
 	defer c.abortSync.Unlock()
 	// If the last output was not the same as the current output, we send it to the client and update the last output.
 	if c.LastSentOutput != s && s != "" && !c.abortSend {
-		log.Println("Sending new output to client, length:", len(s))
+		//log.Println("Sending new output to client, length:", len(s))
 		c.LastSentOutput = s
 		return []byte(s)
 	} else {
@@ -127,13 +127,13 @@ func (c *Console) ClearPointMap() {
 func (c *Console) FlushLastSent() {
 	c.pmapMutex.Lock()
 	defer c.pmapMutex.Unlock()
-	log.Println("Flushing last sent console")
+	//log.Println("Flushing last sent console")
 	c.LastSentPointMap = types.NewPointMap(c.Width, c.Height)
 }
 
 // ResetWindowDrawings resets the pointmap
 func (c *Console) ResetWindowDrawings() {
-	log.Println("console reset called")
+	//log.Println("console reset called")
 	c.FlushLastSent()
 	c.ClearPointMap()
 }
@@ -208,13 +208,13 @@ func (c *Console) FlushWindowArea(winID config.WindowID) {
 
 		win := c.GetWindowByID(winID)
 		if win == nil {
-			log.Println("Invalid request to flush window area, window ID does not exist")
+			c.Log.Println(logging.LogWarn, "Invalid request to flush window area, window ID does not exist")
 			return
 		}
 
-		log.Println("Flushing window area: ", winID.String())
-		log.Println("GetX, GetY: ", win.GetX(), win.GetY())
-		log.Println("GetWidth, GetHeight: ", win.GetWidth(), win.GetHeight())
+		//log.Println("Flushing window area: ", winID.String())
+		//log.Println("GetX, GetY: ", win.GetX(), win.GetY())
+		//log.Println("GetWidth, GetHeight: ", win.GetWidth(), win.GetHeight())
 		for j := win.GetY(); j < win.GetY()+win.GetHeight()+2; j++ {
 			for i := win.GetX(); i < win.GetX()+win.GetWidth()+1; i++ {
 				//log.Println("Flushing point: ", i, j)

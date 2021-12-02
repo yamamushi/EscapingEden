@@ -2,7 +2,6 @@ package login
 
 import (
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"log"
 )
 
 // handleRegistrationInput handles input for the registration screen of the login window
@@ -13,7 +12,7 @@ func (lw *LoginWindow) handleRegistrationInput(input types.Input) {
 	if !lw.GetActive() {
 		return
 	}
-	log.Println("Handling registration input")
+	//log.Println("Handling registration input")
 
 	switch lw.registrationState {
 	case RegistrationMain:
@@ -30,15 +29,15 @@ func (lw *LoginWindow) handleRegistrationMainInput(input types.Input) {
 	case types.InputCharacter:
 		switch input.Data {
 		case "b":
-			log.Println("Opening controls help page")
+			//log.Println("Opening controls help page")
 			lw.RequestHelpFromConsole(types.HelpPageControls)
 			return
 		case "d":
-			log.Println("Opening death help page")
+			//log.Println("Opening death help page")
 			lw.RequestHelpFromConsole(types.HelpPageDeath)
 			return
 		case "r":
-			log.Println("Opening rules help page")
+			//log.Println("Opening rules help page")
 			lw.RequestHelpFromConsole(types.HelpPageRules)
 			return
 		default:
@@ -46,15 +45,15 @@ func (lw *LoginWindow) handleRegistrationMainInput(input types.Input) {
 			return
 		}
 	case types.InputLeft:
-		log.Println("Left arrow pressed")
+		//log.Println("Left arrow pressed")
 		lw.registrationNavOptionSelected = 1
 		return
 	case types.InputRight:
-		log.Println("Right arrow pressed")
+		//log.Println("Right arrow pressed")
 		lw.registrationNavOptionSelected = 2
 		return
 	case types.InputReturn:
-		log.Println("Return pressed")
+		//log.Println("Return pressed")
 		if lw.registrationNavOptionSelected == 1 {
 			lw.windowState = LoginWindowMenu
 		}
@@ -81,7 +80,7 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 			return
 		}
 	case types.InputLeft:
-		log.Println("Left arrow pressed")
+		//log.Println("Left arrow pressed")
 		if lw.registrationNavOptionSelected != 2 {
 			lw.registrationUserInfoLastOptionSelected = lw.registrationUserInfoOptionSelected
 			lw.registrationUserInfoOptionSelected = UserInfoNULL
@@ -89,14 +88,14 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		lw.registrationNavOptionSelected = 1
 
 	case types.InputRight:
-		log.Println("Right arrow pressed")
+		//log.Println("Right arrow pressed")
 		if lw.registrationNavOptionSelected != 1 {
 			lw.registrationUserInfoLastOptionSelected = lw.registrationUserInfoOptionSelected
 			lw.registrationUserInfoOptionSelected = UserInfoNULL
 		}
 		lw.registrationNavOptionSelected = 2
 	case types.InputUp:
-		log.Println("Up arrow pressed")
+		//log.Println("Up arrow pressed")
 		if lw.registrationNavOptionSelected == 2 {
 			lw.registrationUserInfoOptionSelected = lw.registrationUserInfoLastOptionSelected
 		} else if lw.registrationNavOptionSelected == 1 {
@@ -107,7 +106,7 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		lw.registrationNavOptionSelected = 0
 		lw.RequestFlushFromConsole()
 	case types.InputDown:
-		log.Println("Down arrow pressed")
+		//log.Println("Down arrow pressed")
 		if lw.registrationUserInfoOptionSelected < UserInfoNULL-1 {
 			lw.registrationUserInfoOptionSelected++
 		} else {
@@ -118,7 +117,7 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		//lw.registrationNavOptionSelected = 0
 		lw.RequestFlushFromConsole()
 	case types.InputReturn:
-		log.Println("Return pressed")
+		//log.Println("Return pressed")
 		if lw.registrationNavOptionSelected == 0 {
 			switch lw.registrationUserInfoOptionSelected {
 			case UserInfoUsername:
@@ -163,7 +162,7 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		lw.RequestFlushFromConsole()
 		//lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
 	case types.InputBackspace:
-		log.Println("Backspace pressed")
+		//log.Println("Backspace pressed")
 		lw.registrationUserInfoBackspaceInput()
 		lw.RequestFlushFromConsole()
 		return

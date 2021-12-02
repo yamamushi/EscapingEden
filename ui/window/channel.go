@@ -7,7 +7,6 @@ import (
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"log"
 )
 
 func (w *Window) SendToConsole(windowMessage messages.WindowMessage) {
@@ -35,7 +34,7 @@ func (w *Window) ForceConsoleRefresh() {
 
 // RequestPopupFromConsole sends a message with type popup to the console requesting for a popup to be displayed
 func (w *Window) RequestPopupFromConsole(x, y, width, height int, content string) {
-	log.Println("Requesting popup from console")
+	//log.Println("Requesting popup from console")
 	popupConfig := config.NewWindowConfig(x, y, width, height, content)
 	request := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_NewPopup, PopupOptions: *popupConfig}
 	w.ConsoleSend <- request
@@ -43,7 +42,7 @@ func (w *Window) RequestPopupFromConsole(x, y, width, height int, content string
 
 // RequestHelpFromConsole sends a message with type help to the console requesting for the help menu to be displayed
 func (w *Window) RequestHelpFromConsole(page types.HelpPage) {
-	log.Println("Requesting help from console")
+	//log.Println("Requesting help from console")
 	helpConfig := config.NewWindowConfig(w.ConsoleWidth/2-40, w.ConsoleHeight/2-10, 100, 20, "")
 	helpConfig.Page = page
 	request := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_ToggleHelp, HelpOptions: *helpConfig}
@@ -54,7 +53,7 @@ func (w *Window) RequestHelpFromConsole(page types.HelpPage) {
 // What this actually does is sets a flag in the console, which is checked at draw time. It tells the console
 // We want to flush the window area in its last sent buffer, which forces redrawing of the window area only
 func (w *Window) RequestFlushFromConsole() {
-	log.Println("Requesting flush of window area from console")
+	//log.Println("Requesting flush of window area from console")
 	request := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_FlushConsoleBuffer, TargetID: w.GetID()}
 	w.ConsoleSend <- request
 }

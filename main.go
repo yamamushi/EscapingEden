@@ -7,15 +7,12 @@ Escaping Eden is a simple text adventure mud ;)
 import (
 	"flag"
 	"fmt"
-	"github.com/yamamushi/EscapingEden/accounts"
 	"github.com/yamamushi/EscapingEden/edenconfig"
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"github.com/yamamushi/EscapingEden/network"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 const EscapingEdenVersion = "0.0.1"
@@ -34,7 +31,7 @@ func init() {
 
 	_, err := os.Stat(ConfPath)
 	if err != nil {
-		log.Println("Config file is missing: ", ConfPath)
+		fmt.Println("Config file is missing: ", ConfPath)
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -42,56 +39,51 @@ func init() {
 
 // main is the entry point for Escaping Eden
 func main() {
-	log.Println("Preparing to launch Escaping Eden v" + EscapingEdenVersion)
-
-	log.Println("Reading config file at ", ConfPath)
+	fmt.Println("Preparing to launch Escaping Eden v" + EscapingEdenVersion)
+	fmt.Println("Reading config file at:", ConfPath)
 	conf, err := edenconfig.ReadConfig(ConfPath)
 	if err != nil {
-		log.Println("Error reading config: ", err)
+		fmt.Println("Error reading config: ", err)
 		os.Exit(1)
 	}
 
-	startNotify := make(chan bool)
+	// Setup logging
+	log, err := InitLogger(conf)
+	if err != nil {
+		fmt.Println("Error initializing logger: ", err)
+		os.Exit(1)
+	}
 
+	// Setup database
+	dbConn, err := InitDB(conf, log)
+	if err != nil {
+		log.Println(logging.LogFatal, "Error initializing database: ", err)
+	}
+
+	// Setup channels for account manager and connection manager
 	accountManagerReceiver := make(chan messages.AccountManagerMessage)
 	connectionManagerReceive := make(chan messages.ConnectionManagerMessage)
 
-	log.Println("Starting Account Manager...")
-	accountManager := accounts.NewAccountManager(accountManagerReceiver, connectionManagerReceive)
-	err = accountManager.Start(startNotify)
+	// Initialize account manager
+	_, err = InitAccountManager(accountManagerReceiver, connectionManagerReceive, dbConn, log)
 	if err != nil {
-		log.Println("Error starting Account Manager: ", err)
-		os.Exit(1)
-	}
-	ticker := time.NewTicker(1 * time.Second)
-	select {
-	case <-startNotify:
-		log.Println("Account Manager started.")
-		break
-	case <-ticker.C:
-		fmt.Print(".")
+		// Fatal errors will os.Exit(1)
+		log.Println(logging.LogFatal, "Error initializing account manager: ", err)
 	}
 
-	server := network.NewServer(conf.Server.Host, conf.Server.Port)
-	log.Println("Starting Connection Manager...")
-	err = server.Start(startNotify, connectionManagerReceive, accountManagerReceiver)
+	// Initialize the server, and by proxy, the connection manager
+	_, err = InitServer(conf, accountManagerReceiver, connectionManagerReceive, log)
 	if err != nil {
-		log.Println("Error starting server: ", err)
-		os.Exit(1)
-	}
-	select {
-	case <-startNotify:
-		log.Println("Escaping Eden is now running.  Press CTRL-C to exit.")
-		break
-	case <-ticker.C:
-		fmt.Print(".")
+		log.Println(logging.LogFatal, "Error initializing server: ", err)
 	}
 
 	// Wait here until CTRL-C or other term signal is received.
+	log.Println(logging.LogInfo, "Escaping Eden is now running. Press <ctrl-c> to exit.")
 
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-osSignal
-	log.Println("Caught interrupt signal, shutting down...")
-	log.Println("Server exited cleanly.")
+	
+	log.Println(logging.LogInfo, "Caught interrupt signal, shutting down...")
+	log.Println(logging.LogInfo, "Server exited cleanly.")
 }

@@ -1,9 +1,9 @@
 package ui
 
 import (
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"log"
 )
 
 // HandleInput accepts a string terminated by a newline and processes it.
@@ -68,7 +68,7 @@ func (c *Console) HandleInput(rawInput byte) {
 			case 'D':
 				c.InputToActiveWindow(types.Input{Type: types.InputLeft})
 			default:
-				log.Println("Unknown escape sequence: ", c.escapeBuffer)
+				c.Log.Println(logging.LogWarn, "Unknown escape sequence: ", c.escapeBuffer)
 			}
 			c.escapeBuffer = ""
 			c.escapeSequence = false

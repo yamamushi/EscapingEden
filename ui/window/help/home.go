@@ -1,8 +1,8 @@
 package help
 
 import (
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/ui/util"
-	"log"
 )
 
 // DrawHome is a wrapper around the functions necessary to draw the home screen of the Help Window.
@@ -28,7 +28,7 @@ func (hw *HelpWindow) DrawHomeInfo() {
 
 	artFile, err := util.OpenASCIIArtFile("assets/ascii/spire.txt")
 	if err != nil {
-		log.Println(err)
+		hw.Log.Println(logging.LogError, err.Error())
 	} else {
 		for y, line := range artFile.Data {
 			for x, point := range line {

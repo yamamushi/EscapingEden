@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
 	xterm_256color "github.com/yamamushi/EscapingEden/terminals/xterm-256color"
@@ -10,7 +11,6 @@ import (
 	"github.com/yamamushi/EscapingEden/ui/window/chat"
 	"github.com/yamamushi/EscapingEden/ui/window/loginmenu"
 	"github.com/yamamushi/EscapingEden/ui/window/toolbox"
-	"log"
 	"sync"
 )
 
@@ -23,6 +23,8 @@ const (
 type Console struct {
 	ConnectionID string // The ID of the connection using this console
 	TermType     terminals.TerminalType
+
+	Log logging.LoggerType
 
 	Height int // The height of the console
 	Width  int // The width of the console
@@ -67,7 +69,7 @@ type Console struct {
 }
 
 // NewConsole creates a new console with no windows.
-func NewConsole(height int, width int, connectionID string, outputChannel chan messages.ConnectionManagerMessage) *Console {
+func NewConsole(height int, width int, connectionID string, outputChannel chan messages.ConnectionManagerMessage, log logging.LoggerType) *Console {
 	// Set up a new Chat Window and add it to the console at the bottom.
 	receiveFromConnectionManager := make(chan messages.ConsoleMessage)
 	windowMessages := make(chan messages.WindowMessage)
@@ -79,7 +81,8 @@ func NewConsole(height int, width int, connectionID string, outputChannel chan m
 
 	return &Console{Height: height, Width: width, ConnectionID: connectionID, SendMessages: outputChannel,
 		ReceiveMessages: receiveFromConnectionManager, WindowMessages: windowMessages, LoginWindowMessages: loginMessages,
-		ChatMessageReceive: chatMessageReceive, ChatWindowMessages: chatMessageSend, ToolboxWindowMessages: toolboxMessages, PopupBoxWindowMessages: popupBoxMessage}
+		ChatMessageReceive: chatMessageReceive, ChatWindowMessages: chatMessageSend, ToolboxWindowMessages: toolboxMessages,
+		PopupBoxWindowMessages: popupBoxMessage, Log: log}
 }
 
 func (c *Console) SetupTerminalType(termType terminals.TermTypeID) {
@@ -99,17 +102,17 @@ func (c *Console) Init() {
 
 	c.consoleInitialized = false
 	// First we set up our login window
-	loginWindow := login.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height, c.LoginWindowMessages, c.WindowMessages)
+	loginWindow := login.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height, c.LoginWindowMessages, c.WindowMessages, c.Log)
 	loginWindow.Init()
 	c.AddWindow(loginWindow)
 
 	// Next we set up our chat window
-	chatWindow := chat.NewChatWindow(0, c.Height-10, c.Width-50, 9, c.Width, c.Height, c.ChatMessageReceive, c.ChatWindowMessages, c.WindowMessages)
+	chatWindow := chat.NewChatWindow(0, c.Height-10, c.Width-50, 9, c.Width, c.Height, c.ChatMessageReceive, c.ChatWindowMessages, c.WindowMessages, c.Log)
 	chatWindow.Init()
 	c.AddWindow(chatWindow)
 
 	// Then we add our toolbox last
-	toolboxWindow := toolbox.NewToolboxWindow(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height, c.ToolboxWindowMessages, c.WindowMessages)
+	toolboxWindow := toolbox.NewToolboxWindow(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height, c.ToolboxWindowMessages, c.WindowMessages, c.Log)
 	toolboxWindow.Init()
 	c.AddWindow(toolboxWindow)
 
@@ -183,7 +186,7 @@ func (c *Console) GetWindowAttrs(window window.WindowType) (X int, Y int, visibl
 func (c *Console) ForceRedraw() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	log.Println("Forcing redraw")
+	//log.Println("Forcing redraw")
 	for _, w := range c.Windows {
 		w.FlushLastSent()
 	}

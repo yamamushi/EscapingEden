@@ -1,12 +1,22 @@
+[logging]
+type = "console"   # supported options at the moment are "disabled", "console" and "file"
+
 # The server config section
 [server]
 host = "localhost"
 port = "8080"
 
 # The database config section
+# For Bolt (the recommended driver)
 [database]
-host = "localhost"
-port = "3306"
-user = "example"
-password = "example"
-dbname = "exampleDBName"
+type = "bolt"      # specify bolt as the database type
+path = "eden.db"   # path to the database file
+
+# For MongoDB
+#[database]
+#type = "mongodb"   # specify mongodb as the database type
+#host = "localhost"
+#port = "3306"
+#user = "example"
+#password = "example"
+#dbname = "exampleDBName"

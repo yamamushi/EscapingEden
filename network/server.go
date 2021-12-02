@@ -2,8 +2,8 @@ package network
 
 import (
 	"github.com/google/uuid"
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"log"
 	"net"
 	"sync"
 )
@@ -19,14 +19,16 @@ type Server struct {
 
 	ConnectMap        *sync.Map
 	ConnectionManager *ConnectionManager
+	Log               logging.LoggerType
 }
 
 // NewServer creates a new server
-func NewServer(host string, port string) *Server {
+func NewServer(host string, port string, log logging.LoggerType) *Server {
 	return &Server{
 		Host:       host,
 		Port:       port,
 		ConnectMap: &sync.Map{},
+		Log:        log,
 	}
 }
 
@@ -38,7 +40,7 @@ func (s *Server) Start(startedNotify chan bool, cmReceiveMessage chan messages.C
 	}
 
 	// Using sync.Map to not deal with concurrency slice/map issues
-	s.ConnectionManager = NewConnectionManager(s.ConnectMap, cmReceiveMessage, amReceiveMessages)
+	s.ConnectionManager = NewConnectionManager(s.ConnectMap, cmReceiveMessage, amReceiveMessages, s.Log)
 	go s.ConnectionManager.Run(startedNotify)
 	go s.Listen(l)
 	return nil
@@ -50,11 +52,11 @@ func (s *Server) Listen(l net.Listener) {
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			log.Println("Fatal Error Accepting Connection: ", err)
-			return
+			s.Log.Println(logging.LogWarn, "Error Accepting Connection: ", err)
+			continue
 		}
 		id := uuid.New().String()
-		log.Println("Storing New Connection: ", id)
-		s.ConnectionManager.AddConnection(NewConnection(conn, id, s.ConnectionManager))
+		s.Log.Println(logging.LogInfo, "New connection from", conn.RemoteAddr(), "with id", id, "accepted")
+		s.ConnectionManager.AddConnection(NewConnection(conn, id, s.ConnectionManager, s.Log))
 	}
 }

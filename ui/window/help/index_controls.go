@@ -2,7 +2,6 @@ package help
 
 import (
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"log"
 )
 
 func (hw *HelpWindow) handleIndexInput(input types.Input) {
@@ -21,13 +20,13 @@ func (hw *HelpWindow) handleIndexInput(input types.Input) {
 			return
 		}
 	case types.InputUp:
-		log.Println("Help Index handling up command")
+		//log.Println("Help Index handling up command")
 		hw.IndexSelectionUp()
 	case types.InputDown:
-		log.Println("Help Index handling down command")
+		//log.Println("Help Index handling down command")
 		hw.IndexSelectionDown()
 	case types.InputReturn:
-		log.Println("Help Index handling return command")
+		//log.Println("Help Index handling return command")
 		hw.HelpPage = types.HelpPage(hw.indexSelection)
 		hw.HandleStateChange()
 	}

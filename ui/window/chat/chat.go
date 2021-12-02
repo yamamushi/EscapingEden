@@ -2,11 +2,11 @@ package chat
 
 import (
 	"github.com/yamamushi/EscapingEden/edenutil"
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
-	"log"
 	"sync"
 	"time"
 )
@@ -24,8 +24,10 @@ type ChatWindow struct {
 }
 
 // NewChatWindow creates a new chat window
-func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, chatInput chan messages.ChatMessage, windowInput, output chan messages.WindowMessage) *ChatWindow {
+func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, chatInput chan messages.ChatMessage,
+	windowInput, output chan messages.WindowMessage, log logging.LoggerType) *ChatWindow {
 	cw := new(ChatWindow)
+	cw.Log = log
 	cw.ID = config.WindowChatBox
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
@@ -74,47 +76,45 @@ func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, chatInput chan m
 func (cw *ChatWindow) HandleInput(input types.Input) {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
-	if cw.GetActive() {
-		log.Println("ChatWindow Handling input")
+	if !cw.GetActive() {
+		// return
 	}
 
 	switch input.Type {
 	case types.InputUp:
-		log.Println("ChatWindow Up")
+		//log.Println("ChatWindow Up")
 		cw.DecreaseContentPos()
 		cw.ResetWindowDrawings()
 		cw.RequestFlushFromConsole()
 		return
 	case types.InputDown:
-		log.Println("ChatWindow Down")
+		//log.Println("ChatWindow Down")
 		cw.IncreaseContentPos()
 		cw.ResetWindowDrawings()
 		cw.RequestFlushFromConsole()
 		return
 	case types.InputLeft:
-		log.Println("ChatWindow Left")
+		//log.Println("ChatWindow Left")
 		cw.RequestPopupFromConsole(cw.ConsoleWidth/2-40, cw.ConsoleHeight/2-10, 50, 20, "This is a test of a really long string with a bunch of random content to see if the content buffer will scroll or not correctly")
 		return
 	case types.InputRight:
-		log.Println("ChatWindow Right")
+		//log.Println("ChatWindow Right")
 		return
 	case types.InputNewline:
-		log.Println("ChatWindow Newline")
+		//log.Println("ChatWindow Newline")
 		return
 	case types.InputBackspace:
-		log.Println("ChatWindow Backspace")
+		//log.Println("ChatWindow Backspace")
 		// remove one character from the input buffer
 		cw.cwInputBuffer = cw.cwInputBuffer[:len(cw.cwInputBuffer)-1]
 		return
 	case types.InputReturn:
-		log.Println("ChatWindow Return")
+		//log.Println("ChatWindow Return")
 		if cw.cwInputBuffer != "" {
 			// Send a console message to the ConsoleSend channel
 			consoleMessage := messages.WindowMessage{Data: cw.cwInputBuffer, Type: messages.WM_ParseChat}
 			cw.ConsoleSend <- consoleMessage
 			cw.cwInputBuffer = ""
-		} else {
-			log.Println("cw.cwInputBuffer is empty during InputReturn chat request")
 		}
 		return
 	case types.InputCharacter:
@@ -135,7 +135,7 @@ func (cw *ChatWindow) Listen() {
 	for {
 		select {
 		case chatMessage := <-cw.ChatReceiver:
-			log.Println("Chat Window received chat message from console")
+			//log.Println("Chat Window received chat message from console")
 			cw.cwMutex.Lock()
 			cw.History = append(cw.History, chatMessage.Content)
 			// We know if our starting position is less than 0, and we append a new message, then there is

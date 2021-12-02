@@ -2,13 +2,14 @@ package network
 
 import (
 	"github.com/yamamushi/EscapingEden/accounts"
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"log"
 	"sync"
 )
 
 // ConnectionManager synchronizes connection output globally
 type ConnectionManager struct {
+	Log logging.LoggerType
 	// Mutex for locking
 	mutex         sync.Mutex
 	connectionMap *sync.Map
@@ -23,11 +24,13 @@ type ConnectionManager struct {
 }
 
 // NewConnectionManager creates a new ConnectionManager
-func NewConnectionManager(connectionMap *sync.Map, receiveMessages chan messages.ConnectionManagerMessage, accountManagerMessages chan messages.AccountManagerMessage) *ConnectionManager {
+func NewConnectionManager(connectionMap *sync.Map, receiveMessages chan messages.ConnectionManagerMessage,
+	accountManagerMessages chan messages.AccountManagerMessage, log logging.LoggerType) *ConnectionManager {
 	return &ConnectionManager{
 		connectionMap:     connectionMap,
 		CMReceiveMessages: receiveMessages,
 		AMSendMessages:    accountManagerMessages,
+		Log:               log,
 	}
 }
 
@@ -52,12 +55,12 @@ func (cm *ConnectionManager) Run(startedNotify chan bool) {
 
 // MessageParser performs a non-blocking check for messages on cm.CMReceiveMessages
 func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
-	log.Println("Connection Manager is now listening for incoming messages")
+	cm.Log.Println(logging.LogInfo, "Connection Manager is now listening for incoming messages")
 	startedNotify <- true
 	for {
 		select {
 		case managerMessage := <-cm.CMReceiveMessages:
-			log.Println("Message received from cm.CMReceiveMessages")
+			cm.Log.Println(logging.LogInfo, "Message received from cm.CMReceiveMessages")
 
 			switch managerMessage.Type {
 			case messages.ConnectManager_Message_Chat:
@@ -65,7 +68,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						outMessage := messages.ConsoleMessage{Data: managerMessage.SenderConsoleID + ": " + managerMessage.Data.(string), Type: messages.Console_Message_Chat}
-						log.Println("Chat message found, sending to conn.Console.ReceiveMessages")
+						cm.Log.Println(logging.LogInfo, "Chat message found, sending to conn.Console.ReceiveMessages")
 						conn.SendToConsole(outMessage)
 					}
 					return true
@@ -75,7 +78,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if _, ok := value.(*Connection); ok {
 						// json marshal message to string
-						log.Println("Broadcast message found, sending to conn.Console.ReceiveMessages")
+						cm.Log.Println(logging.LogInfo, "Broadcast message found, sending to conn.Console.ReceiveMessages")
 						//conn.Console.ReceiveMessages <- output
 					}
 					return true
@@ -85,7 +88,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
-							log.Println("Error message found, sending to conn.Console.ReceiveMessages")
+							cm.Log.Println(logging.LogInfo, "Error message found, sending to conn.Console.ReceiveMessages")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_Error, Data: managerMessage.Data}
 							conn.SendToConsole(consoleMessage)
 
@@ -97,7 +100,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
-							log.Println("Quit message found, sending to conn.Console.ReceiveMessages")
+							cm.Log.Println(logging.LogInfo, "Quit message found, sending to conn.Console.ReceiveMessages")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_Quit}
 							conn.SendToConsole(consoleMessage)
 						}
@@ -106,7 +109,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				})
 			case messages.ConnectManager_Message_Register:
 				go func() {
-					log.Println("Sending registration request to AccountManager")
+					cm.Log.Println(logging.LogInfo, "Sending registration request to AccountManager")
 					registrationRequest := managerMessage.Data.(messages.AccountRegistrationRequest)
 					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Register, RegistrationRequest: registrationRequest, SenderSessionID: managerMessage.SenderConsoleID}
 				}()
@@ -114,7 +117,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
-							log.Println("Sending registration response to Console that requested registration")
+							cm.Log.Println(logging.LogInfo, "Sending registration response to Console that requested registration")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_RegistrationResponse, Data: managerMessage.Data}
 							conn.SendToConsole(consoleMessage)
 						}
@@ -123,7 +126,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				})
 
 			default:
-				log.Println("Unknown message type received: ", managerMessage.Type, managerMessage.SenderConsoleID, managerMessage.RecipientConsoleID)
+				cm.Log.Println(logging.LogError, "Unknown message type received: ", managerMessage.Type, managerMessage.SenderConsoleID, managerMessage.RecipientConsoleID)
 			}
 
 		}

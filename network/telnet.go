@@ -2,7 +2,6 @@ package network
 
 import (
 	"errors"
-	"log"
 	"net"
 )
 
@@ -71,7 +70,7 @@ func RequestTerminalSize(conn net.Conn) (height, width int, err error) {
 		b := make([]byte, 1)
 		_, err := conn.Read(b)
 		if err != nil {
-			log.Println(err)
+			//log.Println(err)
 			return 0, 0, err
 		}
 		buf = append(buf[:], b[0])
@@ -146,7 +145,7 @@ func EnableLineMode(conn net.Conn) error {
 		b := make([]byte, 1)
 		_, err := conn.Read(b)
 		if err != nil {
-			log.Println(err)
+			//log.Println(err)
 			return err
 		}
 
@@ -161,7 +160,7 @@ func EnableLineMode(conn net.Conn) error {
 					b := make([]byte, 1)
 					_, err := conn.Read(b)
 					if err != nil {
-						log.Println(err)
+						//log.Println(err)
 						return err
 					}
 					if b[0] == SE {
@@ -188,7 +187,7 @@ func EnableLineMode(conn net.Conn) error {
 				b := make([]byte, 1)
 				_, err := conn.Read(b)
 				if err != nil {
-					log.Println(err)
+					//log.Println(err)
 					return err
 				}
 				if b[0] == LINEMODE {
