@@ -9,6 +9,7 @@ type Point struct {
 	X, Y       int
 	EscapeCode string
 	Character  string
+	NoReset    bool
 }
 
 // PointMap is a map of points.
@@ -22,7 +23,9 @@ func (p *Point) Print(term terminals.TerminalType) string {
 	if p.EscapeCode != "" {
 		output += p.EscapeCode
 		output += p.Character
-		output += term.Reset()
+		if !p.NoReset {
+			output += term.Reset()
+		}
 	} else {
 		output += p.Character
 	}

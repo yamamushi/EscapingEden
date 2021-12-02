@@ -93,7 +93,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 		lw.PrintLn(lw.X+12, lw.Y+7, "Username:", "")
 	}
 	lw.PrintLn(lw.X+22, lw.Y+7, lw.registrationSubmitData.Username, "")
-	lw.PrintLn(lw.X+36, lw.Y+7, lw.registrationErrorData.UsernameError(), errorFG.FG()+errorBG.BG())
+	lw.PrintLnNoReset(lw.X+36, lw.Y+7, lw.registrationErrorData.UsernameError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoPassword {
 		lw.PrintLn(lw.X+12, lw.Y+8, "Password:", lw.Terminal.Bold())
@@ -101,7 +101,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 		lw.PrintLn(lw.X+12, lw.Y+8, "Password:", "")
 	}
 	lw.PrintLn(lw.X+22, lw.Y+8, lw.registrationSubmitData.Password, "")
-	lw.PrintLn(lw.X+36, lw.Y+8, lw.registrationErrorData.PasswordError(), errorFG.FG()+errorBG.BG())
+	lw.PrintLnNoReset(lw.X+36, lw.Y+8, lw.registrationErrorData.PasswordError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoPasswordConfirm {
 		lw.PrintLn(lw.X+4, lw.Y+9, "Confirm Password:", lw.Terminal.Bold())
@@ -109,7 +109,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 		lw.PrintLn(lw.X+4, lw.Y+9, "Confirm Password:", "")
 	}
 	lw.PrintLn(lw.X+22, lw.Y+9, lw.registrationSubmitData.PasswordConfirm, "")
-	lw.PrintLn(lw.X+36, lw.Y+9, lw.registrationErrorData.PasswordConfirmError(), errorFG.FG()+errorBG.BG())
+	lw.PrintLnNoReset(lw.X+36, lw.Y+9, lw.registrationErrorData.PasswordConfirmError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoEmail {
 		lw.PrintLn(lw.X+15, lw.Y+10, "Email:", lw.Terminal.Bold())
@@ -117,10 +117,10 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 		lw.PrintLn(lw.X+15, lw.Y+10, "Email:", "")
 	}
 	lw.PrintLn(lw.X+22, lw.Y+10, lw.registrationSubmitData.Email, "")
-	lw.PrintLn(lw.X+36, lw.Y+10, lw.registrationErrorData.EmailError(), errorFG.FG()+errorBG.BG())
+	lw.PrintLnNoReset(lw.X+36, lw.Y+10, lw.registrationErrorData.EmailError(), errorFG.FG()+errorBG.BG())
 
 	lw.PrintLn(lw.X+20, lw.Y+14, "Do you agree to the rules?     (Space to toggle)", "")
-	lw.PrintLn(lw.X+20, lw.Y+13, lw.registrationErrorData.RulesError(), errorFG.FG()+errorBG.BG())
+	lw.PrintLnNoReset(lw.X+20, lw.Y+13, lw.registrationErrorData.RulesError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoAgreeRules {
 		lw.PrintLn(lw.X+47, lw.Y+14, "[ ]", lw.Terminal.Bold())

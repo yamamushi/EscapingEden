@@ -289,7 +289,9 @@ func (c *Console) PrintPointMap() string {
 						// If we reached a new character, and the buffer count is greater than 0
 						// We need to print the repeated last character bufferCount times
 						if bufferCount > 0 {
-							repeatCode := lastSentEscape + c.Terminal.RepeatChar(bufferCount) + c.Terminal.Reset()
+							// This was commented out to try and fix character repeating
+							//repeatCode := lastSentEscape + c.Terminal.RepeatChar(bufferCount) //+ c.Terminal.Reset()
+							repeatCode := c.Terminal.RepeatChar(bufferCount) + c.Terminal.Reset()
 							output += repeatCode
 							// Finally Reset the buffer count
 							bufferCount = 0

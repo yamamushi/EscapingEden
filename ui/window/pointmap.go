@@ -23,6 +23,31 @@ func (w *Window) PrintLn(X int, Y int, text string, escapeCode string) {
 	}
 }
 
+// PrintLn prints a line to the pointmap.
+func (w *Window) PrintLnNoReset(X int, Y int, text string, escapeCode string) {
+	w.pmapMutex.Lock()
+	defer w.pmapMutex.Unlock()
+	if X > len(w.pointMap)-1 {
+		return
+	}
+	if Y > len(w.pointMap[X])-1 {
+		return
+	}
+
+	for i, character := range text {
+		//log.Println("inserting character:", string(character))
+		// For the point at X, Y+1, set the character to the character at the current index of the text string
+		w.pointMap[X+i][Y] = types.Point{X: X + i, Y: Y, Character: string(character), EscapeCode: escapeCode, NoReset: true}
+		//log.Println("pointMap:", X, Y+i, w.pointMap[X][Y+i].Character)
+		// if last character in range
+		if i == len(text)-1 {
+			if (X+i+1) < w.Width && Y < w.Height {
+				w.pointMap[X+i+1][Y] = types.Point{X: X + i + 1, Y: Y, Character: " ", EscapeCode: w.Terminal.Reset()}
+			}
+		}
+	}
+}
+
 // PrintChar prints a character to the pointmap.
 func (w *Window) PrintChar(X int, Y int, text string, escapeCode string) {
 	w.pmapMutex.Lock()
@@ -34,6 +59,19 @@ func (w *Window) PrintChar(X int, Y int, text string, escapeCode string) {
 		return
 	}
 	w.pointMap[X][Y] = types.Point{X: X, Y: Y, Character: text, EscapeCode: escapeCode}
+}
+
+// PrintChar prints a character to the pointmap.
+func (w *Window) PrintCharNoReset(X int, Y int, text string, escapeCode string) {
+	w.pmapMutex.Lock()
+	defer w.pmapMutex.Unlock()
+	if X > len(w.pointMap)-1 || X < 0 {
+		return
+	}
+	if Y > len(w.pointMap[X])-1 || Y < 0 {
+		return
+	}
+	w.pointMap[X][Y] = types.Point{X: X, Y: Y, Character: text, EscapeCode: escapeCode, NoReset: true}
 }
 
 // GetCharAt returns the character at the given point.

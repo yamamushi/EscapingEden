@@ -72,11 +72,11 @@ players in a live environment.
 
 ## Development
 
-Escaping Eden is currently built on Go 1.17, and relies on xterm-color256 support in the terminal.
+Escaping Eden is currently built on Go 1.17, and relies on _full_ ECMA-48 support in the terminal.
 
 It relies heavily on ANSI escape sequences, and will not work on terminals that do not support them. If you are 
-planning on contributing to any of the UI work, it is basically mandatory that you review 
-the [ANSI escape code documentation](https://en.wikipedia.org/wiki/ANSI_escape_code) before you start.
+planning on contributing to any of the UI work, including Terminal emulation, it is essential that you review 
+the [ANSI escape code documentation](https://en.wikipedia.org/wiki/ANSI_escape_code) before you dive in.
 
 ## Connecting
 
@@ -94,11 +94,10 @@ $ telnet localhost 8080
 
 ### Windows
 
-It may be possible to connect with PuTTY on Windows with the following steps, but results may vary:
+To connect on Windows, the only tested method that appears to work is using WSL.
 
-`Settings -> Connection > Data > Terminal-type change to xterm-256color`
-
-Assistance with adding putty-256color support would be appreciated!
+Ubuntu 20.04 has been tested, and appears to work fine. Supporting this will be an ongoing endeavor, and help would be
+appreciated.
 
 
 ## Building

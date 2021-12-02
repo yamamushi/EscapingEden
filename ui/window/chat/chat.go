@@ -60,6 +60,7 @@ func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, chatInput chan m
 	cw.ScrollingSupported = true
 
 	// Initializing a default chat message
+
 	cw.History = append(cw.History, "Welcome traveller!")
 	cw.History = append(cw.History, "The current server time is: "+time.Now().Format("2006-01-02 15:04:05"))
 	cw.History = append(cw.History, "The current time in Freeport is: "+edenutil.EdenTime.TimeStamp(edenutil.EdenTime{}))
