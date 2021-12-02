@@ -145,7 +145,7 @@ func (c *Connection) ReadHandler() {
 	for {
 		readByte, err := reader.ReadByte()
 		if err != nil {
-			c.Log.Println(logging.LogInfo, "Client ", c.ID, " closed connection")
+			c.Log.Println(logging.LogInfo, "Client "+c.ID+" closed connection")
 			c.manager.HandleDisconnect(c)
 			return
 		}
@@ -169,7 +169,7 @@ func (c *Connection) ReadHandler() {
 func (c *Connection) WriteHandler() {
 	for {
 		if c.Console.GetShutdown() {
-			c.Log.Println(logging.LogInfo, "Client requested shutdown")
+			c.Log.Println(logging.LogInfo, "Client "+c.ID+" requested shutdown")
 			c.conn.Write([]byte("\033[2J"))
 			c.conn.Write([]byte("\033[;H" + "See you back soon! Goodbye :)\r\n"))
 			c.conn.Close()
@@ -181,7 +181,7 @@ func (c *Connection) WriteHandler() {
 		if len(output) > 0 {
 			err := c.Write(output)
 			if err != nil {
-				c.Log.Println(logging.LogInfo, "Client disconnected")
+				c.Log.Println(logging.LogInfo, "Client "+c.ID+" disconnected")
 				c.conn.Close()
 				c.manager.HandleDisconnect(c)
 				return

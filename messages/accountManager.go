@@ -3,12 +3,12 @@ package messages
 // Account is used during registration to create a new player account.
 // It is also used during logins to retrieve the character list for an account.
 type Account struct {
-	ID             string
-	Username       string
-	Email          string
+	ID             string `storm:"index"`
+	Username       string `storm:"unique"`
+	Email          string `storm:"unique"`
 	HashedPassword string
 
-	Characters map[string]string // Character ID -> Character Name
+	Characters map[string]string `storm:"unique"` // Character ID -> Character Name
 }
 
 type AccountRegistrationRequest struct {

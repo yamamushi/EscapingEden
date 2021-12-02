@@ -6,6 +6,7 @@ path = "tmp/log/"       # only used if type is "file", note this is a directory,
 [server]
 host = "localhost"
 port = "8080"
+shutdown_timeout = 10 # Seconds to wait before terminating the server 
 
 # The database config section
 # For Bolt (the recommended driver)

@@ -19,8 +19,9 @@ type loggingConfig struct {
 
 // serverConfig struct
 type serverConfig struct {
-	Host string `toml:"host"`
-	Port string `toml:"port"`
+	Host            string `toml:"host"`
+	Port            string `toml:"port"`
+	ShutdownTimeout int    `toml:"shutdown_timeout"`
 }
 
 // dbConfig struct

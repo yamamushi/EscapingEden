@@ -17,9 +17,10 @@ type Server struct {
 	Host string
 	Port string
 
-	ConnectMap        *sync.Map
-	ConnectionManager *ConnectionManager
-	Log               logging.LoggerType
+	ConnectMap            *sync.Map
+	ConnectionManager     *ConnectionManager
+	ConnectionManagerSend chan messages.ConnectionManagerMessage
+	Log                   logging.LoggerType
 }
 
 // NewServer creates a new server
@@ -38,7 +39,7 @@ func (s *Server) Start(startedNotify chan bool, cmReceiveMessage chan messages.C
 	if err != nil {
 		return err
 	}
-
+	s.ConnectionManagerSend = cmReceiveMessage
 	// Using sync.Map to not deal with concurrency slice/map issues
 	s.ConnectionManager = NewConnectionManager(s.ConnectMap, cmReceiveMessage, amReceiveMessages, s.Log)
 	go s.ConnectionManager.Run(startedNotify)

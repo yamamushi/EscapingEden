@@ -60,15 +60,14 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 	for {
 		select {
 		case managerMessage := <-cm.CMReceiveMessages:
-			cm.Log.Println(logging.LogInfo, "Message received from cm.CMReceiveMessages")
-
+			//cm.Log.Println(logging.LogInfo, "Message received from cm.CMReceiveMessages")
 			switch managerMessage.Type {
 			case messages.ConnectManager_Message_Chat:
 				// For every connection, send the message to the Console channel
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
+						//cm.Log.Println(logging.LogInfo, "Chat message found, sending to conn.Console.ReceiveMessages")
 						outMessage := messages.ConsoleMessage{Data: managerMessage.SenderConsoleID + ": " + managerMessage.Data.(string), Type: messages.Console_Message_Chat}
-						cm.Log.Println(logging.LogInfo, "Chat message found, sending to conn.Console.ReceiveMessages")
 						conn.SendToConsole(outMessage)
 					}
 					return true
@@ -76,10 +75,11 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 			case messages.ConnectManager_Message_Broadcast:
 				// For every connection, send the message to the Console channel
 				cm.connectionMap.Range(func(key, value interface{}) bool {
-					if _, ok := value.(*Connection); ok {
+					if conn, ok := value.(*Connection); ok {
 						// json marshal message to string
 						cm.Log.Println(logging.LogInfo, "Broadcast message found, sending to conn.Console.ReceiveMessages")
-						//conn.Console.ReceiveMessages <- output
+						consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_Broadcast, Data: managerMessage.Data}
+						conn.SendToConsole(consoleMessage)
 					}
 					return true
 				})
@@ -88,7 +88,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
-							cm.Log.Println(logging.LogInfo, "Error message found, sending to conn.Console.ReceiveMessages")
+							//cm.Log.Println(logging.LogInfo, "Error message found, sending to conn.Console.ReceiveMessages")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_Error, Data: managerMessage.Data}
 							conn.SendToConsole(consoleMessage)
 
@@ -100,7 +100,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
-							cm.Log.Println(logging.LogInfo, "Quit message found, sending to conn.Console.ReceiveMessages")
+							//cm.Log.Println(logging.LogInfo, "Quit message found, sending to conn.Console.ReceiveMessages")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_Quit}
 							conn.SendToConsole(consoleMessage)
 						}
@@ -109,7 +109,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				})
 			case messages.ConnectManager_Message_Register:
 				go func() {
-					cm.Log.Println(logging.LogInfo, "Sending registration request to AccountManager")
+					//cm.Log.Println(logging.LogInfo, "Sending registration request to AccountManager")
 					registrationRequest := managerMessage.Data.(messages.AccountRegistrationRequest)
 					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Register, RegistrationRequest: registrationRequest, SenderSessionID: managerMessage.SenderConsoleID}
 				}()
@@ -117,7 +117,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
-							cm.Log.Println(logging.LogInfo, "Sending registration response to Console that requested registration")
+							//cm.Log.Println(logging.LogInfo, "Sending registration response to Console that requested registration")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_RegistrationResponse, Data: managerMessage.Data}
 							conn.SendToConsole(consoleMessage)
 						}

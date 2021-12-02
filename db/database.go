@@ -24,6 +24,16 @@ func (dt *DatabaseTypeID) String() string {
 type DatabaseType interface {
 	GetTypeID() DatabaseTypeID
 	GetTypeName() string
+
+	CreateCollection(collectionName string) error
+
+	Update(interface{}) error
+	UpdateField(interface{}, string, interface{}) error
+	Init(interface{}) error
+
+	UpdateNested(string, interface{}) error
+	UpdateFieldNested(string, interface{}, string, interface{}) error
+	InitNested(string, interface{}) error
 }
 
 type Database struct {
@@ -36,4 +46,32 @@ func (db *Database) GetTypeID() DatabaseTypeID {
 
 func (db *Database) GetTypeName() string {
 	return db.Type.String()
+}
+
+func (db *Database) CreateCollection(collectionName string) error {
+	return nil
+}
+
+func (db *Database) Update(interface{}) error {
+	return nil
+}
+
+func (db *Database) UpdateField(interface{}, string, interface{}) error {
+	return nil
+}
+
+func (db *Database) Init(interface{}) error {
+	return nil
+}
+
+func (db *Database) UpdateNested(string, interface{}) error {
+	return nil
+}
+
+func (db *Database) UpdateFieldNested(string, interface{}, string, interface{}) error {
+	return nil
+}
+
+func (db *Database) InitNested(string, interface{}) error {
+	return nil
 }

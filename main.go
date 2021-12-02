@@ -9,9 +9,10 @@ import (
 	"fmt"
 	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/logging"
-	"log"
+	"github.com/yamamushi/EscapingEden/messages"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -43,33 +44,41 @@ func main() {
 	timestamp := time.Now().Format("01/02/2006 15:04:05")
 
 	fmt.Println("Preparing to launch Escaping Eden v"+EscapingEdenVersion, "at", timestamp)
-	fmt.Println("Reading config file at:", ConfPath)
+	fmt.Println("Reading config file at:", ConfPath+"\n")
 	conf, err := edenconfig.ReadConfig(ConfPath)
 	if err != nil {
 		fmt.Println("Error reading config: ", err)
 		os.Exit(1)
 	}
 
-	notifyDone := make(chan bool)
-	if conf.Logger.Type != "console" {
-		go InitAll(conf, notifyDone)
-		ticker := time.NewTicker(100 * time.Millisecond)
-		done := false
-		for {
-			select {
-			case <-notifyDone:
-				done = true
-				break
-			case <-ticker.C:
-				fmt.Print(".")
-			}
-			if done {
-				break
-			}
-		}
-	} else {
-		fmt.Println("[Info] Logging in console mode\n")
-		InitAll(conf, notifyDone)
+	// Setup logging
+	log, err := InitLogger(conf)
+	if err != nil {
+		fmt.Println("Error initializing logger: ", err)
+		os.Exit(1)
+	}
+
+	// Setup database
+	dbConn, err := InitDB(conf, log)
+	if err != nil {
+		log.Println(logging.LogFatal, "Error initializing database: ", err)
+	}
+
+	// Setup channels for account manager and connection manager
+	accountManagerReceiver := make(chan messages.AccountManagerMessage)
+	connectionManagerReceive := make(chan messages.ConnectionManagerMessage)
+
+	// Initialize account manager
+	_, err = InitAccountManager(accountManagerReceiver, connectionManagerReceive, dbConn, log)
+	if err != nil {
+		// Fatal errors will os.Exit(1)
+		log.Println(logging.LogFatal, "Error initializing account manager: ", err)
+	}
+
+	// Initialize the server, and by proxy, the connection manager
+	server, err := InitServer(conf, accountManagerReceiver, connectionManagerReceive, log)
+	if err != nil {
+		log.Println(logging.LogFatal, "Error initializing server: ", err)
 	}
 
 	// Wait here until CTRL-C or other term signal is received.
@@ -80,5 +89,20 @@ func main() {
 	<-osSignal
 
 	log.Println(logging.LogInfo, "Caught interrupt signal, shutting down...")
+	if log.GetTypeID() != logging.LoggerTypeID_Console {
+		fmt.Println("Caught interrupt signal, shutting down...")
+	}
+	// We need to notify our connections we're shutting down :D
+	managerMessage := messages.ConnectionManagerMessage{
+		Type: messages.ConnectManager_Message_Broadcast,
+		Data: "Server shutting down in " + strconv.Itoa(conf.Server.ShutdownTimeout) + " seconds...",
+	}
+	server.ConnectionManagerSend <- managerMessage
+
+	time.Sleep(time.Second * time.Duration(conf.Server.ShutdownTimeout))
+
 	log.Println(logging.LogInfo, "Server exited cleanly.")
+	if log.GetTypeID() != logging.LoggerTypeID_Console {
+		fmt.Println("Server exited cleanly.")
+	}
 }
