@@ -5,22 +5,68 @@ These functions are used to initialize various components, to keep main clean :)
 */
 import (
 	"errors"
+	"fmt"
 	"github.com/yamamushi/EscapingEden/accounts"
 	"github.com/yamamushi/EscapingEden/db"
 	"github.com/yamamushi/EscapingEden/db/boltdb"
 	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/logging/logconsole"
+	"github.com/yamamushi/EscapingEden/logging/logfile"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/network"
+	"os"
 	"time"
 )
+
+// InitAll initializes all components
+func InitAll(conf edenconfig.Config, notifyDone chan bool) {
+	// Setup logging
+	log, err := InitLogger(conf)
+	if err != nil {
+		fmt.Println("Error initializing logger: ", err)
+		os.Exit(1)
+	}
+
+	// Setup database
+	dbConn, err := InitDB(conf, log)
+	if err != nil {
+		log.Println(logging.LogFatal, "Error initializing database: ", err)
+	}
+
+	// Setup channels for account manager and connection manager
+	accountManagerReceiver := make(chan messages.AccountManagerMessage)
+	connectionManagerReceive := make(chan messages.ConnectionManagerMessage)
+
+	// Initialize account manager
+	_, err = InitAccountManager(accountManagerReceiver, connectionManagerReceive, dbConn, log)
+	if err != nil {
+		// Fatal errors will os.Exit(1)
+		log.Println(logging.LogFatal, "Error initializing account manager: ", err)
+	}
+
+	// Initialize the server, and by proxy, the connection manager
+	_, err = InitServer(conf, accountManagerReceiver, connectionManagerReceive, log)
+	if err != nil {
+		log.Println(logging.LogFatal, "Error initializing server: ", err)
+	}
+
+	// Non-blocking send to notifyDone
+	select {
+	case notifyDone <- true:
+		//
+	default:
+		//
+	}
+}
 
 // InitLogger initializes the logger
 func InitLogger(conf edenconfig.Config) (logging.LoggerType, error) {
 	switch conf.Logger.Type {
 	case "console":
 		return logconsole.NewConsoleLogger(), nil
+	case "file":
+		return logfile.NewFileLogger(conf.Logger.Path)
 	default:
 		return nil, errors.New("Unknown logger type: " + conf.Logger.Type)
 	}

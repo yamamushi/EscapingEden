@@ -14,6 +14,7 @@ type Config struct {
 
 type loggingConfig struct {
 	Type string `toml:"type"`
+	Path string `toml:"path"`
 }
 
 // serverConfig struct

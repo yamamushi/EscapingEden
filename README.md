@@ -4,6 +4,11 @@ Escaping Eden is a MUD/Roguelike written in Go.
 
 It implements a unique xterm-256 based UI over telnet, and as such, supported terminals are limited.
 
+The best way of learning about Escaping Eden, and staying up to date with the latest development, is to 
+join the discord server at [https://discord.gg/uMxZnjJGGu](https://discord.gg/uMxZnjJGGu). 
+
+The project is currently in a rapid state of development, and information here is subject to change quickly.
+
 ## Table of Contents
 
   * [Introduction](#introduction)

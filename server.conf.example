@@ -1,5 +1,6 @@
 [logging]
 type = "console"   # supported options at the moment are "disabled", "console" and "file"
+path = "tmp/log/"       # only used if type is "file", note this is a directory, not a file
 
 # The server config section
 [server]
