@@ -159,6 +159,9 @@ type TerminalType interface {
 
 	// HideCursor hides the cursor
 	HideCursor() string
+	MoveCursor(int, int) string
+	RepeatChar(int) string
+	ClearTerminal() string
 }
 
 type Terminal struct {
@@ -372,5 +375,23 @@ func (t *Terminal) NotOverlined() string {
 // HideCursor should hide the cursor on the screen, this is platform independent
 // So it is not implemented here.
 func (t *Terminal) HideCursor() string {
+	return ""
+}
+
+// MoveCursor moves the cursor to the given position, this is platform independent
+// So it is not implemented here.
+func (t *Terminal) MoveCursor(x, y int) string {
+	return ""
+}
+
+// RepeatChar repeats the given character n times, this is platform independent
+// So it is not implemented here.
+func (t *Terminal) RepeatChar(n int) string {
+	return ""
+}
+
+// ClearTerminal clears the terminal screen, this is platform independent
+// So it is not implemented here.
+func (t *Terminal) ClearTerminal() string {
 	return ""
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
+	xterm_256color "github.com/yamamushi/EscapingEden/terminals/xterm-256color"
 	"github.com/yamamushi/EscapingEden/ui"
 	"net"
 	"strings"
@@ -87,10 +88,17 @@ func (c *Connection) Handle() {
 	} else {
 		c.Log.Println(logging.LogWarn, "Unsupported terminal type:", c.ID, " Terminal:", termType, " Closing connection")
 		c.manager.HandleDisconnect(c)
+		// This is one of the FEW places we use \033c
 		c.Write([]byte("\033cUnsupported terminal type, sorry only xterm-256color is supported at the " +
 			"moment and you're using " + termType + " >_>\r\n"))
 		c.Close()
 		return
+	}
+	// Set up the terminal type
+	var terminal terminals.TerminalType
+	switch termTypeID {
+	case terminals.TermTypeXTerm256Color:
+		terminal = xterm_256color.New()
 	}
 
 	//log.Println("Requesting terminal size for:", c.ID)
@@ -118,22 +126,21 @@ func (c *Connection) Handle() {
 	}
 
 	//log.Println("Flushing client terminal and hiding cursor:", c.ID)
-	_, err = c.conn.Write([]byte("\033[2J"))
+	_, err = c.conn.Write([]byte(terminal.ClearTerminal()))
 	if err != nil {
 		c.Log.Println(logging.LogWarn, "Flush Error:", c.ID, " Message: ", err, " Closing connection")
 		c.manager.HandleDisconnect(c)
 		return
 	}
-	_, err = c.conn.Write([]byte("\033[?25l"))
+	_, err = c.conn.Write([]byte(terminal.HideCursor()))
 	if err != nil {
 		c.Log.Println(logging.LogWarn, "Hide Cursor Error:", c.ID, " Message: ", err, " Closing connection")
 		c.manager.HandleDisconnect(c)
 		return
 	}
 
-	c.Console = ui.NewConsole(width, height, c.ID, c.manager.CMReceiveMessages, c.Log)
+	c.Console = ui.NewConsole(width, height, c.ID, c.manager.CMReceiveMessages, c.Log, terminal)
 	//log.Println("Initializing terminal type for:", c.ID)
-	c.Console.SetupTerminalType(termTypeID)
 	//log.Println("Initializing Console for:", c.ID)
 	c.Console.Init()
 	//log.Println("Console Initialized for:", c.ID)

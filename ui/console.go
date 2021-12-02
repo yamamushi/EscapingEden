@@ -4,7 +4,6 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
-	xterm_256color "github.com/yamamushi/EscapingEden/terminals/xterm-256color"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
@@ -69,7 +68,8 @@ type Console struct {
 }
 
 // NewConsole creates a new console with no windows.
-func NewConsole(height int, width int, connectionID string, outputChannel chan messages.ConnectionManagerMessage, log logging.LoggerType) *Console {
+func NewConsole(height int, width int, connectionID string, outputChannel chan messages.ConnectionManagerMessage,
+	log logging.LoggerType, term terminals.TerminalType) *Console {
 	// Set up a new Chat Window and add it to the console at the bottom.
 	receiveFromConnectionManager := make(chan messages.ConsoleMessage)
 	windowMessages := make(chan messages.WindowMessage)
@@ -82,16 +82,7 @@ func NewConsole(height int, width int, connectionID string, outputChannel chan m
 	return &Console{Height: height, Width: width, ConnectionID: connectionID, SendMessages: outputChannel,
 		ReceiveMessages: receiveFromConnectionManager, WindowMessages: windowMessages, LoginWindowMessages: loginMessages,
 		ChatMessageReceive: chatMessageReceive, ChatWindowMessages: chatMessageSend, ToolboxWindowMessages: toolboxMessages,
-		PopupBoxWindowMessages: popupBoxMessage, Log: log}
-}
-
-func (c *Console) SetupTerminalType(termType terminals.TermTypeID) {
-	// Set up the terminal type
-	switch termType {
-	case terminals.TermTypeXTerm256Color:
-		c.Terminal = xterm_256color.New()
-	}
-	c.Terminal.Init()
+		PopupBoxWindowMessages: popupBoxMessage, Log: log, Terminal: term}
 }
 
 // Init is called once to initialize the console, it does things like create the default windows, and launches the
@@ -125,10 +116,10 @@ func (c *Console) Init() {
 	go c.CaptureWindowMessages()
 	go c.CaptureManagerMessages()
 
-	c.SetActiveWindow(loginWindow) // Set our default active window to the login window, we will pass this to another
-	// window after we log in.
+	// Set our default active window to the login window, we will pass this to another window after we log in.
+	c.SetActiveWindow(loginWindow)
 
-	c.ConsoleCommands += c.Terminal.HideCursor() + c.ResetTerminal() // + c.DrawPrompt() + c.MoveCursorToTopLeft()
+	c.ConsoleCommands += c.Terminal.HideCursor() + c.Terminal.ClearTerminal()
 }
 
 // SetManagerSendChannel sets the channel for sending messages to the ConnectionManager.
