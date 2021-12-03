@@ -6,9 +6,9 @@ These functions are used to initialize various components, to keep main clean :)
 import (
 	"errors"
 	"github.com/yamamushi/EscapingEden/accounts"
-	"github.com/yamamushi/EscapingEden/db"
-	"github.com/yamamushi/EscapingEden/db/boltdb"
 	"github.com/yamamushi/EscapingEden/edenconfig"
+	"github.com/yamamushi/EscapingEden/edendb"
+	"github.com/yamamushi/EscapingEden/edendb/bolt"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/logging/logconsole"
 	"github.com/yamamushi/EscapingEden/logging/logfile"
@@ -30,10 +30,10 @@ func InitLogger(conf edenconfig.Config) (logging.LoggerType, error) {
 }
 
 // InitDB initializes the database
-func InitDB(conf edenconfig.Config, log logging.LoggerType) (db.DatabaseType, error) {
+func InitDB(conf edenconfig.Config, log logging.LoggerType) (edendb.DatabaseType, error) {
 	log.Println(logging.LogInfo, "Initializing Database connnection")
 	if conf.DB.Type == "bolt" {
-		dbConn, err := boltdb.NewBoltDB(conf.DB.Path)
+		dbConn, err := bolt.NewBoltDB(conf.DB.Path)
 		if err != nil {
 			return nil, err
 		}
@@ -44,13 +44,19 @@ func InitDB(conf edenconfig.Config, log logging.LoggerType) (db.DatabaseType, er
 
 // InitAccountManager initializes the account manager
 func InitAccountManager(receiver chan messages.AccountManagerMessage, sender chan messages.ConnectionManagerMessage,
-	dbConn db.DatabaseType, log logging.LoggerType) (*accounts.AccountManager, error) {
+	dbConn edendb.DatabaseType, log logging.LoggerType) (*accounts.AccountManager, error) {
 	log.Println(logging.LogInfo, "Starting Account Manager...")
 
 	startNotify := make(chan bool)
 
 	accountManager := accounts.NewAccountManager(receiver, sender, dbConn, log)
-	err := accountManager.Start(startNotify)
+	// We need to init first because we need to ensure the database has been initialized
+	// For the Account Manager to work.
+	err := accountManager.Init()
+	if err != nil {
+		return nil, err
+	}
+	err = accountManager.Start(startNotify)
 	if err != nil {
 		return nil, err
 	}

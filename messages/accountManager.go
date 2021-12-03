@@ -1,14 +1,12 @@
 package messages
 
-// Account is used during registration to create a new player account.
-// It is also used during logins to retrieve the character list for an account.
+// Account is used for registration/db records/etc to store player accounts.
+// It has no knowledge of any other data.
 type Account struct {
-	ID             string `storm:"index"`
-	Username       string `storm:"unique"`
-	Email          string `storm:"unique"`
-	HashedPassword string
-
-	Characters map[string]string `storm:"unique"` // Character ID -> Character Name
+	ID             string `storm:"index"`  // Indexed Unique ID for the account, we use UUID, not the auto-increment, ever.
+	Username       string `storm:"unique"` // Username of the account, must be unique.
+	Email          string `storm:"unique"` // Email of the account, must be unique.
+	HashedPassword string // Hashed password of the account.
 }
 
 type AccountRegistrationRequest struct {

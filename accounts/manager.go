@@ -1,7 +1,8 @@
 package accounts
 
 import (
-	"github.com/yamamushi/EscapingEden/db"
+	"github.com/google/uuid"
+	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 )
@@ -12,11 +13,36 @@ type AccountManager struct {
 
 	Log logging.LoggerType
 
-	DB db.DatabaseType
+	DB edendb.DatabaseType
 }
 
-func NewAccountManager(receiveChannel chan messages.AccountManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db db.DatabaseType, log logging.LoggerType) *AccountManager {
+func NewAccountManager(receiveChannel chan messages.AccountManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType) *AccountManager {
 	return &AccountManager{ReceiveChannel: receiveChannel, SendChannel: sendChannel, DB: db, Log: log}
+}
+
+// Init initializes the database for the account manager if needed
+func (am *AccountManager) Init() error {
+
+	id, _ := uuid.NewUUID()
+	err := am.DB.AddRecord("Characters", &messages.Account{ID: id.String(), Username: "Test", HashedPassword: "Test"})
+	if err != nil {
+		if err.Error() == "already exists" {
+			am.Log.Println(logging.LogInfo, "AccountManager", "Init", "Account already exists")
+		}
+	}
+	_ = am.DB.UpdateRecord("Characters", &messages.Account{ID: id.String(), Username: "Test", HashedPassword: "Test"})
+
+	//	search := messages.Account{Username: "Test"}
+	result := messages.Account{}
+	err = am.DB.One("Characters", "Username", "fdf", &result)
+	if err != nil {
+		am.Log.Println(logging.LogError, "Error finding account:", err)
+		return err
+	}
+
+	am.Log.Println(logging.LogInfo, result.ID, result.Username, result.HashedPassword)
+
+	return nil
 }
 
 func (am *AccountManager) Start(started chan bool) error {
