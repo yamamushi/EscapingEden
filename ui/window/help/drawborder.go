@@ -34,7 +34,7 @@ func (hw *HelpWindow) DrawBorder(winX int, winY int) {
 	for i := 1; i < hw.Width; i++ {
 		// Inserts a horizontal line
 		if hw.Active {
-			hw.PrintCharNoReset(winX+i, winY, "\u2500", "\033[32m")
+			hw.PrintCharColor(winX+i, winY, "\u2500", "\033[32m")
 		} else {
 			hw.PrintChar(winX+i, winY, "\u2500", "")
 		}
@@ -68,7 +68,7 @@ func (hw *HelpWindow) DrawBorder(winX int, winY int) {
 	for i := 1; i < hw.Width; i++ {
 		// Inserts a horizontal line
 		if hw.Active {
-			hw.PrintCharNoReset(winX+i, winY+hw.Height+1, "\u2500", "\033[32m")
+			hw.PrintCharColor(winX+i, winY+hw.Height+1, "\u2500", "\033[32m")
 		} else {
 			hw.PrintChar(winX+i, winY+hw.Height+1, "\u2500", "")
 		}
@@ -87,13 +87,13 @@ func (hw *HelpWindow) DrawBorder(winX int, winY int) {
 		// Top Border
 		for i := 1; i < hw.Width; i++ {
 			// Inserts a horizontal line
-			hw.PrintCharNoReset(winX+i, winY+2, "\u2500", "\033[32m")
+			hw.PrintCharColor(winX+i, winY+2, "\u2500", "\033[32m")
 		}
 
 		// Draw bottom border
 		for i := 1; i < hw.Width; i++ {
 			// Inserts a horizontal line
-			hw.PrintCharNoReset(winX+i, winY+hw.Height-hw.ScrollBufferLimit+1, "\u2500", "\033[32m")
+			hw.PrintCharColor(winX+i, winY+hw.Height-hw.ScrollBufferLimit+1, "\u2500", "\033[32m")
 		}
 
 	} else {
@@ -108,13 +108,13 @@ func (hw *HelpWindow) DrawBorder(winX int, winY int) {
 		// Top Border
 		for i := 1; i < hw.Width; i++ {
 			// Inserts a horizontal line
-			hw.PrintCharNoReset(winX+i, winY+2, "\u2500", "")
+			hw.PrintCharColor(winX+i, winY+2, "\u2500", "")
 		}
 
 		// Draw bottom border
 		for i := 1; i < hw.Width; i++ {
 			// Inserts a horizontal line
-			hw.PrintCharNoReset(winX+i, winY+hw.Height-hw.ScrollBufferLimit+1, "\u2500", "")
+			hw.PrintCharColor(winX+i, winY+hw.Height-hw.ScrollBufferLimit+1, "\u2500", "")
 		}
 	}
 }

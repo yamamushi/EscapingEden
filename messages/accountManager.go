@@ -16,8 +16,7 @@ type AccountRegistrationRequest struct {
 }
 
 type AccountRegistrationResponse struct {
-	Success bool
-	Message string
+	Error AMErrorType
 }
 
 type AccountManagerMessageType int
@@ -36,4 +35,46 @@ type AccountManagerMessage struct {
 	AccountResult        Account
 	RegistrationRequest  AccountRegistrationRequest
 	RegistrationResponse AccountRegistrationResponse
+}
+
+// AMErrorType is used to define various errors that can occur during account management.
+// It is used by anything that expects its messages to get to the Account Manager (registration/login specifically)
+// In order to parse the errors it receives.
+type AMErrorType int
+
+const (
+	AMError_Null AMErrorType = iota
+	AMError_SystemError
+	AMError_AccountAlreadyExists
+	AMError_AccountDoesNotExist
+	AMError_UsernameAlreadyExists
+	AMError_EmailAlreadyExists
+	AMError_InvalidPassword
+	AMError_InvalidEmail
+	AMError_InvalidUsername
+)
+
+func (ame AMErrorType) Error() string {
+	switch ame {
+	case AMError_Null:
+		return "Null Error"
+	case AMError_SystemError:
+		return "System Error"
+	case AMError_AccountAlreadyExists:
+		return "Account Already Exists"
+	case AMError_AccountDoesNotExist:
+		return "Account Does Not Exist"
+	case AMError_UsernameAlreadyExists:
+		return "Username Already Exists"
+	case AMError_EmailAlreadyExists:
+		return "Email Already Exists"
+	case AMError_InvalidPassword:
+		return "Invalid Password"
+	case AMError_InvalidEmail:
+		return "Invalid Email"
+	case AMError_InvalidUsername:
+		return "Invalid Username"
+	default:
+		return "Unknown Error"
+	}
 }

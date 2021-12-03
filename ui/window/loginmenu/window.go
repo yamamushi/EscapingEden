@@ -30,9 +30,10 @@ type LoginWindow struct {
 	registrationErrorData   RegistrationError
 	registrationAgreeRules  bool
 
-	registrationStatusMutex sync.Mutex
-	registrationSuccess     bool
-	registrationResponse    messages.AccountRegistrationResponse
+	registrationStatusMutex      sync.Mutex
+	registrationSuccess          bool
+	registrationResponse         messages.AccountRegistrationResponse
+	registrationResponseReceived bool
 }
 
 // LoginCreds is a struct for storing login credentials

@@ -35,9 +35,9 @@ func (w *Window) DrawBorder(winX int, winY int) {
 	for i := 1; i < w.Width; i++ {
 		// Inserts a horizontal line
 		if w.Active {
-			w.PrintCharNoReset(winX+i, winY, "\u2500", "\033[32m")
+			w.PrintCharColor(winX+i, winY, "\u2500", "\033[32m")
 		} else {
-			w.PrintCharNoReset(winX+i, winY, "\u2500", w.Terminal.Bold())
+			w.PrintCharColor(winX+i, winY, "\u2500", w.Terminal.Bold())
 		}
 	}
 
@@ -69,9 +69,9 @@ func (w *Window) DrawBorder(winX int, winY int) {
 	for i := 1; i < w.Width; i++ {
 		// Inserts a horizontal line
 		if w.Active {
-			w.PrintCharNoReset(winX+i, winY+w.Height+1, "\u2500", "\033[32m")
+			w.PrintCharColor(winX+i, winY+w.Height+1, "\u2500", "\033[32m")
 		} else {
-			w.PrintCharNoReset(winX+i, winY+w.Height+1, "\u2500", w.Terminal.Bold())
+			w.PrintCharColor(winX+i, winY+w.Height+1, "\u2500", w.Terminal.Bold())
 		}
 	}
 }

@@ -23,8 +23,9 @@ func (w *Window) PrintLn(X int, Y int, text string, escapeCode string) {
 	}
 }
 
-// PrintLn prints a line to the pointmap.
-func (w *Window) PrintLnNoReset(X int, Y int, text string, escapeCode string) {
+// PrintLnColor prints a line to the pointmap taking into account coloring, which means the point escape codes should not be reset.
+// Otherwise, buffering at drawing the point map might cause problems on some terminals.
+func (w *Window) PrintLnColor(X int, Y int, text string, escapeCode string) {
 	w.pmapMutex.Lock()
 	defer w.pmapMutex.Unlock()
 	if X > len(w.pointMap)-1 {
@@ -61,8 +62,9 @@ func (w *Window) PrintChar(X int, Y int, text string, escapeCode string) {
 	w.pointMap[X][Y] = types.Point{X: X, Y: Y, Character: text, EscapeCode: escapeCode}
 }
 
-// PrintChar prints a character to the pointmap.
-func (w *Window) PrintCharNoReset(X int, Y int, text string, escapeCode string) {
+// PrintCharColor prints a character to the pointmap taking into account coloring, which means the point escape code should not be reset.
+// Otherwise, buffering at drawing the point map might cause problems on some terminals.
+func (w *Window) PrintCharColor(X int, Y int, text string, escapeCode string) {
 	w.pmapMutex.Lock()
 	defer w.pmapMutex.Unlock()
 	if X > len(w.pointMap)-1 || X < 0 {

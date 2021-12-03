@@ -27,47 +27,20 @@ func (am *AccountManager) Init() error {
 	err := am.DB.AddRecord("Characters", &messages.Account{ID: id.String(), Username: "Test", HashedPassword: "Test"})
 	if err != nil {
 		if err.Error() == "already exists" {
-			am.Log.Println(logging.LogInfo, "AccountManager", "Init", "Account already exists")
+			am.Log.Println(logging.LogInfo, "AccountManager", "Init", messages.AMError_AccountAlreadyExists.Error())
 		}
 	}
 	_ = am.DB.UpdateRecord("Characters", &messages.Account{ID: id.String(), Username: "Test", HashedPassword: "Test"})
 
 	//	search := messages.Account{Username: "Test"}
 	result := messages.Account{}
-	err = am.DB.One("Characters", "Username", "fdf", &result)
+	err = am.DB.One("Characters", "Username", "Test", &result)
 	if err != nil {
-		am.Log.Println(logging.LogError, "Error finding account:", err)
+		am.Log.Println(logging.LogError, messages.AMError_AccountDoesNotExist.Error(), err)
 		return err
 	}
 
 	am.Log.Println(logging.LogInfo, result.ID, result.Username, result.HashedPassword)
 
 	return nil
-}
-
-func (am *AccountManager) Start(started chan bool) error {
-	go am.HandleMessages(started)
-	return nil
-}
-
-func (am *AccountManager) HandleMessages(started chan bool) {
-	am.Log.Println(logging.LogInfo, "Account Manager now handling messages")
-	started <- true
-	for {
-		select {
-		case managerMessage := <-am.ReceiveChannel:
-			am.Log.Println(logging.LogInfo, "Account Manager received message")
-			switch managerMessage.Type {
-			case messages.AccountManager_Message_Register:
-				registrationResponse := messages.AccountRegistrationResponse{Success: true, Message: "Registration Successful"}
-				response := messages.ConnectionManagerMessage{
-					Type:               messages.ConnectManager_Message_RegisterResponse,
-					RecipientConsoleID: managerMessage.SenderSessionID,
-					Data:               registrationResponse,
-				}
-				am.Log.Println(logging.LogInfo, "Sending registration response")
-				am.SendChannel <- response
-			}
-		}
-	}
 }

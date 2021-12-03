@@ -7,6 +7,7 @@ require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/google/uuid v1.3.0
 	github.com/hajimehoshi/ebiten/v2 v2.2.2
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 )
 

@@ -1,6 +1,9 @@
 package login
 
-import "github.com/yamamushi/EscapingEden/ui/util"
+import (
+	"github.com/yamamushi/EscapingEden/messages"
+	"github.com/yamamushi/EscapingEden/ui/util"
+)
 
 // RegistrationState is an enum for storing registration state
 type RegistrationState int
@@ -93,7 +96,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 		lw.PrintLn(lw.X+12, lw.Y+7, "Username:", "")
 	}
 	lw.PrintLn(lw.X+22, lw.Y+7, lw.registrationSubmitData.Username, "")
-	lw.PrintLnNoReset(lw.X+36, lw.Y+7, lw.registrationErrorData.UsernameError(), errorFG.FG()+errorBG.BG())
+	lw.PrintLnColor(lw.X+36, lw.Y+7, lw.registrationErrorData.UsernameError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoPassword {
 		lw.PrintLn(lw.X+12, lw.Y+8, "Password:", lw.Terminal.Bold())
@@ -101,7 +104,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 		lw.PrintLn(lw.X+12, lw.Y+8, "Password:", "")
 	}
 	lw.PrintLn(lw.X+22, lw.Y+8, lw.registrationSubmitData.Password, "")
-	lw.PrintLnNoReset(lw.X+36, lw.Y+8, lw.registrationErrorData.PasswordError(), errorFG.FG()+errorBG.BG())
+	lw.PrintLnColor(lw.X+36, lw.Y+8, lw.registrationErrorData.PasswordError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoPasswordConfirm {
 		lw.PrintLn(lw.X+4, lw.Y+9, "Confirm Password:", lw.Terminal.Bold())
@@ -109,7 +112,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 		lw.PrintLn(lw.X+4, lw.Y+9, "Confirm Password:", "")
 	}
 	lw.PrintLn(lw.X+22, lw.Y+9, lw.registrationSubmitData.PasswordConfirm, "")
-	lw.PrintLnNoReset(lw.X+36, lw.Y+9, lw.registrationErrorData.PasswordConfirmError(), errorFG.FG()+errorBG.BG())
+	lw.PrintLnColor(lw.X+36, lw.Y+9, lw.registrationErrorData.PasswordConfirmError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoEmail {
 		lw.PrintLn(lw.X+15, lw.Y+10, "Email:", lw.Terminal.Bold())
@@ -117,10 +120,10 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 		lw.PrintLn(lw.X+15, lw.Y+10, "Email:", "")
 	}
 	lw.PrintLn(lw.X+22, lw.Y+10, lw.registrationSubmitData.Email, "")
-	lw.PrintLnNoReset(lw.X+36, lw.Y+10, lw.registrationErrorData.EmailError(), errorFG.FG()+errorBG.BG())
+	lw.PrintLnColor(lw.X+36, lw.Y+10, lw.registrationErrorData.EmailError(), errorFG.FG()+errorBG.BG())
 
 	lw.PrintLn(lw.X+20, lw.Y+14, "Do you agree to the rules?     (Space to toggle)", "")
-	lw.PrintLnNoReset(lw.X+20, lw.Y+13, lw.registrationErrorData.RulesError(), errorFG.FG()+errorBG.BG())
+	lw.PrintLnColor(lw.X+20, lw.Y+13, lw.registrationErrorData.RulesError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoAgreeRules {
 		lw.PrintLn(lw.X+47, lw.Y+14, "[ ]", lw.Terminal.Bold())
@@ -151,9 +154,17 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 func (lw *LoginWindow) drawRegistrationSuccess() {
 	lw.registrationStatusMutex.Lock()
 	defer lw.registrationStatusMutex.Unlock()
-	if lw.registrationResponse.Success {
-		lw.PrintLn(lw.X+2, lw.Y+4, "Registration successful!", "")
+
+	if lw.registrationResponseReceived {
+		if lw.registrationResponse.Error == messages.AMError_Null {
+			lw.PrintLnColor(lw.X+2, lw.Y+4, "Registration successful!", "\033[32m")
+			lw.PrintLn(lw.X+2, lw.Y+6, "Please select continue to be taken back to the login screen.", "")
+
+		} else {
+			lw.PrintLn(lw.X+2, lw.Y+4, "Something went wrong!: "+lw.registrationResponse.Error.Error(), "")
+		}
 	} else {
-		lw.PrintLn(lw.X+2, lw.Y+4, "Something went wrong!: "+lw.registrationResponse.Message, "")
+		lw.PrintLn(lw.X+2, lw.Y+4, "Waiting on registration status...", "")
 	}
+
 }
