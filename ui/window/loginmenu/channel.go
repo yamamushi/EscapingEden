@@ -16,6 +16,24 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 
 				lw.Log.Println(logging.LogInfo, "Login Window received registration response from console")
 				lw.registrationResponse = windowMessage.Data.(messages.AccountRegistrationResponse)
+
+				lw.registrationErrorMutex.Lock()
+				defer lw.registrationErrorMutex.Unlock()
+
+				switch lw.registrationResponse.Error {
+				case messages.AMError_UsernameAlreadyExists:
+					lw.registrationErrorData.usernameError = lw.registrationResponse.Error.Error()
+				case messages.AMError_EmailAlreadyExists:
+					lw.registrationErrorData.emailError = lw.registrationResponse.Error.Error()
+				case messages.AMError_AccountAlreadyExists:
+					lw.registrationErrorData.usernameError = messages.AMError_UsernameAlreadyExists.Error()
+					lw.registrationErrorData.emailError = messages.AMError_EmailAlreadyExists.Error()
+				case messages.AMError_SystemError:
+					lw.registrationErrorData.errorRequest = lw.registrationResponse.Error.Error()
+				default:
+					lw.registrationErrorData.errorRequest = "Unhandled Error - Please report this issue."
+				}
+
 				lw.registrationResponseReceived = true
 				lw.RequestFlushFromConsole()
 				return // We launched when our registration request was submitted, now we can return since we got a response

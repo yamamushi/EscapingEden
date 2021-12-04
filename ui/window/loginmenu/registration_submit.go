@@ -6,6 +6,8 @@ func (lw *LoginWindow) RegistrationSubmit(RegistrationSubmitData) *RegistrationE
 	lw.registrationSubmitMutex.Lock()
 	defer lw.registrationSubmitMutex.Unlock()
 
+	// We don't need to lock our lw.registrationErrorMutex because we're generating a new one here, not changing it.
+
 	// We need to lock to make sure no requests are happening twice, and that
 	// Our registration data is locked
 	regError := &RegistrationError{

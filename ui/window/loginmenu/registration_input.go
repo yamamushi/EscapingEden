@@ -19,6 +19,10 @@ func (lw *LoginWindow) handleRegistrationInput(input types.Input) {
 		lw.handleRegistrationMainInput(input)
 	case RegistrationUserInfo:
 		lw.handleRegistrationUserInfo(input)
+	case RegistrationPending:
+		lw.handleRegistrationPending(input)
+	case RegistrationFailure:
+		lw.handleRegistrationFailure(input)
 	case RegistrationSuccess:
 		lw.handleRegistrationSuccess(input)
 	}
@@ -76,6 +80,8 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 	case types.InputCharacter:
 		switch input.Data {
 		default:
+			lw.registrationErrorMutex.Lock()
+			defer lw.registrationErrorMutex.Unlock()
 			lw.registrationUserInfoCharInput(input.Data)
 			return
 		}
@@ -149,12 +155,16 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 				// If we got an error, we're just going to update our error state
 				lw.registrationErrorData = *registrationError
 			} else {
-				// Otherwise we succeeded (yay!) and we can go to the success screen
-				lw.registrationState = RegistrationSuccess
+				// Otherwise we succeeded (yay!) and we can go to the pending screen
+				lw.registrationState = RegistrationPending
 				// Let's also cleanup our registration data
-				lw.registrationAgreeRules = false
+				//lw.registrationAgreeRules = false
+
+				// We need to reset our error data so that we can process it when we get our response
+				// From the account manager
+				lw.registrationErrorMutex.Lock()
 				lw.registrationErrorData = RegistrationError{}
-				lw.registrationSubmitData = RegistrationSubmitData{}
+				lw.registrationErrorMutex.Unlock()
 			}
 		}
 		lw.registrationNavOptionSelected = 0
@@ -207,6 +217,62 @@ func (lw *LoginWindow) registrationUserInfoBackspaceInput() {
 	}
 }
 
-func (lw *LoginWindow) handleRegistrationSuccess(input types.Input) {
+func (lw *LoginWindow) handleRegistrationPending(input types.Input) {
+	// This is a no-op, we just wait for the response from the account manager
+}
 
+func (lw *LoginWindow) handleRegistrationFailure(input types.Input) {
+	switch input.Type {
+	case types.InputLeft:
+		//log.Println("Left arrow pressed")
+		lw.registrationFailureOptionSelected = 1
+		return
+	case types.InputRight:
+		//log.Println("Right arrow pressed")
+		lw.registrationFailureOptionSelected = 2
+		return
+	case types.InputReturn:
+		//log.Println("Return pressed")
+		if lw.registrationFailureOptionSelected == 1 {
+			lw.registrationState = RegistrationUserInfo
+		}
+		if lw.registrationNavOptionSelected == 2 {
+			return
+		}
+		lw.registrationNavOptionSelected = 0
+		//lw.ResetWindowDrawings()
+		//lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
+		lw.RequestFlushFromConsole()
+		return
+	default:
+		return
+	}
+}
+
+func (lw *LoginWindow) handleRegistrationSuccess(input types.Input) {
+	switch input.Type {
+	case types.InputLeft:
+		//log.Println("Left arrow pressed")
+		lw.registrationSuccessOptionSelected = 1
+		return
+	case types.InputRight:
+		//log.Println("Right arrow pressed")
+		lw.registrationSuccessOptionSelected = 2
+		return
+	case types.InputReturn:
+		//log.Println("Return pressed")
+		if lw.registrationSuccessOptionSelected == 1 {
+			return
+		}
+		if lw.registrationNavOptionSelected == 2 {
+			lw.windowState = LoginWindowMenu
+		}
+		lw.registrationNavOptionSelected = 0
+		//lw.ResetWindowDrawings()
+		//lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
+		lw.RequestFlushFromConsole()
+		return
+	default:
+		return
+	}
 }
