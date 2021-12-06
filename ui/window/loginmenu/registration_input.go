@@ -2,6 +2,7 @@ package login
 
 import (
 	"github.com/yamamushi/EscapingEden/ui/types"
+	"net/mail"
 )
 
 // handleRegistrationInput handles input for the registration screen of the login window
@@ -83,6 +84,7 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 			lw.registrationErrorMutex.Lock()
 			defer lw.registrationErrorMutex.Unlock()
 			lw.registrationUserInfoCharInput(input.Data)
+			lw.RequestFlushFromConsole()
 			return
 		}
 	case types.InputLeft:
@@ -149,6 +151,9 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 			lw.registrationSubmitData = RegistrationSubmitData{}
 		}
 		if lw.registrationNavOptionSelected == 2 {
+			if !lw.registrationErrorData.IsEmpty() {
+				lw.registrationErrorData.errorRequest = "Please correct the errors above and try again."
+			}
 			// This is where we submit our entered user data
 			registrationError := lw.RegistrationSubmit(lw.registrationSubmitData)
 			if registrationError != nil {
@@ -182,17 +187,70 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 func (lw *LoginWindow) registrationUserInfoCharInput(input string) {
 	switch lw.registrationUserInfoOptionSelected {
 	case UserInfoUsername:
-		lw.registrationSubmitData.Username += input
+		//lw.registrationErrorMutex.Lock()
+		//defer lw.registrationErrorMutex.Unlock()
+
+		if len(lw.registrationSubmitData.Username) < 16 {
+			if input == " " {
+				lw.registrationErrorData.usernameError = "Username cannot contain spaces"
+			} else {
+				lw.registrationSubmitData.Username += input
+			}
+			if len(lw.registrationSubmitData.Username) < 4 {
+				lw.registrationErrorData.usernameError = "Username must be at least 4 characters"
+			} else {
+				lw.registrationErrorData.usernameError = ""
+			}
+		} else {
+			lw.registrationErrorData.usernameError = "Maximum username length is 16 characters"
+		}
+
 	case UserInfoPassword:
-		lw.registrationSubmitData.Password += input
+		if len(lw.registrationSubmitData.Password) < 32 {
+			if input == " " {
+				lw.registrationErrorData.passwordError = "Password cannot contain spaces"
+			} else {
+				lw.registrationSubmitData.Password += input
+			}
+			if len(lw.registrationSubmitData.Password) < 8 {
+				lw.registrationErrorData.passwordError = "Password must be at least 8 characters"
+			} else {
+				lw.registrationErrorData.passwordError = ""
+			}
+		} else {
+			lw.registrationErrorData.passwordError = "Maximum password length is 32 characters"
+		}
+
 	case UserInfoPasswordConfirm:
-		lw.registrationSubmitData.PasswordConfirm += input
+		if len(lw.registrationSubmitData.PasswordConfirm) < 32 {
+			if input == " " {
+				lw.registrationErrorData.passwordConfirmError = "Password cannot contain spaces"
+			} else {
+				lw.registrationSubmitData.PasswordConfirm += input
+			}
+			if len(lw.registrationSubmitData.PasswordConfirm) < 8 {
+				lw.registrationErrorData.passwordConfirmError = "Password must be at least 8 characters"
+			} else {
+				lw.registrationErrorData.passwordConfirmError = ""
+			}
+		} else {
+			lw.registrationErrorData.passwordConfirmError = "Maximum password length is 32 characters"
+		}
+
 	case UserInfoEmail:
 		lw.registrationSubmitData.Email += input
+		_, err := mail.ParseAddress(lw.registrationSubmitData.Email)
+		if err != nil {
+			lw.registrationErrorData.emailError = "Invalid email address"
+		} else {
+			lw.registrationErrorData.emailError = ""
+		}
+
 	case UserInfoAgreeRules:
 		if input == " " {
 			lw.registrationAgreeRules = !lw.registrationAgreeRules
 		}
+
 	}
 }
 
@@ -201,18 +259,27 @@ func (lw *LoginWindow) registrationUserInfoBackspaceInput() {
 	case UserInfoUsername:
 		if lw.registrationSubmitData.Username != "" {
 			lw.registrationSubmitData.Username = lw.registrationSubmitData.Username[:len(lw.registrationSubmitData.Username)-1]
+			lw.registrationErrorData.usernameError = ""
 		}
 	case UserInfoPassword:
 		if lw.registrationSubmitData.Password != "" {
 			lw.registrationSubmitData.Password = lw.registrationSubmitData.Password[:len(lw.registrationSubmitData.Password)-1]
+			lw.registrationErrorData.passwordError = ""
 		}
 	case UserInfoPasswordConfirm:
 		if lw.registrationSubmitData.PasswordConfirm != "" {
 			lw.registrationSubmitData.PasswordConfirm = lw.registrationSubmitData.PasswordConfirm[:len(lw.registrationSubmitData.PasswordConfirm)-1]
+			lw.registrationErrorData.passwordConfirmError = ""
 		}
 	case UserInfoEmail:
 		if lw.registrationSubmitData.Email != "" {
 			lw.registrationSubmitData.Email = lw.registrationSubmitData.Email[:len(lw.registrationSubmitData.Email)-1]
+			_, err := mail.ParseAddress(lw.registrationSubmitData.Email)
+			if err != nil {
+				lw.registrationErrorData.emailError = "Invalid email address"
+			} else {
+				lw.registrationErrorData.emailError = ""
+			}
 		}
 	}
 }
@@ -264,10 +331,10 @@ func (lw *LoginWindow) handleRegistrationSuccess(input types.Input) {
 		if lw.registrationSuccessOptionSelected == 1 {
 			return
 		}
-		if lw.registrationNavOptionSelected == 2 {
+		if lw.registrationSuccessOptionSelected == 2 {
 			lw.windowState = LoginWindowMenu
 		}
-		lw.registrationNavOptionSelected = 0
+		lw.registrationSuccessOptionSelected = 0
 		//lw.ResetWindowDrawings()
 		//lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
 		lw.RequestFlushFromConsole()

@@ -134,6 +134,10 @@ or by joining our Discord community at [Discord](https://discord.gg/uMxZnjJGGu).
 
 Most conversation about the development of Escaping Eden will be on Discord. 
 
+There will be times when an issue is reported, and I'll try to walk someone through fixing it and submitting a patch themselves.
+This isn't meant as being dismissive, I'd just rather spend the extra bit of time teaching someone how the project works so that
+they can contribute further if they want :) 
+
 ## License
 
 Unless otherwise noted, all content is licensed under the [GPL v3](https://www.gnu.org/licenses/gpl-3.0.html) license.

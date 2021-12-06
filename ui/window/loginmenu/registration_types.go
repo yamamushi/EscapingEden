@@ -9,6 +9,10 @@ type RegistrationError struct {
 	errorRequest         string
 }
 
+func (r RegistrationError) IsEmpty() bool {
+	return r.usernameError == "" && r.passwordError == "" && r.passwordConfirmError == "" && r.emailError == "" && r.rulesError == ""
+}
+
 func (r RegistrationError) UsernameError() string {
 	if r.usernameError != "" {
 		return "Error: " + r.usernameError

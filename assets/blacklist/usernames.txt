@@ -1,0 +1,9 @@
+# A list of blacklisted usernames that will not be allowed to register.
+root
+admin
+god
+administrator
+moderator
+mod
+sysop
+webmaster

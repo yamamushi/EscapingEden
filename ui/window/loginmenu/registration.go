@@ -204,6 +204,8 @@ func (lw *LoginWindow) drawRegistrationStatus() {
 		} else {
 			lw.registrationState = RegistrationFailure
 		}
+		lw.registrationResponseReceived = false
+		lw.RequestFlushFromConsole()
 	} else {
 		lw.PrintLn(lw.X+2, lw.Y+4, "Please wait while your account registration is being processed...", "")
 	}
