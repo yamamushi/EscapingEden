@@ -75,8 +75,12 @@ func main() {
 		log.Println(logging.LogFatal, "Error initializing account manager: ", err)
 	}
 
+	// Initialize the character manager
+	characterManagerReceiver := make(chan messages.CharacterManagerMessage)
+	_, err = InitCharacterManager(characterManagerReceiver, connectionManagerReceive, dbConn, &conf, log)
+
 	// Initialize the server, and by proxy, the connection manager
-	server, err := InitServer(conf, accountManagerReceiver, connectionManagerReceive, log)
+	server, err := InitServer(conf, accountManagerReceiver, characterManagerReceiver, connectionManagerReceive, log)
 	if err != nil {
 		log.Println(logging.LogFatal, "Error initializing server: ", err)
 	}

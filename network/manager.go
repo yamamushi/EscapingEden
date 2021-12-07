@@ -1,7 +1,6 @@
 package network
 
 import (
-	"github.com/yamamushi/EscapingEden/accounts"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"sync"
@@ -18,19 +17,23 @@ type ConnectionManager struct {
 	CMReceiveMessages chan messages.ConnectionManagerMessage
 
 	// Our AccountManager
-	AccountManager *accounts.AccountManager
+	//AccountManager *accounts.AccountManager
 	// Account manager outbound channel
 	AMSendMessages chan messages.AccountManagerMessage
+
+	// Our CharacterManager outbound Channel
+	CharacterManagerMessages chan messages.CharacterManagerMessage
 }
 
 // NewConnectionManager creates a new ConnectionManager
 func NewConnectionManager(connectionMap *sync.Map, receiveMessages chan messages.ConnectionManagerMessage,
-	accountManagerMessages chan messages.AccountManagerMessage, log logging.LoggerType) *ConnectionManager {
+	accountManagerMessages chan messages.AccountManagerMessage, characterManagerReceiveMessages chan messages.CharacterManagerMessage, log logging.LoggerType) *ConnectionManager {
 	return &ConnectionManager{
-		connectionMap:     connectionMap,
-		CMReceiveMessages: receiveMessages,
-		AMSendMessages:    accountManagerMessages,
-		Log:               log,
+		connectionMap:            connectionMap,
+		CMReceiveMessages:        receiveMessages,
+		AMSendMessages:           accountManagerMessages,
+		CharacterManagerMessages: characterManagerReceiveMessages,
+		Log:                      log,
 	}
 }
 
