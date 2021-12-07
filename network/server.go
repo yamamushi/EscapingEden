@@ -2,9 +2,11 @@ package network
 
 import (
 	"github.com/google/uuid"
+	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"net"
+	"strings"
 	"sync"
 )
 
@@ -56,6 +58,15 @@ func (s *Server) Listen(l net.Listener) {
 			s.Log.Println(logging.LogWarn, "Error Accepting Connection: ", err)
 			continue
 		}
+
+		addressSlice := strings.Split(conn.RemoteAddr().String(), ":")
+		if edenutil.CheckBlacklist(addressSlice[0], edenutil.BlackListIPs) {
+			s.Log.Println(logging.LogWarn, "Connection from blacklisted IP: ", conn.RemoteAddr().String())
+			_, _ = conn.Write([]byte("\r\nConnections from this IP are not allowed."))
+			_ = conn.Close()
+			continue
+		}
+
 		id := uuid.New().String()
 		s.Log.Println(logging.LogInfo, "New connection from", conn.RemoteAddr(), "with id", id, "accepted")
 		s.ConnectionManager.AddConnection(NewConnection(conn, id, s.ConnectionManager, s.Log))

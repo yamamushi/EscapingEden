@@ -2,9 +2,8 @@ package login
 
 import (
 	emailverifier "github.com/AfterShip/email-verifier"
+	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/messages"
-	"io/ioutil"
-	"strings"
 )
 
 func (lw *LoginWindow) RegistrationSubmit(RegistrationSubmitData) *RegistrationError {
@@ -27,7 +26,7 @@ func (lw *LoginWindow) RegistrationSubmit(RegistrationSubmitData) *RegistrationE
 	if lw.registrationSubmitData.Username == "" {
 		regError.usernameError = "You must enter a username."
 	}
-	if lw.CheckBlacklist(lw.registrationSubmitData.Username) {
+	if edenutil.CheckBlacklist(lw.registrationSubmitData.Username, edenutil.BlackListUsernames) {
 		regError.usernameError = "That username is not allowed."
 	}
 
@@ -42,6 +41,10 @@ func (lw *LoginWindow) RegistrationSubmit(RegistrationSubmitData) *RegistrationE
 	// email verification
 	if lw.registrationSubmitData.Email == "" {
 		regError.emailError = "You must enter an email."
+	}
+
+	if edenutil.CheckBlacklist(lw.registrationSubmitData.Email, edenutil.BlackListEmails) {
+		regError.emailError = "Email address is not allowed to register."
 	}
 
 	verifier := emailverifier.NewVerifier().EnableAutoUpdateDisposable()
@@ -74,25 +77,4 @@ func (lw *LoginWindow) RegistrationSubmit(RegistrationSubmitData) *RegistrationE
 	go lw.HandleReceiveChannel() // We're going to start listening for responses now
 
 	return nil
-}
-
-func (lw *LoginWindow) CheckBlacklist(username string) bool {
-	// Open our blacklist file - hardcoded for now, I want to change this later
-	blacklist, err := ioutil.ReadFile("assets/blacklist/usernames.txt")
-	if err != nil {
-		return false // If we can't open the file, we don't have a blacklist
-	}
-	// Split the file into lines
-	blacklistLines := strings.Split(string(blacklist), "\n")
-	// Check if the username is in the blacklist
-	for _, line := range blacklistLines {
-		// if line begins with a # we ignore it
-		if strings.HasPrefix(line, "#") {
-			continue
-		}
-		if strings.TrimSpace(line) == username {
-			return true
-		}
-	}
-	return false
 }
