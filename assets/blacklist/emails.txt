@@ -1,0 +1,2 @@
+# A list of blacklisted email addresses.
+test@test.com

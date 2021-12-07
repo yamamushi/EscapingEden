@@ -2,11 +2,12 @@ package toolbox
 
 import (
 	"github.com/yamamushi/EscapingEden/edenutil"
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
+	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
-	"log"
 	"sync"
 	"time"
 )
@@ -18,8 +19,11 @@ type ToolboxWindow struct {
 }
 
 // NewToolboxWindow creates a new toolbox window
-func NewToolboxWindow(x, y, w, h, consoleWidth, consoleHeight int, input, output chan messages.WindowMessage) *ToolboxWindow {
+func NewToolboxWindow(x, y, w, h, consoleWidth, consoleHeight int,
+	input, output chan messages.WindowMessage, log logging.LoggerType, term terminals.TerminalType) *ToolboxWindow {
 	lw := &ToolboxWindow{}
+	lw.Log = log
+	lw.Terminal = term
 	lw.ID = config.WindowToolBox
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
@@ -55,12 +59,14 @@ func (tw *ToolboxWindow) HandleInput(input types.Input) {
 	defer tw.twMutex.Unlock()
 
 	if tw.GetActive() {
-		log.Println("Toolbox Handling input")
+		tw.Log.Println(logging.LogInfo, "Toolbox Handling input")
 	}
 
-	if len(input.Data) > 0 {
-		log.Println(input.Data)
-	}
+	/*
+		if len(input.Data) > 0 {
+			tw.Log.Println(input.Data)
+		}
+	*/
 }
 
 // UpdateContents updates the contents of the toolbox window

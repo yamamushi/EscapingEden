@@ -4,6 +4,11 @@ Escaping Eden is a MUD/Roguelike written in Go.
 
 It implements a unique xterm-256 based UI over telnet, and as such, supported terminals are limited.
 
+The best way of learning about Escaping Eden, and staying up to date with the latest development, is to 
+join the discord server at [https://discord.gg/uMxZnjJGGu](https://discord.gg/uMxZnjJGGu). 
+
+The project is currently in a rapid state of development, and information here is subject to change quickly.
+
 ## Table of Contents
 
   * [Introduction](#introduction)
@@ -57,7 +62,7 @@ different methods of communicating with the game engine that I am attempting bef
 
 This is important for the long term goals of EE, because I want to be able to be able to distribute the game processing
 to a separate cluster in the future if necessary. This is a very long term goal, but it's essential that the game
-engine and the networking/UI are complete separate entities. The connection manager can send messages to the game engine
+engine and the networking/UI are completely separate entities. The connection manager can send messages to the game engine
 on behalf of a console, but a console can never communicate directly with the game engine.
 
 The game engine can _never_ have any notion of what a console is, nor should it ever care. 
@@ -67,11 +72,11 @@ players in a live environment.
 
 ## Development
 
-Escaping Eden is currently built on Go 1.17, and relies on xterm-color256 support in the terminal.
+Escaping Eden is currently built on Go 1.17, and relies on _full_ ECMA-48 support in the terminal.
 
 It relies heavily on ANSI escape sequences, and will not work on terminals that do not support them. If you are 
-planning on contributing to any of the UI work, it is basically mandatory that you review 
-the [ANSI escape code documentation](https://en.wikipedia.org/wiki/ANSI_escape_code) before you start.
+planning on contributing to any of the UI work, including Terminal emulation, it is essential that you review 
+the [ANSI escape code documentation](https://en.wikipedia.org/wiki/ANSI_escape_code) before you dive in.
 
 ## Connecting
 
@@ -89,11 +94,10 @@ $ telnet localhost 8080
 
 ### Windows
 
-It may be possible to connect with PuTTY on Windows with the following steps, but results may vary:
+To connect on Windows, the only tested method that appears to work is using WSL.
 
-`Settings -> Connection > Data > Terminal-type change to xterm-256color`
-
-Assistance with adding putty-256color support would be appreciated!
+Ubuntu 20.04 has been tested, and appears to work fine. Supporting this will be an ongoing endeavor, and help would be
+appreciated.
 
 
 ## Building
@@ -129,6 +133,10 @@ You can contribute to the project by submitting pull requests on [Github](https:
 or by joining our Discord community at [Discord](https://discord.gg/uMxZnjJGGu).
 
 Most conversation about the development of Escaping Eden will be on Discord. 
+
+There will be times when an issue is reported, and I'll try to walk someone through fixing it and submitting a patch themselves.
+This isn't meant as being dismissive, I'd just rather spend the extra bit of time teaching someone how the project works so that
+they can contribute further if they want :) 
 
 ## License
 

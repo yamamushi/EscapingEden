@@ -1,2 +1,5 @@
 .idea
 *.conf
+*.db
+*.log
+tmp/

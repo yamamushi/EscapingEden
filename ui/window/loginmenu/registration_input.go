@@ -2,7 +2,7 @@ package login
 
 import (
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"log"
+	"net/mail"
 )
 
 // handleRegistrationInput handles input for the registration screen of the login window
@@ -13,13 +13,17 @@ func (lw *LoginWindow) handleRegistrationInput(input types.Input) {
 	if !lw.GetActive() {
 		return
 	}
-	log.Println("Handling registration input")
+	//log.Println("Handling registration input")
 
 	switch lw.registrationState {
 	case RegistrationMain:
 		lw.handleRegistrationMainInput(input)
 	case RegistrationUserInfo:
 		lw.handleRegistrationUserInfo(input)
+	case RegistrationPending:
+		lw.handleRegistrationPending(input)
+	case RegistrationFailure:
+		lw.handleRegistrationFailure(input)
 	case RegistrationSuccess:
 		lw.handleRegistrationSuccess(input)
 	}
@@ -30,15 +34,15 @@ func (lw *LoginWindow) handleRegistrationMainInput(input types.Input) {
 	case types.InputCharacter:
 		switch input.Data {
 		case "b":
-			log.Println("Opening controls help page")
+			//log.Println("Opening controls help page")
 			lw.RequestHelpFromConsole(types.HelpPageControls)
 			return
 		case "d":
-			log.Println("Opening death help page")
+			//log.Println("Opening death help page")
 			lw.RequestHelpFromConsole(types.HelpPageDeath)
 			return
 		case "r":
-			log.Println("Opening rules help page")
+			//log.Println("Opening rules help page")
 			lw.RequestHelpFromConsole(types.HelpPageRules)
 			return
 		default:
@@ -46,15 +50,15 @@ func (lw *LoginWindow) handleRegistrationMainInput(input types.Input) {
 			return
 		}
 	case types.InputLeft:
-		log.Println("Left arrow pressed")
+		//log.Println("Left arrow pressed")
 		lw.registrationNavOptionSelected = 1
 		return
 	case types.InputRight:
-		log.Println("Right arrow pressed")
+		//log.Println("Right arrow pressed")
 		lw.registrationNavOptionSelected = 2
 		return
 	case types.InputReturn:
-		log.Println("Return pressed")
+		//log.Println("Return pressed")
 		if lw.registrationNavOptionSelected == 1 {
 			lw.windowState = LoginWindowMenu
 		}
@@ -77,11 +81,14 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 	case types.InputCharacter:
 		switch input.Data {
 		default:
+			lw.registrationErrorMutex.Lock()
+			defer lw.registrationErrorMutex.Unlock()
 			lw.registrationUserInfoCharInput(input.Data)
+			lw.RequestFlushFromConsole()
 			return
 		}
 	case types.InputLeft:
-		log.Println("Left arrow pressed")
+		//log.Println("Left arrow pressed")
 		if lw.registrationNavOptionSelected != 2 {
 			lw.registrationUserInfoLastOptionSelected = lw.registrationUserInfoOptionSelected
 			lw.registrationUserInfoOptionSelected = UserInfoNULL
@@ -89,14 +96,14 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		lw.registrationNavOptionSelected = 1
 
 	case types.InputRight:
-		log.Println("Right arrow pressed")
+		//log.Println("Right arrow pressed")
 		if lw.registrationNavOptionSelected != 1 {
 			lw.registrationUserInfoLastOptionSelected = lw.registrationUserInfoOptionSelected
 			lw.registrationUserInfoOptionSelected = UserInfoNULL
 		}
 		lw.registrationNavOptionSelected = 2
 	case types.InputUp:
-		log.Println("Up arrow pressed")
+		//log.Println("Up arrow pressed")
 		if lw.registrationNavOptionSelected == 2 {
 			lw.registrationUserInfoOptionSelected = lw.registrationUserInfoLastOptionSelected
 		} else if lw.registrationNavOptionSelected == 1 {
@@ -107,7 +114,7 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		lw.registrationNavOptionSelected = 0
 		lw.RequestFlushFromConsole()
 	case types.InputDown:
-		log.Println("Down arrow pressed")
+		//log.Println("Down arrow pressed")
 		if lw.registrationUserInfoOptionSelected < UserInfoNULL-1 {
 			lw.registrationUserInfoOptionSelected++
 		} else {
@@ -118,7 +125,7 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		//lw.registrationNavOptionSelected = 0
 		lw.RequestFlushFromConsole()
 	case types.InputReturn:
-		log.Println("Return pressed")
+		//log.Println("Return pressed")
 		if lw.registrationNavOptionSelected == 0 {
 			switch lw.registrationUserInfoOptionSelected {
 			case UserInfoUsername:
@@ -144,18 +151,25 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 			lw.registrationSubmitData = RegistrationSubmitData{}
 		}
 		if lw.registrationNavOptionSelected == 2 {
+			if !lw.registrationErrorData.IsEmpty() {
+				lw.registrationErrorData.errorRequest = "Please correct the errors above and try again."
+			}
 			// This is where we submit our entered user data
 			registrationError := lw.RegistrationSubmit(lw.registrationSubmitData)
 			if registrationError != nil {
 				// If we got an error, we're just going to update our error state
 				lw.registrationErrorData = *registrationError
 			} else {
-				// Otherwise we succeeded (yay!) and we can go to the success screen
-				lw.registrationState = RegistrationSuccess
+				// Otherwise we succeeded (yay!) and we can go to the pending screen
+				lw.registrationState = RegistrationPending
 				// Let's also cleanup our registration data
-				lw.registrationAgreeRules = false
+				//lw.registrationAgreeRules = false
+
+				// We need to reset our error data so that we can process it when we get our response
+				// From the account manager
+				lw.registrationErrorMutex.Lock()
 				lw.registrationErrorData = RegistrationError{}
-				lw.registrationSubmitData = RegistrationSubmitData{}
+				lw.registrationErrorMutex.Unlock()
 			}
 		}
 		lw.registrationNavOptionSelected = 0
@@ -163,7 +177,7 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 		lw.RequestFlushFromConsole()
 		//lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
 	case types.InputBackspace:
-		log.Println("Backspace pressed")
+		//log.Println("Backspace pressed")
 		lw.registrationUserInfoBackspaceInput()
 		lw.RequestFlushFromConsole()
 		return
@@ -173,17 +187,70 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 func (lw *LoginWindow) registrationUserInfoCharInput(input string) {
 	switch lw.registrationUserInfoOptionSelected {
 	case UserInfoUsername:
-		lw.registrationSubmitData.Username += input
+		//lw.registrationErrorMutex.Lock()
+		//defer lw.registrationErrorMutex.Unlock()
+
+		if len(lw.registrationSubmitData.Username) < 16 {
+			if input == " " {
+				lw.registrationErrorData.usernameError = "Username cannot contain spaces"
+			} else {
+				lw.registrationSubmitData.Username += input
+			}
+			if len(lw.registrationSubmitData.Username) < 4 {
+				lw.registrationErrorData.usernameError = "Username must be at least 4 characters"
+			} else {
+				lw.registrationErrorData.usernameError = ""
+			}
+		} else {
+			lw.registrationErrorData.usernameError = "Maximum username length is 16 characters"
+		}
+
 	case UserInfoPassword:
-		lw.registrationSubmitData.Password += input
+		if len(lw.registrationSubmitData.Password) < 32 {
+			if input == " " {
+				lw.registrationErrorData.passwordError = "Password cannot contain spaces"
+			} else {
+				lw.registrationSubmitData.Password += input
+			}
+			if len(lw.registrationSubmitData.Password) < 8 {
+				lw.registrationErrorData.passwordError = "Password must be at least 8 characters"
+			} else {
+				lw.registrationErrorData.passwordError = ""
+			}
+		} else {
+			lw.registrationErrorData.passwordError = "Maximum password length is 32 characters"
+		}
+
 	case UserInfoPasswordConfirm:
-		lw.registrationSubmitData.PasswordConfirm += input
+		if len(lw.registrationSubmitData.PasswordConfirm) < 32 {
+			if input == " " {
+				lw.registrationErrorData.passwordConfirmError = "Password cannot contain spaces"
+			} else {
+				lw.registrationSubmitData.PasswordConfirm += input
+			}
+			if len(lw.registrationSubmitData.PasswordConfirm) < 8 {
+				lw.registrationErrorData.passwordConfirmError = "Password must be at least 8 characters"
+			} else {
+				lw.registrationErrorData.passwordConfirmError = ""
+			}
+		} else {
+			lw.registrationErrorData.passwordConfirmError = "Maximum password length is 32 characters"
+		}
+
 	case UserInfoEmail:
 		lw.registrationSubmitData.Email += input
+		_, err := mail.ParseAddress(lw.registrationSubmitData.Email)
+		if err != nil {
+			lw.registrationErrorData.emailError = "Invalid email address"
+		} else {
+			lw.registrationErrorData.emailError = ""
+		}
+
 	case UserInfoAgreeRules:
 		if input == " " {
 			lw.registrationAgreeRules = !lw.registrationAgreeRules
 		}
+
 	}
 }
 
@@ -192,22 +259,87 @@ func (lw *LoginWindow) registrationUserInfoBackspaceInput() {
 	case UserInfoUsername:
 		if lw.registrationSubmitData.Username != "" {
 			lw.registrationSubmitData.Username = lw.registrationSubmitData.Username[:len(lw.registrationSubmitData.Username)-1]
+			lw.registrationErrorData.usernameError = ""
 		}
 	case UserInfoPassword:
 		if lw.registrationSubmitData.Password != "" {
 			lw.registrationSubmitData.Password = lw.registrationSubmitData.Password[:len(lw.registrationSubmitData.Password)-1]
+			lw.registrationErrorData.passwordError = ""
 		}
 	case UserInfoPasswordConfirm:
 		if lw.registrationSubmitData.PasswordConfirm != "" {
 			lw.registrationSubmitData.PasswordConfirm = lw.registrationSubmitData.PasswordConfirm[:len(lw.registrationSubmitData.PasswordConfirm)-1]
+			lw.registrationErrorData.passwordConfirmError = ""
 		}
 	case UserInfoEmail:
 		if lw.registrationSubmitData.Email != "" {
 			lw.registrationSubmitData.Email = lw.registrationSubmitData.Email[:len(lw.registrationSubmitData.Email)-1]
+			_, err := mail.ParseAddress(lw.registrationSubmitData.Email)
+			if err != nil {
+				lw.registrationErrorData.emailError = "Invalid email address"
+			} else {
+				lw.registrationErrorData.emailError = ""
+			}
 		}
 	}
 }
 
-func (lw *LoginWindow) handleRegistrationSuccess(input types.Input) {
+func (lw *LoginWindow) handleRegistrationPending(input types.Input) {
+	// This is a no-op, we just wait for the response from the account manager
+}
 
+func (lw *LoginWindow) handleRegistrationFailure(input types.Input) {
+	switch input.Type {
+	case types.InputLeft:
+		//log.Println("Left arrow pressed")
+		lw.registrationFailureOptionSelected = 1
+		return
+	case types.InputRight:
+		//log.Println("Right arrow pressed")
+		lw.registrationFailureOptionSelected = 2
+		return
+	case types.InputReturn:
+		//log.Println("Return pressed")
+		if lw.registrationFailureOptionSelected == 1 {
+			lw.registrationState = RegistrationUserInfo
+		}
+		if lw.registrationNavOptionSelected == 2 {
+			return
+		}
+		lw.registrationNavOptionSelected = 0
+		//lw.ResetWindowDrawings()
+		//lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
+		lw.RequestFlushFromConsole()
+		return
+	default:
+		return
+	}
+}
+
+func (lw *LoginWindow) handleRegistrationSuccess(input types.Input) {
+	switch input.Type {
+	case types.InputLeft:
+		//log.Println("Left arrow pressed")
+		lw.registrationSuccessOptionSelected = 1
+		return
+	case types.InputRight:
+		//log.Println("Right arrow pressed")
+		lw.registrationSuccessOptionSelected = 2
+		return
+	case types.InputReturn:
+		//log.Println("Return pressed")
+		if lw.registrationSuccessOptionSelected == 1 {
+			return
+		}
+		if lw.registrationSuccessOptionSelected == 2 {
+			lw.windowState = LoginWindowMenu
+		}
+		lw.registrationSuccessOptionSelected = 0
+		//lw.ResetWindowDrawings()
+		//lw.ForceConsoleRefresh() // Whenever we switch to a different window state, we need to reset the console
+		lw.RequestFlushFromConsole()
+		return
+	default:
+		return
+	}
 }

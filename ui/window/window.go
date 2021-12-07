@@ -1,7 +1,9 @@
 package window
 
 import (
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
+	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"sync"
@@ -55,8 +57,12 @@ type WindowType interface {
 
 type Window struct {
 	ID config.WindowID
-	X  int // The X position of the Window
-	Y  int // The Y position of the Window
+
+	Log      logging.LoggerType
+	Terminal terminals.TerminalType
+
+	X int // The X position of the Window
+	Y int // The Y position of the Window
 
 	StartX int // When window content is rendered, it is a 2D array, so this is the starting X position of the content
 	StartY int // When window content is rendered, it is a 2D array, so this is the starting Y position of the content

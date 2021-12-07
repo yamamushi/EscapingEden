@@ -3,7 +3,6 @@ package help
 import (
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"log"
 )
 
 // HandleInput handles input events for HelpWindow.
@@ -12,9 +11,9 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 	defer hw.hwMutex.Unlock()
 
 	if hw.GetActive() {
-		log.Println("Help Window Handling input")
+		//log.Println("Help Window Handling input")
 	} else {
-		log.Println("Help window received an input event that it should not have")
+		//log.Println("Help window received an input event that it should not have")
 		return
 	}
 
@@ -26,17 +25,17 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 	switch input.Type {
 
 	case types.InputUp:
-		log.Println("Help Window Handling input up")
+		//log.Println("Help Window Handling input up")
 		hw.DecreaseContentPos()
 		hw.ResetWindowDrawings()
 		return
 	case types.InputDown:
-		log.Println("Help Window Handling input down")
+		//log.Println("Help Window Handling input down")
 		hw.IncreaseContentPos()
 		hw.ResetWindowDrawings()
 		return
 	case types.InputRight:
-		log.Println("Help Window Handling input right")
+		//log.Println("Help Window Handling input right")
 		if hw.HelpPage == types.HelpPageIndex {
 			//hw.indexPage += 1  - Commented out right now because our index generation is very simple
 			//hw.ForceConsoleRefresh()
@@ -46,7 +45,7 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 		}
 		return
 	case types.InputLeft:
-		log.Println("Help Window Handling input left")
+		//log.Println("Help Window Handling input left")
 		if hw.HelpPage == types.HelpPageIndex {
 			if hw.indexPage > 0 {
 				//hw.indexPage -= 1 - Commented out right now because our index generation is very simple
@@ -73,7 +72,7 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 				message := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_ToggleHelp}
 				hw.scrollInitialized = false
 				hw.ConsoleSend <- message
-				log.Println("Help sent toggle window message to console")
+				//log.Println("Help sent toggle window message to console")
 			}
 
 		case "h":
@@ -106,6 +105,6 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 			return
 		}
 	default:
-		log.Println("Unhandled Input event in Help Window")
+		return
 	}
 }

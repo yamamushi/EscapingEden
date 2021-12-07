@@ -12,7 +12,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 		w.PrintChar(winX, winY, "\u250c", "\033[32m")
 
 	} else {
-		w.PrintChar(winX, winY, "\u250c", "")
+		w.PrintChar(winX, winY, "\u250c", w.Terminal.Bold())
 	}
 
 	// Draw left border
@@ -21,23 +21,23 @@ func (w *Window) DrawBorder(winX int, winY int) {
 		if w.Active {
 			w.PrintChar(winX, winY+i, "\u2502", "\033[32m")
 		} else {
-			w.PrintChar(winX, winY+i, "\u2502", "")
+			w.PrintChar(winX, winY+i, "\u2502", w.Terminal.Bold())
 		}
 	}
 	// Draw bottom left corner
 	if w.Active {
 		w.PrintChar(winX, winY+w.Height+1, "\u2514", "\033[32m")
 	} else {
-		w.PrintChar(winX, winY+w.Height+1, "\u2514", "")
+		w.PrintChar(winX, winY+w.Height+1, "\u2514", w.Terminal.Bold())
 	}
 
 	// Draw top border
 	for i := 1; i < w.Width; i++ {
 		// Inserts a horizontal line
 		if w.Active {
-			w.PrintChar(winX+i, winY, "\u2500", "\033[32m")
+			w.PrintCharColor(winX+i, winY, "\u2500", "\033[32m")
 		} else {
-			w.PrintChar(winX+i, winY, "\u2500", "")
+			w.PrintCharColor(winX+i, winY, "\u2500", w.Terminal.Bold())
 		}
 	}
 
@@ -45,7 +45,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 	if w.Active {
 		w.PrintChar(winX+w.Width, winY, "\u2510", "\033[32m")
 	} else {
-		w.PrintChar(winX+w.Width, winY, "\u2510", "")
+		w.PrintChar(winX+w.Width, winY, "\u2510", w.Terminal.Bold())
 	}
 
 	// Draw right border
@@ -54,7 +54,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 		if w.Active {
 			w.PrintChar(winX+w.Width, winY+i, "\u2502", "\033[32m")
 		} else {
-			w.PrintChar(winX+w.Width, winY+i, "\u2502", "")
+			w.PrintChar(winX+w.Width, winY+i, "\u2502", w.Terminal.Bold())
 		}
 	}
 
@@ -62,16 +62,16 @@ func (w *Window) DrawBorder(winX int, winY int) {
 	if w.Active {
 		w.PrintChar(winX+w.Width, winY+w.Height+1, "\u2518", "\033[32m")
 	} else {
-		w.PrintChar(winX+w.Width, winY+w.Height+1, "\u2518", "")
+		w.PrintChar(winX+w.Width, winY+w.Height+1, "\u2518", w.Terminal.Bold())
 	}
 
 	// Draw bottom border
 	for i := 1; i < w.Width; i++ {
 		// Inserts a horizontal line
 		if w.Active {
-			w.PrintChar(winX+i, winY+w.Height+1, "\u2500", "\033[32m")
+			w.PrintCharColor(winX+i, winY+w.Height+1, "\u2500", "\033[32m")
 		} else {
-			w.PrintChar(winX+i, winY+w.Height+1, "\u2500", "")
+			w.PrintCharColor(winX+i, winY+w.Height+1, "\u2500", w.Terminal.Bold())
 		}
 	}
 }

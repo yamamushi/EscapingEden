@@ -1,27 +1,31 @@
 package types
 
-import "strconv"
+import (
+	"github.com/yamamushi/EscapingEden/terminals"
+)
 
 // Point is a 2D point.
 type Point struct {
 	X, Y       int
 	EscapeCode string
 	Character  string
+	NoReset    bool
 }
 
 // PointMap is a map of points.
 type PointMap [][]Point
 
 // Print prints a point as an escaped string.
-func (p *Point) Print() string {
+func (p *Point) Print(term terminals.TerminalType) string {
 	var output string
 	// Move cursor to X Y
-	output += "\033[" + strconv.Itoa(p.Y) + ";" + strconv.Itoa(p.X) + "H"
+	output += term.MoveCursor(p.X, p.Y)
 	if p.EscapeCode != "" {
-		//output += "\033[0m"
 		output += p.EscapeCode
 		output += p.Character
-		output += "\033[0m"
+		if !p.NoReset {
+			output += term.Reset()
+		}
 	} else {
 		output += p.Character
 	}

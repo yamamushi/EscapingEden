@@ -4,7 +4,9 @@ package help
 // Options to open to a specific help page.
 
 import (
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
+	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/util"
@@ -36,8 +38,11 @@ type HelpWindow struct {
 }
 
 // NewHelpWindow creates a new help window.
-func NewHelpWindow(x, y, w, h, consoleWidth, consoleHeight int, page types.HelpPage, input, output chan messages.WindowMessage) *HelpWindow {
+func NewHelpWindow(x, y, w, h, consoleWidth, consoleHeight int, page types.HelpPage,
+	input, output chan messages.WindowMessage, log logging.LoggerType, term terminals.TerminalType) *HelpWindow {
 	hw := &HelpWindow{}
+	hw.Log = log
+	hw.Terminal = term
 	hw.ID = config.WindowHelpBox
 	// if x or y are less than 1 set them to 1
 	if x < 1 {
@@ -89,7 +94,7 @@ func (hw *HelpWindow) PrintPageInfo(page types.HelpPage) {
 	// Top Field
 	windowTitle := "Escaping Eden Help"
 	pageInfo := strings.Title(page.String()) + " (Page " + strconv.Itoa(int(page)) + ")"
-	hw.PrintLn(hw.X+1, hw.Y+1, windowTitle, "\033[1m")
+	hw.PrintLn(hw.X+1, hw.Y+1, windowTitle, hw.Terminal.Bold())
 	hw.PrintLn(hw.X+hw.Width-len(pageInfo)-1, hw.Y+1, pageInfo, "")
 }
 

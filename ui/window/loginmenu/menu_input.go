@@ -1,7 +1,6 @@
 package login
 
 import (
-	"log"
 	"strings"
 )
 
@@ -22,7 +21,7 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 
 	switch input {
 	case "l":
-		log.Println("Login selected")
+		//log.Println("Login selected")
 		lw.windowState = LoginWindowLogin
 		lw.loginState = LoginUsername
 		//lw.ResetWindowDrawings()
@@ -31,7 +30,7 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 
 		return
 	case "r":
-		log.Println("Register selected")
+		//log.Println("Register selected")
 		lw.windowState = LoginWindowRegister
 		lw.registrationState = RegistrationMain
 		//lw.ResetWindowDrawings()
@@ -39,7 +38,7 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 		lw.RequestFlushFromConsole()
 		return
 	case "q":
-		log.Println("Quit selected")
+		//log.Println("Quit selected")
 		lw.Quit()
 		return
 	default:

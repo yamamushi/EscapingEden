@@ -2,7 +2,6 @@ package ui
 
 import (
 	"github.com/yamamushi/EscapingEden/messages"
-	"log"
 )
 
 // CaptureWindowMessages is a goroutine that listens for messages from the windows and parses them to determine
@@ -12,7 +11,7 @@ func (c *Console) CaptureWindowMessages() {
 	for {
 		select {
 		case windowMessage := <-c.WindowMessages:
-			log.Println("Console received window message")
+			//log.Println("Console received window message")
 			//log.Println("MessageType: ", consoleMessage.Type)
 			switch windowMessage.Type {
 			case messages.WM_ConsoleCommand:
@@ -33,7 +32,7 @@ func (c *Console) CaptureWindowMessages() {
 					c.ForceRedraw()
 					continue
 				case messages.WMC_FlushConsoleBuffer:
-					log.Println("Flush message received")
+					//log.Println("Flush message received")
 					c.flushWindowList = append(c.flushWindowList, windowMessage.TargetID)
 					continue
 				default:
@@ -41,27 +40,35 @@ func (c *Console) CaptureWindowMessages() {
 				}
 
 			case messages.WM_ParseChat:
-				log.Println("Sending Chat message: ", windowMessage.MessageContent)
+				//log.Println("Sending Chat message: ", windowMessage.Data.(string))
 				managerMessage := messages.ConnectionManagerMessage{
 					Type:            messages.ConnectManager_Message_Chat,
-					Message:         windowMessage.MessageContent,
+					Data:            windowMessage.Data,
 					SenderConsoleID: c.ConnectionID,
 				}
 				c.SendMessages <- managerMessage
 				continue
 
+			case messages.WM_RequestRegistration:
+				//log.Println("Sending registration request to connection manager")
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_Register,
+					Data:            windowMessage.Data,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
 				// These messages require serializing to send to ConnectionManager
 			case messages.WM_Error:
-				log.Println("Sending Error message to Connection Manager: ", windowMessage.MessageContent)
+				//log.Println("Sending Error message to Connection Manager: ", windowMessage.Data.(string))
 				managerMessage := messages.ConnectionManagerMessage{
 					Type:            messages.ConnectManager_Message_Error,
-					Message:         windowMessage.MessageContent,
+					Data:            windowMessage.Data,
 					SenderConsoleID: c.ConnectionID,
 				}
 				c.SendMessages <- managerMessage
 				continue
 			case messages.WM_QuitConsole:
-				log.Println("Sending Quit request to ConnectionManager")
+				//log.Println("Sending Quit request to ConnectionManager")
 				managerMessage := messages.ConnectionManagerMessage{
 					Type:               messages.ConnectManager_Message_Quit,
 					RecipientConsoleID: c.ConnectionID,

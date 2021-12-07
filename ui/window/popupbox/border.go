@@ -2,7 +2,6 @@ package popupbox
 
 import (
 	"github.com/yamamushi/EscapingEden/ui/util"
-	"log"
 )
 
 // DrawBorder returns the border of a window using code page 437 characters as a string
@@ -87,7 +86,7 @@ func (pb *PopupBox) DrawBorder(winX int, winY int) {
 
 		pb.PrintLn(winX+pb.Width/2-3, winY+pb.Height+1, "Close", colorCode)
 	} else {
-		log.Println("Writing Close to window")
+		//log.Println("Writing Close to window")
 		pb.PrintLn(winX+pb.Width/2-3, winY+pb.Height+1, "Close", "")
 	}
 }

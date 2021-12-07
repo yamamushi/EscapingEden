@@ -1,20 +1,20 @@
 package ui
 
 import (
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
-	"log"
 )
 
 // ForceRedrawOn forces redrawing of the given window.
 func (c *Console) ForceRedrawOn(windowType config.WindowID) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	log.Println("Forcing redraw on: ", windowType)
+	//log.Println("Forcing redraw on: ", windowType)
 	for _, w := range c.Windows {
 		if w.GetID() == windowType {
-			log.Println("Flushing: ", w.GetID())
+			//log.Println("Flushing: ", w.GetID())
 			w.FlushLastSent()
 		}
 	}
@@ -84,7 +84,7 @@ func (c *Console) AddWindow(w window.WindowType) {
 
 	for _, target := range c.Windows {
 		if target.GetID() == w.GetID() {
-			log.Println("duplicate window: ", target.GetID())
+			c.Log.Println(logging.LogWarn, "duplicate window: ", target.GetID())
 			return
 		}
 	}

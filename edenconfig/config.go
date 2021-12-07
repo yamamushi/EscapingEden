@@ -7,18 +7,27 @@ import (
 
 // Config is the main configuration struct
 type Config struct {
-	Server serverConfig `toml:"server"`
-	DB     dbConfig     `toml:"database"`
+	Logger loggingConfig `toml:"logging"`
+	Server serverConfig  `toml:"server"`
+	DB     dbConfig      `toml:"database"`
+}
+
+type loggingConfig struct {
+	Type string `toml:"type"`
+	Path string `toml:"path"`
 }
 
 // serverConfig struct
 type serverConfig struct {
-	Host string `toml:"host"`
-	Port string `toml:"port"`
+	Host            string `toml:"host"`
+	Port            string `toml:"port"`
+	ShutdownTimeout int    `toml:"shutdown_timeout"`
 }
 
 // dbConfig struct
 type dbConfig struct {
+	Type string `toml:"type"`
+	Path string `toml:"path"`
 	Host string `toml:"host"`
 	Port string `toml:"port"`
 	User string `toml:"user"`

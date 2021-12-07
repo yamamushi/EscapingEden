@@ -9,7 +9,8 @@ import (
 // OpenPopup opens a new popup window using the options
 func (c *Console) OpenPopup(options *config.WindowConfig) {
 	//log.Println(options)
-	popupBox := popupbox.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height, c.PopupBoxWindowMessages, c.WindowMessages)
+	popupBox := popupbox.NewPopupBox(options.X, options.Y, options.Width, options.Height, c.Width, c.Height,
+		c.PopupBoxWindowMessages, c.WindowMessages, c.Log, c.Terminal)
 	popupBox.Init()
 	popupBox.SetContents(options.Content)
 	c.LastActiveWindow = c.GetActiveWindow() // Save the last active window
@@ -34,7 +35,7 @@ func (c *Console) ClosePopup() {
 
 // HandlePopupMessage handles the messages sent to the popup window
 func (c *Console) HandlePopupMessage(message messages.WindowMessage) {
-	switch message.MessageContent {
+	switch message.Data.(string) {
 	case "close":
 		c.ClosePopup()
 	}

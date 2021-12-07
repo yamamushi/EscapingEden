@@ -1,0 +1,2 @@
+# A list of blacklisted IP addresses.
+1.1.1.1

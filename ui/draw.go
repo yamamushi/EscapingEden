@@ -1,10 +1,10 @@
 package ui
 
 import (
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
-	"log"
 	"strconv"
 )
 
@@ -17,7 +17,7 @@ func (c *Console) Draw() []byte {
 	//s = s + c.ConsoleCommands
 	//c.ConsoleCommands = ""
 	if !c.IsConsoleValidSize() {
-		s = s + "\033[2J"
+		s = s + c.Terminal.ClearTerminal()
 		s = s + "Invalid console size, Escaping Eden requires a terminal size of" + strconv.Itoa(MINWIDTH) + "x" + strconv.Itoa(MINHEIGHT) + "or greater.\r\n"
 		s = s + "Please resize your terminal, or press q to disconnect.\n"
 		s = s + "If your terminal is empty after resizing, you can press ctrl-r to force a screen refresh.\n"
@@ -36,14 +36,14 @@ func (c *Console) Draw() []byte {
 	}
 
 	if c.forceScreenRefresh {
-		log.Println("force screen refresh")
+		//log.Println("force screen refresh")
 		c.forceScreenRefresh = false
-		s = s + c.ClearTerminal()
+		s = s + c.Terminal.ClearTerminal()
 		return []byte(s)
 	}
 
 	if c.resizeActive {
-		log.Println("Handling resize in buffer")
+		//log.Println("Handling resize in buffer")
 		for _, w := range c.Windows {
 			w.FlushLastSent()
 		}
@@ -67,7 +67,7 @@ func (c *Console) Draw() []byte {
 	defer c.abortSync.Unlock()
 	// If the last output was not the same as the current output, we send it to the client and update the last output.
 	if c.LastSentOutput != s && s != "" && !c.abortSend {
-		log.Println("Sending new output to client, length:", len(s))
+		//log.Println("Sending new output to client, length:", len(s))
 		c.LastSentOutput = s
 		return []byte(s)
 	} else {
@@ -127,13 +127,13 @@ func (c *Console) ClearPointMap() {
 func (c *Console) FlushLastSent() {
 	c.pmapMutex.Lock()
 	defer c.pmapMutex.Unlock()
-	log.Println("Flushing last sent console")
+	//log.Println("Flushing last sent console")
 	c.LastSentPointMap = types.NewPointMap(c.Width, c.Height)
 }
 
 // ResetWindowDrawings resets the pointmap
 func (c *Console) ResetWindowDrawings() {
-	log.Println("console reset called")
+	//log.Println("console reset called")
 	c.FlushLastSent()
 	c.ClearPointMap()
 }
@@ -208,20 +208,20 @@ func (c *Console) FlushWindowArea(winID config.WindowID) {
 
 		win := c.GetWindowByID(winID)
 		if win == nil {
-			log.Println("Invalid request to flush window area, window ID does not exist")
+			c.Log.Println(logging.LogWarn, "Invalid request to flush window area, window ID does not exist")
 			return
 		}
 
-		log.Println("Flushing window area: ", winID.String())
-		log.Println("GetX, GetY: ", win.GetX(), win.GetY())
-		log.Println("GetWidth, GetHeight: ", win.GetWidth(), win.GetHeight())
+		//log.Println("Flushing window area: ", winID.String())
+		//log.Println("GetX, GetY: ", win.GetX(), win.GetY())
+		//log.Println("GetWidth, GetHeight: ", win.GetWidth(), win.GetHeight())
 		for j := win.GetY(); j < win.GetY()+win.GetHeight()+2; j++ {
 			for i := win.GetX(); i < win.GetX()+win.GetWidth()+1; i++ {
-				log.Println("Flushing point: ", i, j)
+				//log.Println("Flushing point: ", i, j)
 				//if w.GetCharAt(i, j) != " " { // && w.GetEscapeCodeAt(i, j) != "" {
 				//log.Println("Blank point found: ", i, j)'
 				c.PointMap[i][j] = types.Point{X: i, Y: i, Character: " ", EscapeCode: ""}
-				c.LastSentPointMap[i][j] = types.Point{X: i, Y: j, Character: "\033[0m", EscapeCode: ""}
+				c.LastSentPointMap[i][j] = types.Point{X: i, Y: j, Character: c.Terminal.Reset(), EscapeCode: ""}
 				//}
 			}
 		}
@@ -271,7 +271,7 @@ func (c *Console) PrintPointMap() string {
 	for y := 0; y < c.Height+1; y++ {
 		for x := 0; x < c.Width+1; x++ {
 			if c.PointMap[x][y].Character != "" || c.PointMap[x][y].EscapeCode != "" {
-				if c.LastSentPointMap[x][y].Print() != c.PointMap[x][y].Print() {
+				if c.LastSentPointMap[x][y].Print(c.Terminal) != c.PointMap[x][y].Print(c.Terminal) {
 					//log.Println("LastSentPointMap: ", c.LastSentPointMap[x][y].Character)
 					//log.Println("Currently Read PointMap: ", target[x][y].Character)
 
@@ -289,7 +289,9 @@ func (c *Console) PrintPointMap() string {
 						// If we reached a new character, and the buffer count is greater than 0
 						// We need to print the repeated last character bufferCount times
 						if bufferCount > 0 {
-							repeatCode := lastSentEscape + "\033[" + strconv.Itoa(bufferCount) + "b" + "\033[0m"
+							// This was commented out to try and fix character repeating
+							//repeatCode := lastSentEscape + c.Terminal.RepeatChar(bufferCount) //+ c.Terminal.Reset()
+							repeatCode := c.Terminal.RepeatChar(bufferCount) + c.Terminal.Reset()
 							output += repeatCode
 							// Finally Reset the buffer count
 							bufferCount = 0
@@ -303,7 +305,7 @@ func (c *Console) PrintPointMap() string {
 							bufferCount = 0
 						}
 						// Now that we have dealt with the buffer count, we can print the new character
-						output += c.PointMap[x][y].Print()
+						output += c.PointMap[x][y].Print(c.Terminal)
 					}
 
 					// Finally, no matter what we do with the character, we still append it to
