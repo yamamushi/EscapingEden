@@ -126,7 +126,7 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	} else {
 		password = lw.registrationSubmitData.Password
 	}
-	for i := 0; i < len(password); i++ {
+	for i := 0; i < len(password) && i < 12; i++ {
 		lw.PrintChar(lw.X+22+i, lw.Y+8, "*", lw.Terminal.Bold())
 	}
 	lw.PrintLnColor(lw.X+41, lw.Y+8, lw.registrationErrorData.PasswordError(), errorFG.FG()+errorBG.BG())

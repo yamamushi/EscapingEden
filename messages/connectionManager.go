@@ -13,6 +13,7 @@ const (
 	ConnectManager_Message_RegisterResponse
 	ConnectManager_Message_Login
 	ConnectManager_Message_LoginResponse
+	ConnectManager_Message_BadLoginAttempt
 )
 
 // ConnectionManagerMessage is a message sent meant for parsing by the ConnectionManager

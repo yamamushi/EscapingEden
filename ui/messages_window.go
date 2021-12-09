@@ -58,6 +58,24 @@ func (c *Console) CaptureWindowMessages() {
 				}
 				c.SendMessages <- managerMessage
 				// These messages require serializing to send to ConnectionManager
+
+			case messages.WM_RequestLogin:
+				//log.Println("Sending login request to connection manager")
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_Login,
+					Data:            windowMessage.Data,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
+			// These messages require serializing to send to ConnectionManager
+
+			case messages.WM_BadLoginAttempt:
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_BadLoginAttempt,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
+
 			case messages.WM_Error:
 				//log.Println("Sending Error message to Connection Manager: ", windowMessage.Data.(string))
 				managerMessage := messages.ConnectionManagerMessage{

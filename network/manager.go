@@ -1,10 +1,13 @@
 package network
 
 import (
-	"github.com/yamamushi/EscapingEden/accounts"
+	"github.com/google/uuid"
+	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
+	"strings"
 	"sync"
+	"time"
 )
 
 // ConnectionManager synchronizes connection output globally
@@ -14,23 +17,30 @@ type ConnectionManager struct {
 	mutex         sync.Mutex
 	connectionMap *sync.Map
 
+	DB edendb.DatabaseType
+
 	// Channel for receiving messages
 	CMReceiveMessages chan messages.ConnectionManagerMessage
 
 	// Our AccountManager
-	AccountManager *accounts.AccountManager
+	//AccountManager *accounts.AccountManager
 	// Account manager outbound channel
 	AMSendMessages chan messages.AccountManagerMessage
+
+	// Our CharacterManager outbound Channel
+	CharacterManagerMessages chan messages.CharacterManagerMessage
 }
 
 // NewConnectionManager creates a new ConnectionManager
 func NewConnectionManager(connectionMap *sync.Map, receiveMessages chan messages.ConnectionManagerMessage,
-	accountManagerMessages chan messages.AccountManagerMessage, log logging.LoggerType) *ConnectionManager {
+	accountManagerMessages chan messages.AccountManagerMessage, characterManagerReceiveMessages chan messages.CharacterManagerMessage, db edendb.DatabaseType, log logging.LoggerType) *ConnectionManager {
 	return &ConnectionManager{
-		connectionMap:     connectionMap,
-		CMReceiveMessages: receiveMessages,
-		AMSendMessages:    accountManagerMessages,
-		Log:               log,
+		connectionMap:            connectionMap,
+		CMReceiveMessages:        receiveMessages,
+		AMSendMessages:           accountManagerMessages,
+		CharacterManagerMessages: characterManagerReceiveMessages,
+		Log:                      log,
+		DB:                       db,
 	}
 }
 
@@ -38,7 +48,12 @@ func NewConnectionManager(connectionMap *sync.Map, receiveMessages chan messages
 func (cm *ConnectionManager) AddConnection(connection *Connection) {
 	cm.mutex.Lock()
 	defer cm.mutex.Unlock()
-	cm.connectionMap.Store(connection.ID, connection)
+	if cm.checkIPBadLogins(connection) {
+		cm.connectionMap.Store(connection.ID, connection)
+	} else {
+		connection.Write([]byte("This IP is temporarily banned. Please try again later."))
+		connection.Close()
+	}
 }
 
 // HandleDisconnect handles disconnect events
@@ -121,8 +136,16 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				go func() {
 					//cm.Log.Println(logging.LogInfo, "Sending registration request to AccountManager")
 					registrationRequest := managerMessage.Data.(messages.AccountRegistrationRequest)
-					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Register, RegistrationRequest: registrationRequest, SenderSessionID: managerMessage.SenderConsoleID}
+					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Register, Data: registrationRequest, SenderSessionID: managerMessage.SenderConsoleID}
 				}()
+
+			case messages.ConnectManager_Message_Login:
+				go func() {
+					//cm.Log.Println(logging.LogInfo, "Sending login request to AccountManager")
+					loginRequest := managerMessage.Data.(messages.AccountLoginRequest)
+					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Login, Data: loginRequest, SenderSessionID: managerMessage.SenderConsoleID}
+				}()
+
 			case messages.ConnectManager_Message_RegisterResponse:
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
@@ -135,10 +158,111 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					return true
 				})
 
+			case messages.ConnectManager_Message_LoginResponse:
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						if managerMessage.RecipientConsoleID == conn.ID {
+							//cm.Log.Println(logging.LogInfo, "Sending login response to Console that requested login")
+							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_LoginResponse, Data: managerMessage.Data}
+							conn.SendToConsole(consoleMessage)
+						}
+					}
+					return true
+				})
+
+			case messages.ConnectManager_Message_BadLoginAttempt:
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						// Note the distinction here, the SenderConsoleID is the ID of the console that sent the message,
+						if managerMessage.SenderConsoleID == conn.ID {
+							if cm.handleBadLogins(conn) {
+								cm.HandleDisconnect(conn)
+								conn.Write([]byte("\033c\r\nToo many bad login attempts, your IP has been temporarily blocked.\r\n"))
+								conn.Close()
+							}
+						}
+					}
+					return true
+				})
+
 			default:
 				cm.Log.Println(logging.LogError, "Unknown message type received: ", managerMessage.Type, managerMessage.SenderConsoleID, managerMessage.RecipientConsoleID)
 			}
 
 		}
 	}
+}
+
+type BadLoginRecord struct {
+	ID        string `storm:"index"`
+	IPAddress string `storm:"unique"`
+	Timestamp time.Time
+	Attempts  int
+}
+
+func (cm *ConnectionManager) handleBadLogins(conn *Connection) (disconnect bool) {
+	// First we get the IP address of the connection
+	addressSlice := strings.Split(conn.conn.RemoteAddr().String(), ":")
+	ipAddress := addressSlice[0]
+
+	// Then we check if we have a record for this IP address
+	var badLoginRecord BadLoginRecord
+
+	err := cm.DB.One("bad_logins", "IPAddress", ipAddress, &badLoginRecord)
+	if err != nil {
+		// If we don't have a record, we create one
+		id := uuid.New().String()
+		badLoginRecord = BadLoginRecord{ID: id, IPAddress: ipAddress, Timestamp: time.Now(), Attempts: 1}
+		err = cm.DB.AddRecord("bad_logins", &badLoginRecord)
+		if err != nil {
+			cm.Log.Println(logging.LogError, "Error adding bad login record: ", err)
+		}
+		return false
+	} else {
+		// If we do have a record, we increment the number of attempts
+		badLoginRecord.Attempts++
+		badLoginRecord.Timestamp = time.Now()
+		err = cm.DB.UpdateRecord("bad_logins", &badLoginRecord)
+		if err != nil {
+			cm.Log.Println(logging.LogError, "Error updating bad login record: ", err)
+		}
+
+		// If we have more than 3 bad login attempts recorded, we disconnect the connection
+		if badLoginRecord.Attempts > 3 {
+			return true
+		}
+	}
+	return false
+}
+
+func (cm *ConnectionManager) checkIPBadLogins(conn *Connection) (allowed bool) {
+	// First we get the IP address of the connection
+	addressSlice := strings.Split(conn.conn.RemoteAddr().String(), ":")
+	ipAddress := addressSlice[0]
+
+	// Then we check if we have a record for this IP address
+	var badLoginRecord BadLoginRecord
+
+	err := cm.DB.One("bad_logins", "IPAddress", ipAddress, &badLoginRecord)
+	if err != nil {
+		// If we don't have a record, we allow the connection
+		return true
+	} else {
+		// If we do have a record, we check the number of bad logins
+		if badLoginRecord.Attempts > 3 {
+			// If less than 30 minutes have passed since the last bad login, we don't allow the connection
+			if time.Since(badLoginRecord.Timestamp) < time.Minute*30 {
+				return false
+			} else {
+				// If more than 30 minutes have passed, we remove the bad login record and allow the connection
+				err = cm.DB.RemoveRecord("bad_logins", &badLoginRecord)
+				if err != nil {
+					cm.Log.Println(logging.LogError, "Error updating bad login record: ", err)
+				}
+				return true
+			}
+		}
+	}
+
+	return true
 }

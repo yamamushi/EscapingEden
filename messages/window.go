@@ -21,9 +21,12 @@ const (
 	// We can't do anything with them here, so we just pass them along
 	WM_ParseChat
 	WM_RequestRegistration
+	WM_RequestLogin
+	WM_BadLoginAttempt
 
 	// These are messages that are parsed by the windows themselves if they receive an event
 	WM_RegistrationResponse
+	WM_LoginResponse
 )
 
 type WindowMessageCommand int

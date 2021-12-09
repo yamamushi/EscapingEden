@@ -17,6 +17,10 @@ func (c *Console) CaptureManagerMessages() {
 				//log.Println("Console received registration response")
 				loginMessage := messages.WindowMessage{Type: messages.WM_RegistrationResponse, Data: consoleMessage.Data}
 				c.LoginWindowMessages <- loginMessage
+			case messages.Console_Message_LoginResponse:
+				//log.Println("Console received login response")
+				loginMessage := messages.WindowMessage{Type: messages.WM_LoginResponse, Data: consoleMessage.Data}
+				c.LoginWindowMessages <- loginMessage
 			case messages.Console_Message_Chat:
 				//log.Println("Chat message received from manager")
 				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: consoleMessage.Data.(string)}

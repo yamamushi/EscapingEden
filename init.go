@@ -6,6 +6,7 @@ These functions are used to initialize various components, to keep main clean :)
 import (
 	"errors"
 	"github.com/yamamushi/EscapingEden/accounts"
+	"github.com/yamamushi/EscapingEden/character"
 	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/edendb/bolt"
@@ -74,15 +75,40 @@ func InitAccountManager(receiver chan messages.AccountManagerMessage, sender cha
 	return accountManager, nil
 }
 
+// InitCharacterManager initializes the character manager
+func InitCharacterManager(input chan messages.CharacterManagerMessage, output chan messages.ConnectionManagerMessage, dbConn edendb.DatabaseType, conf *edenconfig.Config, log logging.LoggerType) (*character.CharacterManager, error) {
+	log.Println(logging.LogInfo, "Starting Character Manager...")
+	characterManager := character.NewCharacterManager(input, output, dbConn, log, conf)
+
+	startNotify := make(chan bool)
+	err := characterManager.Run(startNotify)
+	if err != nil {
+		return nil, err
+	}
+
+	ticker := time.NewTicker(1 * time.Second)
+	select {
+	case <-startNotify:
+		log.Println(logging.LogInfo, "Character Manager started.")
+		break
+	case <-ticker.C:
+		//fmt.Print(".")
+		// no-op
+	}
+	return characterManager, nil
+}
+
 // InitServer initializes the server
-func InitServer(conf edenconfig.Config, accountManagerReceive chan messages.AccountManagerMessage,
-	connectionManagerReceive chan messages.ConnectionManagerMessage, log logging.LoggerType) (*network.Server, error) {
+func InitServer(conf edenconfig.Config,
+	accountManagerReceive chan messages.AccountManagerMessage, characterManagerReceiver chan messages.CharacterManagerMessage,
+	connectionManagerReceive chan messages.ConnectionManagerMessage,
+	db edendb.DatabaseType, log logging.LoggerType) (*network.Server, error) {
 	log.Println(logging.LogInfo, "Starting Server...")
 
 	startNotify := make(chan bool)
 
 	server := network.NewServer(conf.Server.Host, conf.Server.Port, log)
-	err := server.Start(startNotify, connectionManagerReceive, accountManagerReceive)
+	err := server.Start(startNotify, connectionManagerReceive, accountManagerReceive, characterManagerReceiver, db)
 	if err != nil {
 		return nil, err
 	}

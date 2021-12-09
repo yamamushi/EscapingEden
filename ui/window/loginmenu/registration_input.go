@@ -155,7 +155,7 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 				lw.registrationErrorData.errorRequest = "Please correct the errors above and try again."
 			}
 			// This is where we submit our entered user data
-			registrationError := lw.RegistrationSubmit(lw.registrationSubmitData)
+			registrationError := lw.RegistrationSubmit()
 			if registrationError != nil {
 				// If we got an error, we're just going to update our error state
 				lw.registrationErrorData = *registrationError
