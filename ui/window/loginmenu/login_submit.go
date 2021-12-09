@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (lw *LoginWindow) LoginSubmit() {
+func (lw *LoginWindow) loginSubmit() {
 	lw.loginSubmitMutex.Lock()
 	defer lw.loginSubmitMutex.Unlock()
 
@@ -56,4 +56,10 @@ func (lw *LoginWindow) LoginSubmit() {
 	go lw.HandleReceiveChannel() // We're going to start listening for responses now
 
 	return
+}
+
+func (lw *LoginWindow) forgotPasswordSubmit() {
+	lw.loginForgotPasswordMutex.Lock()
+	defer lw.loginForgotPasswordMutex.Unlock()
+
 }

@@ -21,7 +21,7 @@ type LoginWindow struct {
 	// Vars for login navigation
 	loginNavOptionSelected int
 	loginState             LoginState
-	loginMenuState         LoginMenuState
+	loginMenuState         LoginUserInfoState
 
 	loginSubmitMutex sync.Mutex
 	loginSubmitData  LoginSubmitData
@@ -31,6 +31,12 @@ type LoginWindow struct {
 	loginResponseReceived bool
 	loginAttempts         int
 	loginLastAttempt      time.Time
+
+	loginForgotPasswordOptionSelected int
+	loginForgotPasswordState          LoginForgotPasswordState
+
+	loginForgotPasswordMutex sync.Mutex
+	loginForgotPasswordData  LoginForgotPasswordData
 
 	// Vars for registration navigation
 	// These have long names to be as verbose as possible
