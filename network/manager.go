@@ -124,14 +124,34 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				go func() {
 					//cm.Log.Println(logging.LogInfo, "Sending registration request to AccountManager")
 					registrationRequest := managerMessage.Data.(messages.AccountRegistrationRequest)
-					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Register, RegistrationRequest: registrationRequest, SenderSessionID: managerMessage.SenderConsoleID}
+					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Register, Data: registrationRequest, SenderSessionID: managerMessage.SenderConsoleID}
 				}()
+
+			case messages.ConnectManager_Message_Login:
+				go func() {
+					//cm.Log.Println(logging.LogInfo, "Sending login request to AccountManager")
+					loginRequest := managerMessage.Data.(messages.AccountLoginRequest)
+					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Login, Data: loginRequest, SenderSessionID: managerMessage.SenderConsoleID}
+				}()
+
 			case messages.ConnectManager_Message_RegisterResponse:
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
 							//cm.Log.Println(logging.LogInfo, "Sending registration response to Console that requested registration")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_RegistrationResponse, Data: managerMessage.Data}
+							conn.SendToConsole(consoleMessage)
+						}
+					}
+					return true
+				})
+
+			case messages.ConnectManager_Message_LoginResponse:
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						if managerMessage.RecipientConsoleID == conn.ID {
+							//cm.Log.Println(logging.LogInfo, "Sending login response to Console that requested login")
+							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_LoginResponse, Data: managerMessage.Data}
 							conn.SendToConsole(consoleMessage)
 						}
 					}

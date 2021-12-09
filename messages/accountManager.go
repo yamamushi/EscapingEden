@@ -19,8 +19,14 @@ type AccountRegistrationResponse struct {
 	Error AMErrorType
 }
 
+type AccountLoginRequest struct {
+	Email    string
+	Password string // Plaintext here, we hash it later down the chain
+}
+
 type AccountLoginResponse struct {
-	Error AMErrorType
+	Account Account
+	Error   AMErrorType
 }
 
 type AccountManagerMessageType int
@@ -34,11 +40,9 @@ const (
 )
 
 type AccountManagerMessage struct {
-	Type                 AccountManagerMessageType
-	SenderSessionID      string
-	AccountResult        Account
-	RegistrationRequest  AccountRegistrationRequest
-	RegistrationResponse AccountRegistrationResponse
+	Type            AccountManagerMessageType
+	SenderSessionID string
+	Data            interface{}
 }
 
 // AMErrorType is used to define various errors that can occur during account management.

@@ -14,7 +14,7 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 				lw.registrationStatusMutex.Lock()
 				defer lw.registrationStatusMutex.Unlock()
 
-				lw.Log.Println(logging.LogInfo, "Login Window received registration response from console")
+				lw.Log.Println(logging.LogInfo, "handleLogin Window received registration response from console")
 				lw.registrationResponse = windowMessage.Data.(messages.AccountRegistrationResponse)
 
 				lw.registrationErrorMutex.Lock()
@@ -26,8 +26,8 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 				case messages.AMError_EmailAlreadyExists:
 					lw.registrationErrorData.emailError = lw.registrationResponse.Error.Error()
 				case messages.AMError_AccountAlreadyExists:
-					lw.registrationErrorData.usernameError = messages.AMError_UsernameAlreadyExists.Error()
-					lw.registrationErrorData.emailError = messages.AMError_EmailAlreadyExists.Error()
+					lw.registrationErrorData.usernameError = "This account already exists"
+					//lw.registrationErrorData.emailError = messages.AMError_EmailAlreadyExists.Error()
 				case messages.AMError_SystemError:
 					lw.registrationErrorData.errorRequest = lw.registrationResponse.Error.Error()
 				default:
@@ -46,8 +46,16 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 				lw.loginSubmitMutex.Lock()
 				defer lw.loginSubmitMutex.Unlock()
 
+				lw.loginSubmitData.Error = "" // Flush any previous errors
 				lw.loginResponse = windowMessage.Data.(messages.AccountLoginResponse)
 
+				if lw.loginResponse.Error != messages.AMError_Null {
+					lw.loginSubmitData.Error = lw.loginResponse.Error.Error()
+					if lw.loginResponse.Error == messages.AMError_InvalidPassword {
+						// Increment our login attempts if we have an invalid password
+						lw.loginAttempts += 1
+					}
+				}
 				lw.loginResponseReceived = true
 				//lw.RequestFlushFromConsole()
 				return

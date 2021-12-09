@@ -8,6 +8,7 @@ import (
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"sync"
+	"time"
 )
 
 // LoginWindow is a window for logins
@@ -28,6 +29,8 @@ type LoginWindow struct {
 	loginStatusMutex      sync.Mutex
 	loginResponse         messages.AccountLoginResponse
 	loginResponseReceived bool
+	loginAttempts         int
+	loginLastAttempt      time.Time
 
 	// Vars for registration navigation
 	// These have long names to be as verbose as possible
@@ -126,5 +129,7 @@ func (lw *LoginWindow) UpdateContents() {
 		lw.drawLoginMenu()
 	case LoginWindowRegister:
 		lw.drawRegistrationMenu()
+	case LoginWindowUserDashboard:
+		lw.drawUserDashboard()
 	}
 }

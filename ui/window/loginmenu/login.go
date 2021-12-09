@@ -32,7 +32,7 @@ func (lw *LoginWindow) drawLoginMenu() {
 	lw.lwMutex.Lock()
 	defer lw.lwMutex.Unlock()
 
-	//lw.SetContents("Login")
+	//lw.SetContents("handleLogin")
 
 	switch lw.loginState {
 	case LoginUserInfo:
@@ -55,7 +55,11 @@ func (lw *LoginWindow) drawLoginMenuUserInfo() {
 	errorFG := util.RGBCode(255, 255, 255)
 	errorBG := util.RGBCode(255, 0, 0)
 
-	lw.PrintLn(lw.X+9, lw.Y+5, "Email:", "")
+	if lw.loginMenuState == LoginMenuEmail {
+		lw.PrintLn(lw.X+9, lw.Y+5, "Email:", lw.Terminal.Bold())
+	} else {
+		lw.PrintLn(lw.X+9, lw.Y+5, "Email:", "")
+	}
 	email := ""
 	// We only want the last 12 characters of the email
 	if len(lw.loginSubmitData.Email) > 12 {
@@ -65,7 +69,11 @@ func (lw *LoginWindow) drawLoginMenuUserInfo() {
 	}
 	lw.PrintLn(lw.X+16, lw.Y+5, email, "")
 
-	lw.PrintLn(lw.X+6, lw.Y+6, "Password:", "")
+	if lw.loginMenuState == LoginMenuPassword {
+		lw.PrintLn(lw.X+6, lw.Y+6, "Password:", lw.Terminal.Bold())
+	} else {
+		lw.PrintLn(lw.X+6, lw.Y+6, "Password:", "")
+	}
 	for i := 0; i < len(lw.loginSubmitData.Password) && i < 12; i++ {
 		lw.PrintLn(lw.X+16+i, lw.Y+6, "*", "")
 	}

@@ -7,13 +7,11 @@ type ConsoleMessageType int
 const (
 	Console_Message_Null ConsoleMessageType = iota
 	Console_Message_Error
-	Console_Message_Warning
-	Console_Message_Log
 	Console_Message_Quit
 	Console_Message_Broadcast
 	Console_Message_Chat // This needs to be refactored into the game engine channels, the connection manager does not need to know about chat.
-	Console_Message_RegistrationRequest
 	Console_Message_RegistrationResponse
+	Console_Message_LoginResponse
 )
 
 // ConsoleMessage is a message that is meant for parsing by the Console
