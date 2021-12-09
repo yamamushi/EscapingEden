@@ -19,6 +19,10 @@ type AccountRegistrationResponse struct {
 	Error AMErrorType
 }
 
+type AccountLoginResponse struct {
+	Error AMErrorType
+}
+
 type AccountManagerMessageType int
 
 const (

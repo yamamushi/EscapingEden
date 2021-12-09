@@ -24,6 +24,7 @@ const (
 
 	// These are messages that are parsed by the windows themselves if they receive an event
 	WM_RegistrationResponse
+	WM_LoginResponse
 )
 
 type WindowMessageCommand int

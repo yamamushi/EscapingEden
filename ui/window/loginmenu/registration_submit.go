@@ -6,7 +6,7 @@ import (
 	"github.com/yamamushi/EscapingEden/messages"
 )
 
-func (lw *LoginWindow) RegistrationSubmit(RegistrationSubmitData) *RegistrationError {
+func (lw *LoginWindow) RegistrationSubmit() *RegistrationError {
 	lw.registrationSubmitMutex.Lock()
 	defer lw.registrationSubmitMutex.Unlock()
 

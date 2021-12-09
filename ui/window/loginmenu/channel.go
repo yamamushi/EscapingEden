@@ -35,8 +35,22 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 				}
 
 				lw.registrationResponseReceived = true
-				lw.RequestFlushFromConsole()
+				//lw.RequestFlushFromConsole()
 				return // We launched when our registration request was submitted, now we can return since we got a response
+
+			case messages.WM_LoginResponse:
+				// Handle the login response here and then return
+				lw.loginStatusMutex.Lock()
+				defer lw.loginStatusMutex.Unlock()
+
+				lw.loginSubmitMutex.Lock()
+				defer lw.loginSubmitMutex.Unlock()
+
+				lw.loginResponse = windowMessage.Data.(messages.AccountLoginResponse)
+
+				lw.loginResponseReceived = true
+				//lw.RequestFlushFromConsole()
+				return
 			}
 		}
 	}

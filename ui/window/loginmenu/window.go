@@ -13,14 +13,26 @@ import (
 // LoginWindow is a window for logins
 type LoginWindow struct {
 	window.Window
-	credentials       *LoginCreds
-	lwMutex           sync.Mutex
-	windowState       LoginWindowState
-	loginState        LoginState
-	registrationState RegistrationState
+	credentials *LoginCreds
+	lwMutex     sync.Mutex
+	windowState LoginWindowState
+
+	// Vars for login navigation
+	loginNavOptionSelected int
+	loginState             LoginState
+	loginMenuState         LoginMenuState
+
+	loginSubmitMutex sync.Mutex
+	loginSubmitData  LoginSubmitData
+
+	loginStatusMutex      sync.Mutex
+	loginResponse         messages.AccountLoginResponse
+	loginResponseReceived bool
 
 	// Vars for registration navigation
 	// These have long names to be as verbose as possible
+	registrationState RegistrationState
+
 	registrationNavOptionSelected          int
 	registrationUserInfoOptionSelected     RegistrationUserInfoState
 	registrationUserInfoLastOptionSelected RegistrationUserInfoState
@@ -54,15 +66,7 @@ const (
 	LoginWindowMenu LoginWindowState = iota
 	LoginWindowLogin
 	LoginWindowRegister
-)
-
-// LoginState is an enum for storing login state
-type LoginState int
-
-const (
-	LoginUsername LoginState = iota
-	LoginPassword
-	LoginSubmit
+	LoginWindowUserDashboard
 )
 
 // NewLoginWindow creates a new login window
@@ -107,7 +111,7 @@ func (lw *LoginWindow) HandleInput(input types.Input) {
 	case LoginWindowMenu:
 		lw.handleMenuInput(input.Data)
 	case LoginWindowLogin:
-		lw.handleLoginInput(input.Data)
+		lw.handleLoginInput(input)
 	case LoginWindowRegister:
 		lw.handleRegistrationInput(input)
 	}

@@ -23,7 +23,7 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 	case "l":
 		//log.Println("Login selected")
 		lw.windowState = LoginWindowLogin
-		lw.loginState = LoginUsername
+		lw.loginState = LoginUserInfo
 		//lw.ResetWindowDrawings()
 		//lw.ForceConsoleRefresh()
 		lw.RequestFlushFromConsole()
