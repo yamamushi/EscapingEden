@@ -22,3 +22,6 @@ path = "eden.db"   # path to the database file
 #user = "example"
 #password = "example"
 #dbname = "exampleDBName"
+
+[email]
+type = "smtp" # specify the email provider type: [smtp, gmail]

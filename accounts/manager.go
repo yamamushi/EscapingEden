@@ -27,7 +27,7 @@ func (am *AccountManager) Init() error {
 	err := am.DB.AddRecord("Characters", &messages.Account{ID: id.String(), Username: "Test", HashedPassword: "Test"})
 	if err != nil {
 		if err.Error() == "already exists" {
-			am.Log.Println(logging.LogInfo, "AccountManager", "Init", messages.AMError_AccountAlreadyExists.Error())
+			//am.Log.Println(logging.LogInfo, "AccountManager", "Init", messages.AMError_AccountAlreadyExists.Error())
 		}
 	}
 	_ = am.DB.UpdateRecord("Characters", &messages.Account{ID: id.String(), Username: "Test", HashedPassword: "Test"})
@@ -40,7 +40,7 @@ func (am *AccountManager) Init() error {
 		return err
 	}
 
-	am.Log.Println(logging.LogInfo, result.ID, result.Username, result.HashedPassword)
+	//am.Log.Println(logging.LogInfo, result.ID, result.Username, result.HashedPassword)
 
 	return nil
 }

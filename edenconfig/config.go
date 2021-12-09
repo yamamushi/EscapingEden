@@ -10,6 +10,7 @@ type Config struct {
 	Logger loggingConfig `toml:"logging"`
 	Server serverConfig  `toml:"server"`
 	DB     dbConfig      `toml:"database"`
+	Email  emailConfig   `toml:"email"`
 }
 
 type loggingConfig struct {
@@ -33,6 +34,11 @@ type dbConfig struct {
 	User string `toml:"user"`
 	Pass string `toml:"pass"`
 	Name string `toml:"name"`
+}
+
+// emailConfig struct
+type emailConfig struct {
+	Type string `toml:"type"`
 }
 
 // ReadConfig function
