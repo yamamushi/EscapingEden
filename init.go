@@ -101,13 +101,14 @@ func InitCharacterManager(input chan messages.CharacterManagerMessage, output ch
 // InitServer initializes the server
 func InitServer(conf edenconfig.Config,
 	accountManagerReceive chan messages.AccountManagerMessage, characterManagerReceiver chan messages.CharacterManagerMessage,
-	connectionManagerReceive chan messages.ConnectionManagerMessage, log logging.LoggerType) (*network.Server, error) {
+	connectionManagerReceive chan messages.ConnectionManagerMessage,
+	db edendb.DatabaseType, log logging.LoggerType) (*network.Server, error) {
 	log.Println(logging.LogInfo, "Starting Server...")
 
 	startNotify := make(chan bool)
 
 	server := network.NewServer(conf.Server.Host, conf.Server.Port, log)
-	err := server.Start(startNotify, connectionManagerReceive, accountManagerReceive, characterManagerReceiver)
+	err := server.Start(startNotify, connectionManagerReceive, accountManagerReceive, characterManagerReceiver, db)
 	if err != nil {
 		return nil, err
 	}

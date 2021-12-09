@@ -80,7 +80,7 @@ func main() {
 	_, err = InitCharacterManager(characterManagerReceiver, connectionManagerReceive, dbConn, &conf, log)
 
 	// Initialize the server, and by proxy, the connection manager
-	server, err := InitServer(conf, accountManagerReceiver, characterManagerReceiver, connectionManagerReceive, log)
+	server, err := InitServer(conf, accountManagerReceiver, characterManagerReceiver, connectionManagerReceive, dbConn, log)
 	if err != nil {
 		log.Println(logging.LogFatal, "Error initializing server: ", err)
 	}

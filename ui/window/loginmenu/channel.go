@@ -46,15 +46,14 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 				lw.loginSubmitMutex.Lock()
 				defer lw.loginSubmitMutex.Unlock()
 
+				lw.Log.Println(logging.LogInfo, "handleLogin Window received login response from console")
+
 				lw.loginSubmitData.Error = "" // Flush any previous errors
 				lw.loginResponse = windowMessage.Data.(messages.AccountLoginResponse)
 
 				if lw.loginResponse.Error != messages.AMError_Null {
 					lw.loginSubmitData.Error = lw.loginResponse.Error.Error()
-					if lw.loginResponse.Error == messages.AMError_InvalidPassword {
-						// Increment our login attempts if we have an invalid password
-						lw.loginAttempts += 1
-					}
+					lw.loginAttempts += 1
 				}
 				lw.loginResponseReceived = true
 				//lw.RequestFlushFromConsole()
