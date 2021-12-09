@@ -5,7 +5,7 @@ import (
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"strings"
+	"net"
 	"sync"
 	"time"
 )
@@ -202,8 +202,7 @@ type BadLoginRecord struct {
 
 func (cm *ConnectionManager) handleBadLogins(conn *Connection) (disconnect bool) {
 	// First we get the IP address of the connection
-	addressSlice := strings.Split(conn.conn.RemoteAddr().String(), ":")
-	ipAddress := addressSlice[0]
+	ipAddress, _, _ := net.SplitHostPort(conn.conn.RemoteAddr().String())
 
 	// Then we check if we have a record for this IP address
 	var badLoginRecord BadLoginRecord
@@ -237,8 +236,7 @@ func (cm *ConnectionManager) handleBadLogins(conn *Connection) (disconnect bool)
 
 func (cm *ConnectionManager) checkIPBadLogins(conn *Connection) (allowed bool) {
 	// First we get the IP address of the connection
-	addressSlice := strings.Split(conn.conn.RemoteAddr().String(), ":")
-	ipAddress := addressSlice[0]
+	ipAddress, _, _ := net.SplitHostPort(conn.conn.RemoteAddr().String())
 
 	// Then we check if we have a record for this IP address
 	var badLoginRecord BadLoginRecord
