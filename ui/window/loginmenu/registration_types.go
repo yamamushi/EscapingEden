@@ -4,13 +4,13 @@ type RegistrationError struct {
 	usernameError        string
 	passwordError        string
 	passwordConfirmError string
-	emailError           string
+	discordError         string
 	rulesError           string
 	errorRequest         string
 }
 
 func (r RegistrationError) IsEmpty() bool {
-	return r.usernameError == "" && r.passwordError == "" && r.passwordConfirmError == "" && r.emailError == "" && r.rulesError == ""
+	return r.usernameError == "" && r.passwordError == "" && r.passwordConfirmError == "" && r.discordError == "" && r.rulesError == ""
 }
 
 func (r RegistrationError) UsernameError() string {
@@ -37,9 +37,9 @@ func (r RegistrationError) PasswordConfirmError() string {
 	}
 }
 
-func (r RegistrationError) EmailError() string {
-	if r.emailError != "" {
-		return "Error: " + r.emailError
+func (r RegistrationError) DiscordError() string {
+	if r.discordError != "" {
+		return "Error: " + r.discordError
 	} else {
 		return ""
 	}
@@ -62,7 +62,7 @@ func (r RegistrationError) ErrorRequest() string {
 }
 
 func (r RegistrationError) Empty() bool {
-	if r.usernameError != "" || r.passwordError != "" || r.passwordConfirmError != "" || r.emailError != "" || r.rulesError != "" {
+	if r.usernameError != "" || r.passwordError != "" || r.passwordConfirmError != "" || r.discordError != "" || r.rulesError != "" {
 		return false
 	} else {
 		return true
@@ -73,5 +73,5 @@ type RegistrationSubmitData struct {
 	Username        string
 	Password        string
 	PasswordConfirm string
-	Email           string
+	DiscordID       string
 }

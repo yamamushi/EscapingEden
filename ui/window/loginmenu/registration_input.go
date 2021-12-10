@@ -2,7 +2,6 @@ package login
 
 import (
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"net/mail"
 )
 
 // handleRegistrationInput handles input for the registration screen of the login window
@@ -133,11 +132,11 @@ func (lw *LoginWindow) handleRegistrationUserInfo(input types.Input) {
 			case UserInfoPassword:
 				lw.registrationUserInfoOptionSelected = UserInfoPasswordConfirm
 			case UserInfoPasswordConfirm:
-				lw.registrationUserInfoOptionSelected = UserInfoEmail
-			case UserInfoEmail:
+				lw.registrationUserInfoOptionSelected = UserInfoDiscord
+			case UserInfoDiscord:
 				lw.registrationUserInfoOptionSelected = UserInfoAgreeRules
 			case UserInfoAgreeRules:
-				// If we have no option selected, and we're at the email line, we may as well just go to the submit button
+				// If we have no option selected, and we're here, we may as well just go to the submit button
 				lw.registrationUserInfoOptionSelected = UserInfoNULL
 				lw.registrationNavOptionSelected = 2
 			}
@@ -237,13 +236,9 @@ func (lw *LoginWindow) registrationUserInfoCharInput(input string) {
 			lw.registrationErrorData.passwordConfirmError = "Maximum password length is 32 characters"
 		}
 
-	case UserInfoEmail:
-		lw.registrationSubmitData.Email += input
-		_, err := mail.ParseAddress(lw.registrationSubmitData.Email)
-		if err != nil {
-			lw.registrationErrorData.emailError = "Invalid email address"
-		} else {
-			lw.registrationErrorData.emailError = ""
+	case UserInfoDiscord:
+		if len(lw.registrationSubmitData.DiscordID) < 128 {
+			lw.registrationSubmitData.DiscordID += input
 		}
 
 	case UserInfoAgreeRules:
@@ -271,15 +266,9 @@ func (lw *LoginWindow) registrationUserInfoBackspaceInput() {
 			lw.registrationSubmitData.PasswordConfirm = lw.registrationSubmitData.PasswordConfirm[:len(lw.registrationSubmitData.PasswordConfirm)-1]
 			lw.registrationErrorData.passwordConfirmError = ""
 		}
-	case UserInfoEmail:
-		if lw.registrationSubmitData.Email != "" {
-			lw.registrationSubmitData.Email = lw.registrationSubmitData.Email[:len(lw.registrationSubmitData.Email)-1]
-			_, err := mail.ParseAddress(lw.registrationSubmitData.Email)
-			if err != nil {
-				lw.registrationErrorData.emailError = "Invalid email address"
-			} else {
-				lw.registrationErrorData.emailError = ""
-			}
+	case UserInfoDiscord:
+		if lw.registrationSubmitData.DiscordID != "" {
+			lw.registrationSubmitData.DiscordID = lw.registrationSubmitData.DiscordID[:len(lw.registrationSubmitData.DiscordID)-1]
 		}
 	}
 }

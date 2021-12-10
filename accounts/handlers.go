@@ -21,7 +21,7 @@ func (am *AccountManager) HandleMessages(started chan bool) {
 			case messages.AccountManager_Message_Register:
 				req := managerMessage.Data.(messages.AccountRegistrationRequest)
 				am.Log.Println(logging.LogInfo, "Account Manager received registration request")
-				registrationResponse := am.CreateAccount(req.Username, req.Password, req.Email)
+				registrationResponse := am.CreateAccount(req.Username, req.Password, req.DiscordID)
 				response := messages.ConnectionManagerMessage{
 					Type:               messages.ConnectManager_Message_RegisterResponse,
 					RecipientConsoleID: managerMessage.SenderSessionID,
@@ -34,7 +34,7 @@ func (am *AccountManager) HandleMessages(started chan bool) {
 				req := managerMessage.Data.(messages.AccountLoginRequest)
 				am.Log.Println(logging.LogInfo, "Account Manager received login request")
 
-				loginResponse := am.handleLogin(req.Email, req.Password)
+				loginResponse := am.handleLogin(req.Username, req.Password)
 				response := messages.ConnectionManagerMessage{
 					Type:               messages.ConnectManager_Message_LoginResponse,
 					RecipientConsoleID: managerMessage.SenderSessionID,

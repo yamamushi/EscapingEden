@@ -23,5 +23,7 @@ path = "eden.db"   # path to the database file
 #password = "example"
 #dbname = "exampleDBName"
 
-[email]
-type = "smtp" # specify the email provider type: [smtp, gmail]
+[discord]
+bot_token = "bot user token goes here"
+guild_id  = "main guild id goes here"
+admin_ids = ["example#0001", "example#0002"]

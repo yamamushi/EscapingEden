@@ -5,14 +5,14 @@ package messages
 type Account struct {
 	ID             string `storm:"index"`  // Indexed Unique ID for the account, we use UUID, not the auto-increment, ever.
 	Username       string `storm:"unique"` // Username of the account, must be unique.
-	Email          string `storm:"unique"` // Email of the account, must be unique.
+	DiscordID      string `storm:"unique"` // Discord ID of the account, must be unique.
 	HashedPassword string // Hashed password of the account.
 }
 
 type AccountRegistrationRequest struct {
-	Username string
-	Password string // Plaintext here, we hash it later down the chain
-	Email    string
+	Username  string
+	Password  string // Plaintext here, we hash it later down the chain
+	DiscordID string
 }
 
 type AccountRegistrationResponse struct {
@@ -20,7 +20,7 @@ type AccountRegistrationResponse struct {
 }
 
 type AccountLoginRequest struct {
-	Email    string
+	Username string
 	Password string // Plaintext here, we hash it later down the chain
 }
 
@@ -56,9 +56,9 @@ const (
 	AMError_AccountAlreadyExists
 	AMError_AccountDoesNotExist
 	AMError_UsernameAlreadyExists
-	AMError_EmailAlreadyExists
+	AMError_DiscordAlreadyExists
 	AMError_InvalidPassword
-	AMError_InvalidEmail
+	AMError_InvalidDiscordID
 	AMError_InvalidUsername
 )
 
@@ -74,12 +74,12 @@ func (ame AMErrorType) Error() string {
 		return "Account Does Not Exist"
 	case AMError_UsernameAlreadyExists:
 		return "Username Already Exists"
-	case AMError_EmailAlreadyExists:
-		return "Email Already Exists"
+	case AMError_DiscordAlreadyExists:
+		return "DiscordID Already Exists"
 	case AMError_InvalidPassword:
 		return "Invalid Password"
-	case AMError_InvalidEmail:
-		return "Invalid Email"
+	case AMError_InvalidDiscordID:
+		return "Invalid DiscordID"
 	case AMError_InvalidUsername:
 		return "Invalid Username"
 	default:

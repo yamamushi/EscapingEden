@@ -10,8 +10,6 @@ import (
 	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/edendb/bolt"
-	"github.com/yamamushi/EscapingEden/email"
-	"github.com/yamamushi/EscapingEden/email/gmail"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/logging/logconsole"
 	"github.com/yamamushi/EscapingEden/logging/logfile"
@@ -44,19 +42,6 @@ func InitDB(conf edenconfig.Config, log logging.LoggerType) (edendb.DatabaseType
 		return dbConn, nil
 	}
 	return nil, errors.New("Invalid Database Type found - " + conf.DB.Type)
-}
-
-// InitEmail initializes the email subsystem
-func InitEmail(conf edenconfig.Config, log logging.LoggerType) (email.EmailProviderType, error) {
-	log.Println(logging.LogInfo, "Initializing Email Subsystem")
-	if strings.ToLower(conf.Email.Type) == "gmail" {
-		gmailProvider, err := gmail.NewGmailProvider("", "")
-		if err != nil {
-			return nil, err
-		}
-		return gmailProvider, nil
-	}
-	return nil, errors.New("Invalid Email Provider Type found - " + conf.Email.Type)
 }
 
 // InitAccountManager initializes the account manager

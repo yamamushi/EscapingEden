@@ -37,21 +37,21 @@ func (lw *LoginWindow) handleLoginUserInfoInput(input types.Input) {
 		case LoginUserInfoForgotPassword:
 			lw.loginMenuState = LoginUserInfoPassword
 		case LoginUserInfoPassword:
-			lw.loginMenuState = LoginUserInfoEmail
-		case LoginUserInfoEmail:
+			lw.loginMenuState = LoginUserInfoUsername
+		case LoginUserInfoUsername:
 			lw.loginMenuState = LoginUserInfoNull
 		}
 	case types.InputDown:
 		lw.loginNavOptionSelected = 0
 		switch lw.loginMenuState {
 		case LoginUserInfoNull:
-			lw.loginMenuState = LoginUserInfoEmail
+			lw.loginMenuState = LoginUserInfoUsername
 		case LoginUserInfoPassword:
 			lw.loginMenuState = LoginUserInfoForgotPassword
 		case LoginUserInfoForgotPassword:
 			lw.loginMenuState = LoginUserInfoNull
 			lw.loginNavOptionSelected = 2 // submit
-		case LoginUserInfoEmail:
+		case LoginUserInfoUsername:
 			lw.loginMenuState = LoginUserInfoPassword
 		}
 	case types.InputLeft:
@@ -66,7 +66,7 @@ func (lw *LoginWindow) handleLoginUserInfoInput(input types.Input) {
 		return
 	case types.InputReturn:
 		switch lw.loginMenuState {
-		case LoginUserInfoEmail:
+		case LoginUserInfoUsername:
 			lw.loginMenuState = LoginUserInfoPassword
 		case LoginUserInfoPassword:
 			lw.loginMenuState = LoginUserInfoNull
@@ -79,7 +79,7 @@ func (lw *LoginWindow) handleLoginUserInfoInput(input types.Input) {
 
 			// Send us to the forgot password state
 			lw.loginState = LoginForgotPassword
-			lw.loginForgotPasswordState = LoginForgotPasswordEmail
+			lw.loginForgotPasswordState = LoginForgotPasswordUsername
 			lw.RequestFlushFromConsole()
 		case LoginUserInfoNull:
 			// Go Back to the main menu
@@ -106,9 +106,9 @@ func (lw *LoginWindow) handleLoginBackspace() {
 	defer lw.loginSubmitMutex.Unlock()
 
 	switch lw.loginMenuState {
-	case LoginUserInfoEmail:
-		if lw.loginSubmitData.Email != "" {
-			lw.loginSubmitData.Email = lw.loginSubmitData.Email[:len(lw.loginSubmitData.Email)-1]
+	case LoginUserInfoUsername:
+		if lw.loginSubmitData.Username != "" {
+			lw.loginSubmitData.Username = lw.loginSubmitData.Username[:len(lw.loginSubmitData.Username)-1]
 		}
 	case LoginUserInfoPassword:
 		if lw.loginSubmitData.Password != "" {
@@ -122,9 +122,9 @@ func (lw *LoginWindow) handleLoginCharInput(input string) {
 	defer lw.loginSubmitMutex.Unlock()
 
 	switch lw.loginMenuState {
-	case LoginUserInfoEmail:
-		if len(lw.loginSubmitData.Email) < 128 {
-			lw.loginSubmitData.Email += input
+	case LoginUserInfoUsername:
+		if len(lw.loginSubmitData.Username) < 128 {
+			lw.loginSubmitData.Username += input
 		}
 		//lw.loginMenuState = LoginUserInfoPassword
 	case LoginUserInfoPassword:
@@ -146,17 +146,17 @@ func (lw *LoginWindow) handleForgotPasswordInput(input types.Input) {
 	case types.InputUp:
 		lw.loginForgotPasswordOptionSelected = 0
 		switch lw.loginForgotPasswordState {
-		case LoginForgotPasswordEmail:
-			lw.loginForgotPasswordState = LoginForgotPasswordEmail
+		case LoginForgotPasswordUsername:
+			lw.loginForgotPasswordState = LoginForgotPasswordUsername
 		case LoginForgotPasswordNull:
-			lw.loginForgotPasswordState = LoginForgotPasswordEmail
+			lw.loginForgotPasswordState = LoginForgotPasswordUsername
 		}
 	case types.InputDown:
 		lw.loginForgotPasswordOptionSelected = 0
 		switch lw.loginForgotPasswordState {
 		case LoginForgotPasswordNull:
-			lw.loginForgotPasswordState = LoginForgotPasswordEmail
-		case LoginForgotPasswordEmail:
+			lw.loginForgotPasswordState = LoginForgotPasswordUsername
+		case LoginForgotPasswordUsername:
 			lw.loginForgotPasswordState = LoginForgotPasswordNull
 			lw.loginForgotPasswordOptionSelected = 2 // submit
 		}
@@ -172,7 +172,7 @@ func (lw *LoginWindow) handleForgotPasswordInput(input types.Input) {
 		return
 	case types.InputReturn:
 		switch lw.loginForgotPasswordState {
-		case LoginForgotPasswordEmail:
+		case LoginForgotPasswordUsername:
 			lw.loginForgotPasswordState = LoginForgotPasswordNull
 			lw.loginForgotPasswordOptionSelected = 2
 		case LoginForgotPasswordNull:
@@ -199,9 +199,9 @@ func (lw *LoginWindow) handleForgotPasswordBackspace() {
 	defer lw.loginForgotPasswordMutex.Unlock()
 
 	switch lw.loginForgotPasswordState {
-	case LoginForgotPasswordEmail:
-		if lw.loginForgotPasswordData.Email != "" {
-			lw.loginForgotPasswordData.Email = lw.loginForgotPasswordData.Email[:len(lw.loginForgotPasswordData.Email)-1]
+	case LoginForgotPasswordUsername:
+		if lw.loginForgotPasswordData.Username != "" {
+			lw.loginForgotPasswordData.Username = lw.loginForgotPasswordData.Username[:len(lw.loginForgotPasswordData.Username)-1]
 		}
 	}
 }
@@ -211,9 +211,9 @@ func (lw *LoginWindow) handleForgotPasswordCharInput(input string) {
 	defer lw.loginForgotPasswordMutex.Unlock()
 
 	switch lw.loginForgotPasswordState {
-	case LoginForgotPasswordEmail:
-		if len(lw.loginForgotPasswordData.Email) < 128 {
-			lw.loginForgotPasswordData.Email += input
+	case LoginForgotPasswordUsername:
+		if len(lw.loginForgotPasswordData.Username) < 128 {
+			lw.loginForgotPasswordData.Username += input
 		}
 		//lw.loginMenuState = LoginUserInfoPassword
 	}

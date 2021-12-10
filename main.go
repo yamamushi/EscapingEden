@@ -64,12 +64,6 @@ func main() {
 		log.Println(logging.LogFatal, "Error initializing database: ", err)
 	}
 
-	// Setup Email Subsystem
-	_, err = InitEmail(conf, log)
-	if err != nil {
-		log.Println(logging.LogFatal, "Error initializing email: ", err)
-	}
-
 	// Setup channels for account manager and connection manager
 	accountManagerReceiver := make(chan messages.AccountManagerMessage)
 	connectionManagerReceive := make(chan messages.ConnectionManagerMessage)

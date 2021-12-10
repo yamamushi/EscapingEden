@@ -15,14 +15,14 @@ const (
 type LoginUserInfoState int
 
 const (
-	LoginUserInfoEmail LoginUserInfoState = iota
+	LoginUserInfoUsername LoginUserInfoState = iota
 	LoginUserInfoPassword
 	LoginUserInfoForgotPassword
 	LoginUserInfoNull
 )
 
 type LoginSubmitData struct {
-	Email    string
+	Username string
 	Password string
 	Error    string
 }
@@ -30,12 +30,12 @@ type LoginSubmitData struct {
 type LoginForgotPasswordState int
 
 const (
-	LoginForgotPasswordEmail LoginForgotPasswordState = iota
+	LoginForgotPasswordUsername LoginForgotPasswordState = iota
 	LoginForgotPasswordNull
 )
 
 type LoginForgotPasswordData struct {
-	Email string
+	Username string
 }
 
 // drawLoginMenu draws the login window
@@ -66,19 +66,19 @@ func (lw *LoginWindow) drawLoginMenuUserInfo() {
 	errorFG := util.RGBCode(255, 255, 255)
 	errorBG := util.RGBCode(255, 0, 0)
 
-	if lw.loginMenuState == LoginUserInfoEmail {
-		lw.PrintLn(lw.X+9, lw.Y+5, "Email:", lw.Terminal.Bold())
+	if lw.loginMenuState == LoginUserInfoUsername {
+		lw.PrintLn(lw.X+6, lw.Y+5, "Username:", lw.Terminal.Bold())
 	} else {
-		lw.PrintLn(lw.X+9, lw.Y+5, "Email:", "")
+		lw.PrintLn(lw.X+6, lw.Y+5, "Username:", "")
 	}
-	email := ""
-	// We only want the last 12 characters of the email
-	if len(lw.loginSubmitData.Email) > 12 {
-		email = lw.loginSubmitData.Email[len(lw.loginSubmitData.Email)-12:]
+	username := ""
+	// We only want the last 12 characters of the username
+	if len(lw.loginSubmitData.Username) > 12 {
+		username = lw.loginSubmitData.Username[len(lw.loginSubmitData.Username)-12:]
 	} else {
-		email = lw.loginSubmitData.Email
+		username = lw.loginSubmitData.Username
 	}
-	lw.PrintLn(lw.X+16, lw.Y+5, email, "")
+	lw.PrintLn(lw.X+16, lw.Y+5, username, "")
 
 	if lw.loginMenuState == LoginUserInfoPassword {
 		lw.PrintLn(lw.X+6, lw.Y+6, "Password:", lw.Terminal.Bold())
@@ -145,19 +145,19 @@ func (lw *LoginWindow) drawLoginMenuForgotPassword() {
 	lw.loginForgotPasswordMutex.Lock()
 	defer lw.loginForgotPasswordMutex.Unlock()
 
-	if lw.loginForgotPasswordState == LoginForgotPasswordEmail {
-		lw.PrintLn(lw.X+9, lw.Y+5, "Email:", lw.Terminal.Bold())
+	if lw.loginForgotPasswordState == LoginForgotPasswordUsername {
+		lw.PrintLn(lw.X+9, lw.Y+5, "Username:", lw.Terminal.Bold())
 	} else {
-		lw.PrintLn(lw.X+9, lw.Y+5, "Email:", "")
+		lw.PrintLn(lw.X+9, lw.Y+5, "Username:", "")
 	}
-	email := ""
-	// We only want the last 12 characters of the email
-	if len(lw.loginForgotPasswordData.Email) > 12 {
-		email = lw.loginForgotPasswordData.Email[len(lw.loginForgotPasswordData.Email)-12:]
+	username := ""
+	// We only want the last 12 characters of the username
+	if len(lw.loginForgotPasswordData.Username) > 12 {
+		username = lw.loginForgotPasswordData.Username[len(lw.loginForgotPasswordData.Username)-12:]
 	} else {
-		email = lw.loginForgotPasswordData.Email
+		username = lw.loginForgotPasswordData.Username
 	}
-	lw.PrintLn(lw.X+16, lw.Y+5, email, "")
+	lw.PrintLn(lw.X+16, lw.Y+5, username, "")
 
 	// Draw the back and submit buttons
 	if lw.loginForgotPasswordOptionSelected == 1 {

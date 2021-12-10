@@ -23,11 +23,11 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 				switch lw.registrationResponse.Error {
 				case messages.AMError_UsernameAlreadyExists:
 					lw.registrationErrorData.usernameError = lw.registrationResponse.Error.Error()
-				case messages.AMError_EmailAlreadyExists:
-					lw.registrationErrorData.emailError = lw.registrationResponse.Error.Error()
+				case messages.AMError_DiscordAlreadyExists:
+					lw.registrationErrorData.discordError = lw.registrationResponse.Error.Error()
 				case messages.AMError_AccountAlreadyExists:
 					lw.registrationErrorData.usernameError = "This account already exists"
-					//lw.registrationErrorData.emailError = messages.AMError_EmailAlreadyExists.Error()
+					//lw.registrationErrorData.discordError = messages.AMError_DiscordAlreadyExists.Error()
 				case messages.AMError_SystemError:
 					lw.registrationErrorData.errorRequest = lw.registrationResponse.Error.Error()
 				default:

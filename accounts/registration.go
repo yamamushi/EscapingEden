@@ -23,10 +23,10 @@ func (am *AccountManager) UsernameExists(username string) (bool, error) {
 	return true, nil
 }
 
-// EmailExists checks if an email is already registered to an account
-func (am *AccountManager) EmailExists(email string) (bool, error) {
+// DiscordExists checks if a discord id is already registered to an account
+func (am *AccountManager) DiscordExists(discordID string) (bool, error) {
 	result := messages.Account{}
-	err := am.DB.One("Accounts", "Email", email, &result)
+	err := am.DB.One("Accounts", "DiscordID", discordID, &result)
 	if err != nil {
 		if err.Error() == "not found" {
 			return false, nil
@@ -37,20 +37,20 @@ func (am *AccountManager) EmailExists(email string) (bool, error) {
 }
 
 // CreateAccount creates a new account, returns nil on success or error on failure
-func (am *AccountManager) CreateAccount(username, password, email string) messages.AccountRegistrationResponse {
-	am.Log.Println(logging.LogInfo, "Creating account:", username, email, password)
+func (am *AccountManager) CreateAccount(username, password, discordID string) messages.AccountRegistrationResponse {
+	am.Log.Println(logging.LogInfo, "Creating account:", username, discordID, password)
 
 	response := messages.AccountRegistrationResponse{}
-	// Before we work, lets make sure the username and email are not already taken
+	// Before we work, lets make sure the username and discord are not already taken
 	usernameStatus, err := am.UsernameExists(username)
 	if err != nil || usernameStatus {
 		response.Error = messages.AMError_UsernameAlreadyExists
 		return response
 	}
 
-	emailStatus, err := am.EmailExists(email)
-	if err != nil || emailStatus {
-		response.Error = messages.AMError_EmailAlreadyExists
+	discordStatus, err := am.DiscordExists(discordID)
+	if err != nil || discordStatus {
+		response.Error = messages.AMError_DiscordAlreadyExists
 		return response
 	}
 
@@ -64,7 +64,7 @@ func (am *AccountManager) CreateAccount(username, password, email string) messag
 		ID:             uuid.New().String(),
 		Username:       username,
 		HashedPassword: hash,
-		Email:          email,
+		DiscordID:      discordID,
 	}
 	err = am.DB.AddRecord("Accounts", &account)
 	if err != nil {

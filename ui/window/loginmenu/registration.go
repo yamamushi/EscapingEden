@@ -22,7 +22,7 @@ const (
 	UserInfoUsername RegistrationUserInfoState = iota
 	UserInfoPassword
 	UserInfoPasswordConfirm
-	UserInfoEmail
+	UserInfoDiscord
 	UserInfoAgreeRules
 	UserInfoNULL
 )
@@ -149,21 +149,21 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	}
 	lw.PrintLnColor(lw.X+41, lw.Y+9, lw.registrationErrorData.PasswordConfirmError(), errorFG.FG()+errorBG.BG())
 
-	if lw.registrationUserInfoOptionSelected == UserInfoEmail {
-		lw.PrintLn(lw.X+15, lw.Y+10, "Email:", lw.Terminal.Bold())
+	if lw.registrationUserInfoOptionSelected == UserInfoDiscord {
+		lw.PrintLn(lw.X+10, lw.Y+10, "Discord ID:", lw.Terminal.Bold())
 	} else {
-		lw.PrintLn(lw.X+15, lw.Y+10, "Email:", "")
+		lw.PrintLn(lw.X+10, lw.Y+10, "Discord ID:", "")
 	}
 
-	email := ""
-	// We only want the last 12 characters of the email
-	if len(lw.registrationSubmitData.Email) > 12 {
-		email = lw.registrationSubmitData.Email[len(lw.registrationSubmitData.Email)-12:]
+	discordID := ""
+	// We only want the last 12 characters of the discord ID
+	if len(lw.registrationSubmitData.DiscordID) > 12 {
+		discordID = lw.registrationSubmitData.DiscordID[len(lw.registrationSubmitData.DiscordID)-12:]
 	} else {
-		email = lw.registrationSubmitData.Email
+		discordID = lw.registrationSubmitData.DiscordID
 	}
-	lw.PrintLn(lw.X+22, lw.Y+10, email, "")
-	lw.PrintLnColor(lw.X+41, lw.Y+10, lw.registrationErrorData.EmailError(), errorFG.FG()+errorBG.BG())
+	lw.PrintLn(lw.X+22, lw.Y+10, discordID, "")
+	lw.PrintLnColor(lw.X+41, lw.Y+10, lw.registrationErrorData.DiscordError(), errorFG.FG()+errorBG.BG())
 
 	lw.PrintLn(lw.X+20, lw.Y+14, "Do you agree to the rules?     (Space to toggle)", "")
 	lw.PrintLnColor(lw.X+20, lw.Y+13, lw.registrationErrorData.RulesError(), errorFG.FG()+errorBG.BG())
