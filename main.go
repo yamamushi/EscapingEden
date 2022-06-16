@@ -64,6 +64,14 @@ func main() {
 		log.Println(logging.LogFatal, "Error initializing database: ", err)
 	}
 
+	// Setup Edenbot
+	edenbotInput := make(chan messages.EdenbotMessage)
+	edenbotOutput := make(chan messages.SystemManagerMessage) // TODO: this needs a whole new manager created
+	_, err = InitEdenbot(edenbotInput, edenbotOutput, dbConn, log, &conf)
+	if err != nil {
+		log.Println(logging.LogFatal, "Error initializing edenbot: ", err)
+	}
+
 	// Setup channels for account manager and connection manager
 	accountManagerReceiver := make(chan messages.AccountManagerMessage)
 	connectionManagerReceive := make(chan messages.ConnectionManagerMessage)

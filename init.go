@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/yamamushi/EscapingEden/accounts"
 	"github.com/yamamushi/EscapingEden/character"
+	"github.com/yamamushi/EscapingEden/edenbot"
 	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/edendb/bolt"
@@ -39,9 +40,39 @@ func InitDB(conf edenconfig.Config, log logging.LoggerType) (edendb.DatabaseType
 		if err != nil {
 			return nil, err
 		}
+		log.Println(logging.LogInfo, "Database connection initialized.")
 		return dbConn, nil
 	}
 	return nil, errors.New("Invalid Database Type found - " + conf.DB.Type)
+}
+
+func InitEdenbot(input chan messages.EdenbotMessage, output chan messages.SystemManagerMessage, dbConn edendb.DatabaseType,
+	log logging.LoggerType, conf *edenconfig.Config) (*edenbot.EdenBot, error) {
+	log.Println(logging.LogInfo, "Starting Edenbot...")
+
+	startNotify := make(chan bool)
+
+	edenBot := edenbot.NewEdenBot(input, output, dbConn, log, conf)
+	err := edenBot.Init()
+	if err != nil {
+		return nil, err
+	}
+	err = edenBot.Run(startNotify)
+	if err != nil {
+		return nil, err
+	}
+
+	ticker := time.NewTicker(1 * time.Second)
+	select {
+	case <-startNotify:
+		log.Println(logging.LogInfo, "Eden Bot started.")
+		break
+	case <-ticker.C:
+		//fmt.Print(".")
+		// no-op
+	}
+
+	return edenBot, nil
 }
 
 // InitAccountManager initializes the account manager
