@@ -61,5 +61,22 @@ func (lw *LoginWindow) loginSubmit() {
 func (lw *LoginWindow) forgotPasswordSubmit() {
 	lw.loginForgotPasswordMutex.Lock()
 	defer lw.loginForgotPasswordMutex.Unlock()
+	//lw.Log.Println(logging.LogInfo, "Forgot password entry submitted")
+	//lw.Log.Println(logging.LogInfo, "Forgot password email:", lw.loginForgotPasswordData.Username)
+	//lw.Log.Println(logging.LogInfo, "Forgot password discord:", lw.loginForgotPasswordData.DiscordUser)
+}
 
+func (lw *LoginWindow) forgotPasswordValidate() {
+	lw.loginForgotPasswordPendingMutex.Lock()
+	defer lw.loginForgotPasswordPendingMutex.Unlock()
+	//lw.Log.Println(logging.LogInfo, "Forgot password validate submitted")
+	//lw.Log.Println(logging.LogInfo, "Forgot password validation code:", lw.loginForgotPasswordPendingData.Code)
+
+	// If we failed
+	//lw.loginState = LoginForgotPasswordFailed
+	//lw.loginForgotPasswordFailedOptionSelected = 1
+
+	// If we succeeded
+	//lw.loginState = LoginForgotPasswordSuccess
+	//lw.loginForgotPasswordSuccessState = LoginForgotPasswordSuccessEntry
 }

@@ -3,13 +3,15 @@ package messages
 // Account is used for registration/db records/etc to store player accounts.
 // It has no knowledge of any other data.
 type Account struct {
-	ID               string `storm:"index"`  // Indexed Unique ID for the account, we use UUID, not the auto-increment, ever.
-	Username         string `storm:"unique"` // Username of the account, must be unique.
-	DiscordTag       string `storm:"unique"` // Discord Tag of the account, must be unique in username#0000 format.
-	DiscordID        string `storm:"unique"` // Discord ID of the account, must be unique.
-	HashedPassword   string // Hashed password of the account.
-	ValidationStatus int    // 0 = pending, 1 = validated
-	ValidationCode   string // The validation code for the account.
+	ID                  string `storm:"index"`  // Indexed Unique ID for the account, we use UUID, not the auto-increment, ever.
+	Username            string `storm:"unique"` // Username of the account, must be unique.
+	DiscordTag          string `storm:"unique"` // Discord Tag of the account, must be unique in username#0000 format.
+	DiscordID           string `storm:"unique"` // Discord ID of the account, must be unique.
+	HashedPassword      string // Hashed password of the account.
+	ValidationStatus    int    // 0 = pending, 1 = validated
+	ValidationCode      string // The validation code for the account.
+	PasswordResetStatus int    // 0 = no reset requested, 1 = reset requested
+	PasswordResetCode   string // The temporary reset code for the account.
 }
 
 type AccountRegistrationRequest struct {
