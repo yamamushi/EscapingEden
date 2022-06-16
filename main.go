@@ -67,7 +67,7 @@ func main() {
 	// Setup Edenbot
 	edenbotInput := make(chan messages.EdenbotMessage)
 	edenbotOutput := make(chan messages.SystemManagerMessage) // TODO: this needs a whole new manager created
-	_, err = InitEdenbot(edenbotInput, edenbotOutput, dbConn, log, &conf)
+	edenBot, err := InitEdenbot(edenbotInput, edenbotOutput, dbConn, log, &conf)
 	if err != nil {
 		log.Println(logging.LogFatal, "Error initializing edenbot: ", err)
 	}
@@ -77,7 +77,7 @@ func main() {
 	connectionManagerReceive := make(chan messages.ConnectionManagerMessage)
 
 	// Initialize account manager
-	_, err = InitAccountManager(accountManagerReceiver, connectionManagerReceive, dbConn, log)
+	_, err = InitAccountManager(accountManagerReceiver, connectionManagerReceive, dbConn, log, *edenBot)
 	if err != nil {
 		// Fatal errors will os.Exit(1)
 		log.Println(logging.LogFatal, "Error initializing account manager: ", err)

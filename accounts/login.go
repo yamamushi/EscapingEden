@@ -24,6 +24,12 @@ func (am *AccountManager) handleLogin(username, password string) (response messa
 		return response
 	}
 
+	if account.ValidationStatus == 0 {
+		am.Log.Println(logging.LogWarn, "Attempted login to account that is pending validation:", username)
+		response.Error = messages.AMError_PendingValidation
+		return response
+	}
+
 	account.HashedPassword = ""
 	response.Account = account
 

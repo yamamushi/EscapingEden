@@ -42,6 +42,7 @@ type discordConfig struct {
 	GuildID               string   `toml:"guild_id"`
 	AdminIDs              []string `toml:"admin_ids"`
 	RegistrationChannelID string   `toml:"registration_channel_id"`
+	RegisteredRoleID      string   `toml:"registered_role_id"`
 }
 
 // ReadConfig function

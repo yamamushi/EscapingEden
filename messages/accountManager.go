@@ -3,10 +3,13 @@ package messages
 // Account is used for registration/db records/etc to store player accounts.
 // It has no knowledge of any other data.
 type Account struct {
-	ID             string `storm:"index"`  // Indexed Unique ID for the account, we use UUID, not the auto-increment, ever.
-	Username       string `storm:"unique"` // Username of the account, must be unique.
-	DiscordID      string `storm:"unique"` // Discord ID of the account, must be unique.
-	HashedPassword string // Hashed password of the account.
+	ID               string `storm:"index"`  // Indexed Unique ID for the account, we use UUID, not the auto-increment, ever.
+	Username         string `storm:"unique"` // Username of the account, must be unique.
+	DiscordTag       string `storm:"unique"` // Discord Tag of the account, must be unique in username#0000 format.
+	DiscordID        string `storm:"unique"` // Discord ID of the account, must be unique.
+	HashedPassword   string // Hashed password of the account.
+	ValidationStatus int    // 0 = pending, 1 = validated
+	ValidationCode   string // The validation code for the account.
 }
 
 type AccountRegistrationRequest struct {
@@ -16,7 +19,8 @@ type AccountRegistrationRequest struct {
 }
 
 type AccountRegistrationResponse struct {
-	Error AMErrorType
+	Error          AMErrorType
+	ValidationCode string
 }
 
 type AccountLoginRequest struct {
@@ -55,8 +59,12 @@ const (
 	AMError_SystemError
 	AMError_AccountAlreadyExists
 	AMError_AccountDoesNotExist
+	AMError_UserNotInServer
 	AMError_UsernameAlreadyExists
 	AMError_DiscordAlreadyExists
+	AMError_DiscordMessageError
+	AMError_PendingValidation
+	AMError_DBError
 	AMError_InvalidPassword
 	AMError_InvalidDiscordID
 	AMError_InvalidUsername
@@ -76,12 +84,18 @@ func (ame AMErrorType) Error() string {
 		return "Username Already Exists"
 	case AMError_DiscordAlreadyExists:
 		return "DiscordID Already Exists"
+	case AMError_DiscordMessageError:
+		return "Discord Message Error, please check your private message settings for the server."
 	case AMError_InvalidPassword:
 		return "Invalid Password"
 	case AMError_InvalidDiscordID:
 		return "Invalid DiscordID"
 	case AMError_InvalidUsername:
 		return "Invalid Username"
+	case AMError_PendingValidation:
+		return "This Account is currently pending validation, please check your discord messages."
+	case AMError_UserNotInServer:
+		return "User is not in the discord server, please join the server and try registering again."
 	default:
 		return "Unknown Error"
 	}

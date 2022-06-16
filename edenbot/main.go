@@ -64,7 +64,7 @@ func (eb *EdenBot) Run(startNotify chan bool) error {
 
 	eb.Log.Println(logging.LogInfo, "Edenbot starting manager service...")
 	go eb.HandleInput(startNotify)
-
+	eb.dg.AddHandler(eb.HandleVerify)
 	//eb.dg.ChannelMessageSend(eb.Config.Discord.RegistrationChannelID, "Edenbot is online.")
 
 	return nil

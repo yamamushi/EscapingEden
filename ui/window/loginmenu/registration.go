@@ -201,7 +201,11 @@ func (lw *LoginWindow) drawRegistrationStatus() {
 	if lw.registrationResponseReceived {
 		if lw.registrationResponse.Error == messages.AMError_Null {
 			lw.registrationState = RegistrationSuccess
+			lw.registrationCode = lw.registrationResponse.ValidationCode
 		} else {
+			if lw.registrationResponse.Error == messages.AMError_PendingValidation {
+				lw.registrationCode = lw.registrationResponse.ValidationCode
+			}
 			lw.registrationState = RegistrationFailure
 		}
 		lw.registrationResponseReceived = false
@@ -218,6 +222,9 @@ func (lw *LoginWindow) drawRegistrationFailure() {
 
 	// Print error in red
 	lw.PrintLnColor(lw.X+2, lw.Y+2, "Something went wrong!: "+lw.registrationResponse.Error.Error(), "\033[31m")
+	if lw.registrationResponse.Error == messages.AMError_PendingValidation {
+		lw.PrintLn(lw.X+3, lw.Y+3, "Your pending validation code is: "+lw.registrationCode, "\033[32m")
+	}
 
 	if lw.registrationErrorData.errorRequest != "" {
 		lw.PrintLnColor(lw.X+2, lw.Y+4, "Please report this issue as something more serious may be wrong", "\033[31m")
@@ -237,6 +244,8 @@ func (lw *LoginWindow) drawRegistrationFailure() {
 
 func (lw *LoginWindow) drawRegistrationSuccess() {
 	lw.PrintLnColor(lw.X+2, lw.Y+2, "Registration successful!", "\033[32m")
+	lw.PrintLnColor(lw.X+2, lw.Y+3, "Please check your discord messages to validate your account before logging in.", "\033[32m")
+	lw.PrintLnColor(lw.X+3, lw.Y+4, "Your registration code is: "+lw.registrationCode, "\033[32m")
 
 	lw.PrintLn(lw.X+2, lw.Y+6, "We look forward to seeing you soon in Eden!", "")
 

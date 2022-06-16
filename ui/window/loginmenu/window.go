@@ -56,6 +56,7 @@ type LoginWindow struct {
 	registrationStatusMutex      sync.Mutex
 	registrationSuccess          bool
 	registrationResponse         messages.AccountRegistrationResponse
+	registrationCode             string
 	registrationResponseReceived bool
 
 	registrationFailureOptionSelected int
