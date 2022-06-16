@@ -104,6 +104,9 @@ func main() {
 	if log.GetTypeID() != logging.LoggerTypeID_Console {
 		fmt.Println("Caught interrupt signal, shutting down...")
 	}
+	// Issue a shutdown request to edenbot
+	edenbotInput <- messages.EdenbotMessage{Type: messages.Edenbot_Message_Shutdown}
+
 	// We need to notify our connections we're shutting down :D
 	managerMessage := messages.ConnectionManagerMessage{
 		Type: messages.ConnectManager_Message_Broadcast,

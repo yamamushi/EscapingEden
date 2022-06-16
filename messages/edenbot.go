@@ -9,6 +9,7 @@ const (
 	Edenbot_Message_PlayerLoggedIn
 	Edenbot_Message_PlayerLoggedOut
 	Edenbot_Message_CharacterCreated
+	Edenbot_Message_Shutdown
 )
 
 // EdenbotMessage is a message sent meant for parsing by Edenbot.

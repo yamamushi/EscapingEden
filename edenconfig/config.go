@@ -38,9 +38,10 @@ type dbConfig struct {
 
 // discordConfig struct
 type discordConfig struct {
-	Token    string   `toml:"bot_token"`
-	GuildID  string   `toml:"guild_id"`
-	AdminIDs []string `toml:"admin_ids"`
+	Token                 string   `toml:"bot_token"`
+	GuildID               string   `toml:"guild_id"`
+	AdminIDs              []string `toml:"admin_ids"`
+	RegistrationChannelID string   `toml:"registration_channel_id"`
 }
 
 // ReadConfig function

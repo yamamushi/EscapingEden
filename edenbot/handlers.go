@@ -16,6 +16,22 @@ func (eb *EdenBot) HandleInput(started chan bool) {
 				//
 			case messages.Edenbot_Message_Error:
 				//
+			case messages.Edenbot_Message_NewRegistration:
+				//
+			case messages.Edenbot_Message_PlayerLoggedIn:
+				//
+			case messages.Edenbot_Message_PlayerLoggedOut:
+				//
+			case messages.Edenbot_Message_CharacterCreated:
+				//
+			case messages.Edenbot_Message_Shutdown:
+				//
+				eb.Log.Println(logging.LogInfo, "Edenbot received shutdown message, shutting down")
+				err := eb.Shutdown()
+				if err != nil {
+					eb.Log.Println(logging.LogError, "Error shutting down Edenbot: ", err)
+				}
+				eb.Log.Println(logging.LogInfo, "Edenbot shut down successfully")
 			default:
 				//
 			}
