@@ -10,7 +10,7 @@ type Account struct {
 	HashedPassword      string // Hashed password of the account.
 	ValidationStatus    int    // 0 = pending, 1 = validated
 	ValidationCode      string // The validation code for the account.
-	PasswordResetStatus int    // 0 = no reset requested, 1 = reset requested
+	PasswordResetStatus int    // 0 = no reset requested, 1 = reset requested, 2 = password reset required by admin
 	PasswordResetCode   string // The temporary reset code for the account.
 }
 
@@ -30,6 +30,18 @@ type AccountLoginRequest struct {
 	Password string // Plaintext here, we hash it later down the chain
 }
 
+type AccountForgotPasswordData struct {
+	Username   string
+	DiscordTag string
+}
+
+type AccountProcessForgotPasswordData struct {
+	Code        string
+	Username    string
+	DiscordTag  string
+	NewPassword string
+}
+
 type AccountLoginResponse struct {
 	Account Account
 	Error   AMErrorType
@@ -41,6 +53,8 @@ const (
 	AccountManager_Message_Null AccountManagerMessageType = iota
 	AccountManager_Message_Register
 	AccountManager_Message_Login
+	AccountManager_Message_ResetPasswordValidate
+	AccountManager_Message_ResetPasswordProcess
 	AccountManager_Message_Logout
 	AccountManager_Message_GetCharacters
 )
@@ -66,6 +80,7 @@ const (
 	AMError_DiscordAlreadyExists
 	AMError_DiscordMessageError
 	AMError_PendingValidation
+	AMError_PendingPasswordReset
 	AMError_DBError
 	AMError_InvalidPassword
 	AMError_InvalidDiscordID
@@ -96,6 +111,8 @@ func (ame AMErrorType) Error() string {
 		return "Invalid Username"
 	case AMError_PendingValidation:
 		return "This Account is currently pending validation, please check your discord messages."
+	case AMError_PendingPasswordReset:
+		return "This Account is currently pending a password reset."
 	case AMError_UserNotInServer:
 		return "User is not in the discord server, please join the server and try registering again."
 	default:

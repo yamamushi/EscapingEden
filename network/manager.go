@@ -29,16 +29,20 @@ type ConnectionManager struct {
 
 	// Our CharacterManager outbound Channel
 	CharacterManagerMessages chan messages.CharacterManagerMessage
+
+	// Our EdenBot Manager
+	EBSendMessages chan messages.EdenbotMessage
 }
 
 // NewConnectionManager creates a new ConnectionManager
 func NewConnectionManager(connectionMap *sync.Map, receiveMessages chan messages.ConnectionManagerMessage,
-	accountManagerMessages chan messages.AccountManagerMessage, characterManagerReceiveMessages chan messages.CharacterManagerMessage, db edendb.DatabaseType, log logging.LoggerType) *ConnectionManager {
+	accountManagerMessages chan messages.AccountManagerMessage, characterManagerReceiveMessages chan messages.CharacterManagerMessage, ebSendMessages chan messages.EdenbotMessage, db edendb.DatabaseType, log logging.LoggerType) *ConnectionManager {
 	return &ConnectionManager{
 		connectionMap:            connectionMap,
 		CMReceiveMessages:        receiveMessages,
 		AMSendMessages:           accountManagerMessages,
 		CharacterManagerMessages: characterManagerReceiveMessages,
+		EBSendMessages:           ebSendMessages,
 		Log:                      log,
 		DB:                       db,
 	}
@@ -145,6 +149,59 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					loginRequest := managerMessage.Data.(messages.AccountLoginRequest)
 					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Login, Data: loginRequest, SenderSessionID: managerMessage.SenderConsoleID}
 				}()
+
+			case messages.ConnectManager_Message_RequestPasswordReset:
+				// Sending request to EdenBot to reset password for a user
+				// If this doesn't work, we don't tell the user
+				go func() {
+					cm.Log.Println(logging.LogInfo, "Sending password reset request to EdenBot")
+					cm.EBSendMessages <- messages.EdenbotMessage{
+						Type:       messages.Edenbot_Message_ForgotPassword,
+						Data:       managerMessage.Data.(messages.AccountForgotPasswordData),
+						SourceType: "console",
+						SourceID:   managerMessage.SenderConsoleID,
+					}
+				}()
+
+			case messages.ConnectManager_Message_ValidatePasswordReset:
+				// Send the password reset validation request to the AccountManager
+				go func() {
+					//cm.Log.Println(logging.LogInfo, "Sending password reset validation request to AccountManager")
+					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_ResetPasswordValidate, Data: managerMessage.Data.(messages.AccountProcessForgotPasswordData), SenderSessionID: managerMessage.SenderConsoleID}
+				}()
+
+			case messages.ConnectManager_Message_ProcessPasswordReset:
+				// Send the new password data to the AccountManager
+				go func() {
+					cm.Log.Println(logging.LogInfo, "Sending new password request to AccountManager")
+					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_ResetPasswordProcess, Data: managerMessage.Data.(messages.AccountProcessForgotPasswordData), SenderSessionID: managerMessage.SenderConsoleID}
+				}()
+
+			case messages.ConnectManager_Message_ValidatePasswordResetResponse:
+				// Send the password reset validation response to the Console
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						if managerMessage.RecipientConsoleID == conn.ID {
+							//cm.Log.Println(logging.LogInfo, "Sending registration response to Console that requested registration")
+							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_ResetPasswordValidateResponse, Data: managerMessage.Data}
+							conn.SendToConsole(consoleMessage)
+						}
+					}
+					return true
+				})
+
+			case messages.ConnectManager_Message_ProcessPasswordResetResponse:
+				// Send the password reset validation response to the Console
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						if managerMessage.RecipientConsoleID == conn.ID {
+							//cm.Log.Println(logging.LogInfo, "Sending registration response to Console that requested registration")
+							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_ProcessPasswordValidateResponse, Data: managerMessage.Data}
+							conn.SendToConsole(consoleMessage)
+						}
+					}
+					return true
+				})
 
 			case messages.ConnectManager_Message_RegisterResponse:
 				cm.connectionMap.Range(func(key, value interface{}) bool {

@@ -38,10 +38,6 @@ func (eb *EdenBot) IsUserInDiscordServer(username string) (*discordgo.User, erro
 }
 
 func (eb *EdenBot) ValidateUser(username string, userID string) error {
-	userprivatechannel, err := eb.dg.UserChannelCreate(userID)
-	if err != nil {
-		return err
-	}
 
 	outputMessage := "Hello, " + username + "!\n\n"
 	outputMessage += "Thank you for registering an account on Escaping Eden! You must now verify your account before you " +
@@ -49,7 +45,7 @@ func (eb *EdenBot) ValidateUser(username string, userID string) error {
 	outputMessage += "Please respond to this message with your verification code using the !verify command.\n\n"
 	outputMessage += "Example: ```!verify 123456```\n\n"
 
-	_, err = eb.dg.ChannelMessageSend(userprivatechannel.ID, outputMessage)
+	_, err := eb.SendPrivateMessage(userID, outputMessage)
 	if err != nil {
 		return err
 	}
@@ -57,6 +53,9 @@ func (eb *EdenBot) ValidateUser(username string, userID string) error {
 }
 
 func (eb *EdenBot) HandleVerify(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if m.Author.Bot {
+		return
+	}
 	if m.Author.ID == s.State.User.ID {
 		return
 	}

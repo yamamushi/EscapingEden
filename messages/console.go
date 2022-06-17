@@ -11,6 +11,8 @@ const (
 	Console_Message_Broadcast
 	Console_Message_Chat // This needs to be refactored into the game engine channels, the connection manager does not need to know about chat.
 	Console_Message_RegistrationResponse
+	Console_Message_ResetPasswordValidateResponse
+	Console_Message_ProcessPasswordValidateResponse
 	Console_Message_LoginResponse
 )
 

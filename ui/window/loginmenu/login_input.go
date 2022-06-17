@@ -199,7 +199,7 @@ func (lw *LoginWindow) handleForgotPasswordInput(input types.Input) {
 			// Submit the forgot password request
 			if lw.loginForgotPasswordOptionSelected == 2 {
 				lw.loginForgotPasswordOptionSelected = 0
-				lw.forgotPasswordSubmit()
+				lw.forgotPasswordGenerateToken()
 				lw.loginState = LoginForgotPasswordPending
 				//lw.loginForgotPasswordState = LoginForgotPasswordPending
 			}
@@ -221,8 +221,8 @@ func (lw *LoginWindow) handleForgotPasswordBackspace() {
 			lw.loginForgotPasswordData.Username = lw.loginForgotPasswordData.Username[:len(lw.loginForgotPasswordData.Username)-1]
 		}
 	case LoginForgotPasswordDiscord:
-		if lw.loginForgotPasswordData.DiscordUser != "" {
-			lw.loginForgotPasswordData.DiscordUser = lw.loginForgotPasswordData.DiscordUser[:len(lw.loginForgotPasswordData.DiscordUser)-1]
+		if lw.loginForgotPasswordData.DiscordTag != "" {
+			lw.loginForgotPasswordData.DiscordTag = lw.loginForgotPasswordData.DiscordTag[:len(lw.loginForgotPasswordData.DiscordTag)-1]
 		}
 	}
 }
@@ -239,7 +239,7 @@ func (lw *LoginWindow) handleForgotPasswordCharInput(input string) {
 		//lw.loginMenuState = LoginUserInfoPassword
 	case LoginForgotPasswordDiscord:
 		if len(lw.loginForgotPasswordData.Username) < 128 {
-			lw.loginForgotPasswordData.DiscordUser += input
+			lw.loginForgotPasswordData.DiscordTag += input
 		}
 	}
 }
@@ -295,7 +295,6 @@ func (lw *LoginWindow) handleForgotPasswordPendingInput(input types.Input) {
 			if lw.loginForgotPasswordPendingOptionSelected == 2 {
 				lw.loginForgotPasswordPendingOptionSelected = 0
 				lw.forgotPasswordValidate()
-				//lw.loginForgotPasswordState = LoginForgotPasswordPending
 			}
 			lw.loginForgotPasswordPendingOptionSelected = 0
 			// Whenever we switch to a different window state, we need to reset the console
@@ -311,8 +310,8 @@ func (lw *LoginWindow) handleForgotPasswordPendingBackspace() {
 
 	switch lw.loginForgotPasswordPendingState {
 	case LoginForgotPendingCode:
-		if lw.loginForgotPasswordPendingData.Code != "" {
-			lw.loginForgotPasswordPendingData.Code = lw.loginForgotPasswordPendingData.Code[:len(lw.loginForgotPasswordPendingData.Code)-1]
+		if lw.loginProcessForgotPasswordPendingData.Code != "" {
+			lw.loginProcessForgotPasswordPendingData.Code = lw.loginProcessForgotPasswordPendingData.Code[:len(lw.loginProcessForgotPasswordPendingData.Code)-1]
 		}
 	}
 }
@@ -323,8 +322,8 @@ func (lw *LoginWindow) handleForgotPasswordPendingCharInput(input string) {
 
 	switch lw.loginForgotPasswordPendingState {
 	case LoginForgotPendingCode:
-		if len(lw.loginForgotPasswordPendingData.Code) < 128 {
-			lw.loginForgotPasswordPendingData.Code += input
+		if len(lw.loginProcessForgotPasswordPendingData.Code) < 128 {
+			lw.loginProcessForgotPasswordPendingData.Code += input
 		}
 	}
 }
@@ -378,8 +377,8 @@ func (lw *LoginWindow) handleForgotPasswordSuccessInput(input types.Input) {
 			// Submit the forgot password request
 			if lw.loginForgotPasswordSuccessOptionSelected == 2 {
 				lw.loginForgotPasswordSuccessOptionSelected = LoginForgotPendingNull
+				lw.forgotPasswordSubmitNewPassword()
 				lw.Log.Println(logging.LogInfo, "Password Reset Submitted")
-				//lw.loginForgotPasswordState = LoginForgotPasswordPending
 			}
 			lw.loginForgotPasswordSuccessOptionSelected = 0
 			// Whenever we switch to a different window state, we need to reset the console
@@ -395,12 +394,12 @@ func (lw *LoginWindow) handleForgotPasswordSuccessBackspace() {
 
 	switch lw.loginForgotPasswordSuccessState {
 	case LoginForgotPasswordSuccessEntry:
-		if lw.loginForgotPasswordSuccessData.Password != "" {
-			lw.loginForgotPasswordSuccessData.Password = lw.loginForgotPasswordSuccessData.Password[:len(lw.loginForgotPasswordSuccessData.Password)-1]
+		if lw.loginForgotPasswordNewPasswordData.Password != "" {
+			lw.loginForgotPasswordNewPasswordData.Password = lw.loginForgotPasswordNewPasswordData.Password[:len(lw.loginForgotPasswordNewPasswordData.Password)-1]
 		}
 	case LoginForgotPasswordSuccessConfirm:
-		if lw.loginForgotPasswordSuccessData.PasswordConfirm != "" {
-			lw.loginForgotPasswordSuccessData.PasswordConfirm = lw.loginForgotPasswordSuccessData.PasswordConfirm[:len(lw.loginForgotPasswordSuccessData.PasswordConfirm)-1]
+		if lw.loginForgotPasswordNewPasswordData.PasswordConfirm != "" {
+			lw.loginForgotPasswordNewPasswordData.PasswordConfirm = lw.loginForgotPasswordNewPasswordData.PasswordConfirm[:len(lw.loginForgotPasswordNewPasswordData.PasswordConfirm)-1]
 		}
 	}
 }
@@ -411,12 +410,12 @@ func (lw *LoginWindow) handleForgotPasswordSuccessCharInput(input string) {
 
 	switch lw.loginForgotPasswordSuccessState {
 	case LoginForgotPasswordSuccessEntry:
-		if len(lw.loginForgotPasswordSuccessData.Password) < 128 {
-			lw.loginForgotPasswordSuccessData.Password += input
+		if len(lw.loginForgotPasswordNewPasswordData.Password) < 128 {
+			lw.loginForgotPasswordNewPasswordData.Password += input
 		}
 	case LoginForgotPasswordSuccessConfirm:
-		if len(lw.loginForgotPasswordSuccessData.PasswordConfirm) < 128 {
-			lw.loginForgotPasswordSuccessData.PasswordConfirm += input
+		if len(lw.loginForgotPasswordNewPasswordData.PasswordConfirm) < 128 {
+			lw.loginForgotPasswordNewPasswordData.PasswordConfirm += input
 		}
 	}
 }
@@ -437,7 +436,7 @@ func (lw *LoginWindow) handleForgotPasswordFailedInput(input types.Input) {
 			// do nothing
 		case 1:
 			// Go back to the code entry screen
-			lw.loginForgotPasswordPendingData.Code = ""                 // Reset the code so we can enter it fresh
+			lw.loginProcessForgotPasswordPendingData.Code = ""          // Reset the code so we can enter it fresh
 			lw.loginForgotPasswordPendingState = LoginForgotPendingCode // reset to the entry line
 			lw.loginState = LoginForgotPasswordPending
 		}

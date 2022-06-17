@@ -9,6 +9,7 @@ const (
 	Edenbot_Message_PlayerLoggedIn
 	Edenbot_Message_PlayerLoggedOut
 	Edenbot_Message_CharacterCreated
+	Edenbot_Message_ForgotPassword
 	Edenbot_Message_Shutdown
 )
 
@@ -16,5 +17,13 @@ const (
 type EdenbotMessage struct {
 	Type       EdenbotMessageType `json:"type"`
 	SourceType string             `json:"source_type"`
+	SourceID   string             `json:"source_id"`
 	Data       interface{}        `json:"data"`
 }
+
+type EdenbotErrorType int
+
+const (
+	Edenbot_Error_Null EdenbotErrorType = iota
+	Edenbot_Error_DB
+)

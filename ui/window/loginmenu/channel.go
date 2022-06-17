@@ -66,6 +66,31 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 				lw.loginResponseReceived = true
 				//lw.RequestFlushFromConsole()
 				return
+			case messages.WM_PasswordResetValidateResponse:
+				success := windowMessage.Data.(bool)
+				if success {
+					lw.RequestFlushFromConsole()
+					lw.loginState = LoginForgotPasswordSuccess
+				} else {
+					lw.RequestFlushFromConsole()
+					lw.loginState = LoginForgotPasswordFailed
+				}
+			case messages.WM_PasswordResetProcessResponse:
+				success := windowMessage.Data.(bool)
+				if success {
+					lw.Log.Println(logging.LogInfo, "handleLogin Window received password reset success")
+					lw.loginMenuMessage = "Your password has been reset. Please login with your new password."
+					lw.RequestFlushFromConsole()
+					lw.loginProcessForgotPasswordPendingData = messages.AccountProcessForgotPasswordData{}
+					lw.loginForgotPasswordData = messages.AccountForgotPasswordData{}
+					lw.loginForgotPasswordNewPasswordData = LoginForgotPasswordSuccessData{}
+					lw.loginState = LoginNull
+					lw.windowState = LoginWindowMenu
+				} else {
+					lw.Log.Println(logging.LogInfo, "handleLogin Window received password reset failed")
+					lw.RequestFlushFromConsole()
+					lw.loginForgotPasswordNewPasswordData.Error = "Password reset failed, please try again."
+				}
 			}
 		}
 	}

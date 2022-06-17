@@ -18,6 +18,9 @@ func (eb *EdenBot) HandleInput(started chan bool) {
 				//
 			case messages.Edenbot_Message_NewRegistration:
 				//
+			case messages.Edenbot_Message_ForgotPassword:
+				//eb.Log.Println(logging.LogInfo, "Edenbot Manager received a forgot password request")
+				eb.ForgotPassword(edenbotMessage.Data.(messages.AccountForgotPasswordData))
 			case messages.Edenbot_Message_PlayerLoggedIn:
 				//
 			case messages.Edenbot_Message_PlayerLoggedOut:

@@ -36,14 +36,15 @@ func NewServer(host string, port string, log logging.LoggerType) *Server {
 }
 
 // Start starts the server
-func (s *Server) Start(startedNotify chan bool, cmReceiveMessage chan messages.ConnectionManagerMessage, amReceiveMessages chan messages.AccountManagerMessage, characterManagerReceiveMessages chan messages.CharacterManagerMessage, db edendb.DatabaseType) error {
+func (s *Server) Start(startedNotify chan bool, cmReceiveMessage chan messages.ConnectionManagerMessage, amReceiveMessages chan messages.AccountManagerMessage, characterManagerReceiveMessages chan messages.CharacterManagerMessage,
+	ebSendMessages chan messages.EdenbotMessage, db edendb.DatabaseType) error {
 	l, err := net.Listen("tcp", s.Host+":"+s.Port)
 	if err != nil {
 		return err
 	}
 	s.ConnectionManagerSend = cmReceiveMessage
 	// Using sync.Map to not deal with concurrency slice/map issues
-	s.ConnectionManager = NewConnectionManager(s.ConnectMap, cmReceiveMessage, amReceiveMessages, characterManagerReceiveMessages, db, s.Log)
+	s.ConnectionManager = NewConnectionManager(s.ConnectMap, cmReceiveMessage, amReceiveMessages, characterManagerReceiveMessages, ebSendMessages, db, s.Log)
 	go s.ConnectionManager.Run(startedNotify)
 	go s.Listen(l)
 	return nil

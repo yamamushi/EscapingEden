@@ -12,6 +12,11 @@ const (
 	ConnectManager_Message_Register
 	ConnectManager_Message_RegisterResponse
 	ConnectManager_Message_Login
+	ConnectManager_Message_RequestPasswordReset
+	ConnectManager_Message_ValidatePasswordReset
+	ConnectManager_Message_ProcessPasswordReset
+	ConnectManager_Message_ValidatePasswordResetResponse
+	ConnectManager_Message_ProcessPasswordResetResponse
 	ConnectManager_Message_LoginResponse
 	ConnectManager_Message_BadLoginAttempt
 )

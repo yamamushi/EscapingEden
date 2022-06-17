@@ -42,6 +42,32 @@ func (am *AccountManager) HandleMessages(started chan bool) {
 				}
 				am.Log.Println(logging.LogInfo, "Sending login response")
 				am.SendChannel <- response
+			case messages.AccountManager_Message_ResetPasswordValidate:
+				req := managerMessage.Data.(messages.AccountProcessForgotPasswordData)
+				am.Log.Println(logging.LogInfo, "Account Manager received reset password validation request")
+				//am.Log.Println(logging.LogInfo, "Requested for: ", req.Username)
+				validated := am.handleValidatePasswordReset(req)
+
+				response := messages.ConnectionManagerMessage{
+					Type:               messages.ConnectManager_Message_ValidatePasswordResetResponse,
+					RecipientConsoleID: managerMessage.SenderSessionID,
+					Data:               validated,
+				}
+				am.Log.Println(logging.LogInfo, "Sending reset password validation response")
+				am.SendChannel <- response
+
+			case messages.AccountManager_Message_ResetPasswordProcess:
+				req := managerMessage.Data.(messages.AccountProcessForgotPasswordData)
+				am.Log.Println(logging.LogInfo, "Account Manager received reset password process request")
+
+				status := am.handleChangePassword(req)
+				response := messages.ConnectionManagerMessage{
+					Type:               messages.ConnectManager_Message_ProcessPasswordResetResponse,
+					RecipientConsoleID: managerMessage.SenderSessionID,
+					Data:               status,
+				}
+				am.Log.Println(logging.LogInfo, "Sending process reset password response")
+				am.SendChannel <- response
 			}
 		}
 	}

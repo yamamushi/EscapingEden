@@ -45,15 +45,6 @@ const (
 	LoginForgotPendingNull
 )
 
-type LoginForgotPasswordData struct {
-	Username    string
-	DiscordUser string
-}
-
-type LoginForgotPasswordPendingData struct {
-	Code string
-}
-
 type LoginForgotPasswordSuccessState int
 
 const (
@@ -65,6 +56,7 @@ const (
 type LoginForgotPasswordSuccessData struct {
 	Password        string
 	PasswordConfirm string
+	Error           string
 }
 
 // drawLoginMenu draws the login window
@@ -206,10 +198,10 @@ func (lw *LoginWindow) drawLoginMenuForgotPassword() {
 	}
 	discordUser := ""
 	// We only want the last 12 characters of the username
-	if len(lw.loginForgotPasswordData.DiscordUser) > 12 {
-		discordUser = lw.loginForgotPasswordData.DiscordUser[len(lw.loginForgotPasswordData.DiscordUser)-12:]
+	if len(lw.loginForgotPasswordData.DiscordTag) > 12 {
+		discordUser = lw.loginForgotPasswordData.DiscordTag[len(lw.loginForgotPasswordData.DiscordTag)-12:]
 	} else {
-		discordUser = lw.loginForgotPasswordData.DiscordUser
+		discordUser = lw.loginForgotPasswordData.DiscordTag
 	}
 	lw.PrintLn(lw.X+19, lw.Y+6, discordUser, "")
 
@@ -245,10 +237,10 @@ func (lw *LoginWindow) drawLoginMenuForgotPasswordPending() {
 	}
 	validationCode := ""
 	// We only want the last 12 characters of the username
-	if len(lw.loginForgotPasswordPendingData.Code) > 12 {
-		validationCode = lw.loginForgotPasswordPendingData.Code[len(lw.loginForgotPasswordPendingData.Code)-12:]
+	if len(lw.loginProcessForgotPasswordPendingData.Code) > 12 {
+		validationCode = lw.loginProcessForgotPasswordPendingData.Code[len(lw.loginProcessForgotPasswordPendingData.Code)-12:]
 	} else {
-		validationCode = lw.loginForgotPasswordPendingData.Code
+		validationCode = lw.loginProcessForgotPasswordPendingData.Code
 	}
 	lw.PrintLn(lw.X+22, lw.Y+6, validationCode, "")
 
@@ -283,10 +275,10 @@ func (lw *LoginWindow) drawLoginMenuForgotPasswordSuccess() {
 	}
 	password := ""
 	// We only want the last 12 characters of the password
-	if len(lw.loginForgotPasswordSuccessData.Password) > 12 {
-		password = lw.loginForgotPasswordSuccessData.Password[len(lw.loginForgotPasswordSuccessData.Password)-12:]
+	if len(lw.loginForgotPasswordNewPasswordData.Password) > 12 {
+		password = lw.loginForgotPasswordNewPasswordData.Password[len(lw.loginForgotPasswordNewPasswordData.Password)-12:]
 	} else {
-		password = lw.loginForgotPasswordSuccessData.Password
+		password = lw.loginForgotPasswordNewPasswordData.Password
 	}
 	lw.PrintLn(lw.X+23, lw.Y+6, password, "")
 
@@ -297,12 +289,17 @@ func (lw *LoginWindow) drawLoginMenuForgotPasswordSuccess() {
 	}
 	confirm := ""
 	// We only want the last 12 characters of the password
-	if len(lw.loginForgotPasswordSuccessData.PasswordConfirm) > 12 {
-		confirm = lw.loginForgotPasswordSuccessData.PasswordConfirm[len(lw.loginForgotPasswordSuccessData.PasswordConfirm)-12:]
+	if len(lw.loginForgotPasswordNewPasswordData.PasswordConfirm) > 12 {
+		confirm = lw.loginForgotPasswordNewPasswordData.PasswordConfirm[len(lw.loginForgotPasswordNewPasswordData.PasswordConfirm)-12:]
 	} else {
-		confirm = lw.loginForgotPasswordSuccessData.PasswordConfirm
+		confirm = lw.loginForgotPasswordNewPasswordData.PasswordConfirm
 	}
 	lw.PrintLn(lw.X+23, lw.Y+7, confirm, "")
+
+	// Draw the error message if there is one
+	if lw.loginForgotPasswordNewPasswordData.Error != "" {
+		lw.PrintLn(lw.X+5, lw.Y+10, lw.loginForgotPasswordNewPasswordData.Error, util.RGBCode(255, 0, 0).FG())
+	}
 
 	if lw.loginForgotPasswordSuccessOptionSelected == 2 {
 		fg := util.RGBCode(0, 0, 0)

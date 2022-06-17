@@ -23,6 +23,8 @@ type LoginWindow struct {
 	loginState             LoginState
 	loginMenuState         LoginUserInfoState
 
+	loginMenuMessage string
+
 	loginSubmitMutex sync.Mutex
 	loginSubmitData  LoginSubmitData
 
@@ -40,12 +42,12 @@ type LoginWindow struct {
 	loginForgotPasswordPendingState          LoginForgotPasswordPendingState
 	loginForgotPasswordSuccessState          LoginForgotPasswordSuccessState
 
-	loginForgotPasswordMutex        sync.Mutex
-	loginForgotPasswordPendingMutex sync.Mutex
-	loginForgotPasswordSuccessMutex sync.Mutex
-	loginForgotPasswordData         LoginForgotPasswordData
-	loginForgotPasswordPendingData  LoginForgotPasswordPendingData
-	loginForgotPasswordSuccessData  LoginForgotPasswordSuccessData
+	loginForgotPasswordMutex              sync.Mutex
+	loginForgotPasswordPendingMutex       sync.Mutex
+	loginForgotPasswordSuccessMutex       sync.Mutex
+	loginForgotPasswordData               messages.AccountForgotPasswordData
+	loginProcessForgotPasswordPendingData messages.AccountProcessForgotPasswordData
+	loginForgotPasswordNewPasswordData    LoginForgotPasswordSuccessData
 
 	// Vars for registration navigation
 	// These have long names to be as verbose as possible
