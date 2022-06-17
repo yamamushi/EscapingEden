@@ -128,6 +128,11 @@ func (lw *LoginWindow) drawLoginMenuUserInfo() {
 		lw.PrintLn(lw.X+7, lw.Y+8, "<Forgot Password>", lw.Terminal.Bold())
 	}
 
+	if lw.loginMenuMessage != "" {
+		// Draw the message in green
+		lw.PrintLn(lw.X+7, lw.Y+10, lw.loginMenuMessage, lw.Terminal.Bold()+util.RGBCode(0, 255, 0).FG())
+	}
+
 	//lw.loginSubmitData.Error = "This is a test error message"
 
 	if lw.loginSubmitData.Error != "" {
