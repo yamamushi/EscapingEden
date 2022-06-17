@@ -142,4 +142,4 @@ they can contribute further if they want :)
 
 Unless otherwise noted, all content is licensed under the [GPL v3](https://www.gnu.org/licenses/gpl-3.0.html) license.
 
-(c) 2021 Yamamushi
+(c) 2022 Yamamushi

@@ -30,9 +30,10 @@ type DatabaseType interface {
 	GetTypeName() string
 	Init() error
 
-	AddRecord(string, interface{}) error      // Add record to collection, return error if failed
-	UpdateRecord(string, interface{}) error   // Update record in collection if it exists, otherwise add it
-	AddIfNotExists(string, interface{}) error // Add record to collection if it doesn't exist
+	AddRecord(string, interface{}) error                        // Add record to collection, return error if failed
+	UpdateRecord(string, interface{}) error                     // Update record in collection if it exists, otherwise add it
+	UpdateField(string, string, interface{}, interface{}) error // Update field in record if it exists, otherwise add it
+	AddIfNotExists(string, interface{}) error                   // Add record to collection if it doesn't exist
 
 	RemoveRecord(string, interface{}) error // Remove a specific record from the given collection
 	RemoveCollection(string) error          // Remove the given collection and all its records

@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"github.com/google/uuid"
+	"github.com/yamamushi/EscapingEden/edenbot"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
@@ -12,12 +13,13 @@ type AccountManager struct {
 	SendChannel    chan messages.ConnectionManagerMessage // We only send connection manager messages
 
 	Log logging.LoggerType
+	EB  edenbot.EdenBot
 
 	DB edendb.DatabaseType
 }
 
-func NewAccountManager(receiveChannel chan messages.AccountManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType) *AccountManager {
-	return &AccountManager{ReceiveChannel: receiveChannel, SendChannel: sendChannel, DB: db, Log: log}
+func NewAccountManager(receiveChannel chan messages.AccountManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType, edenbot edenbot.EdenBot) *AccountManager {
+	return &AccountManager{ReceiveChannel: receiveChannel, SendChannel: sendChannel, DB: db, Log: log, EB: edenbot}
 }
 
 // Init initializes the database for the account manager if needed
@@ -40,7 +42,7 @@ func (am *AccountManager) Init() error {
 		return err
 	}
 
-	am.Log.Println(logging.LogInfo, result.ID, result.Username, result.HashedPassword)
+	//am.Log.Println(logging.LogInfo, result.ID, result.Username, result.HashedPassword)
 
 	return nil
 }

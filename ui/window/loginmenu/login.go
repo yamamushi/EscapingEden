@@ -9,20 +9,23 @@ const (
 	LoginUserInfo
 	LoginPending
 	LoginForgotPassword
+	LoginForgotPasswordPending
+	LoginForgotPasswordSuccess
+	LoginForgotPasswordFailed
 )
 
 // LoginUserInfoState is an enum for storing login state
 type LoginUserInfoState int
 
 const (
-	LoginUserInfoEmail LoginUserInfoState = iota
+	LoginUserInfoUsername LoginUserInfoState = iota
 	LoginUserInfoPassword
 	LoginUserInfoForgotPassword
 	LoginUserInfoNull
 )
 
 type LoginSubmitData struct {
-	Email    string
+	Username string
 	Password string
 	Error    string
 }
@@ -30,12 +33,30 @@ type LoginSubmitData struct {
 type LoginForgotPasswordState int
 
 const (
-	LoginForgotPasswordEmail LoginForgotPasswordState = iota
+	LoginForgotPasswordUsername LoginForgotPasswordState = iota
+	LoginForgotPasswordDiscord
 	LoginForgotPasswordNull
 )
 
-type LoginForgotPasswordData struct {
-	Email string
+type LoginForgotPasswordPendingState int
+
+const (
+	LoginForgotPendingCode = iota
+	LoginForgotPendingNull
+)
+
+type LoginForgotPasswordSuccessState int
+
+const (
+	LoginForgotPasswordSuccessNull = iota
+	LoginForgotPasswordSuccessEntry
+	LoginForgotPasswordSuccessConfirm
+)
+
+type LoginForgotPasswordSuccessData struct {
+	Password        string
+	PasswordConfirm string
+	Error           string
 }
 
 // drawLoginMenu draws the login window
@@ -55,6 +76,15 @@ func (lw *LoginWindow) drawLoginMenu() {
 	case LoginForgotPassword:
 		lw.drawLoginMenuForgotPassword()
 		return
+	case LoginForgotPasswordPending:
+		lw.drawLoginMenuForgotPasswordPending()
+		return
+	case LoginForgotPasswordSuccess:
+		lw.drawLoginMenuForgotPasswordSuccess()
+		return
+	case LoginForgotPasswordFailed:
+		lw.drawLoginMenuForgotPasswordFailed()
+		return
 	}
 
 }
@@ -66,19 +96,19 @@ func (lw *LoginWindow) drawLoginMenuUserInfo() {
 	errorFG := util.RGBCode(255, 255, 255)
 	errorBG := util.RGBCode(255, 0, 0)
 
-	if lw.loginMenuState == LoginUserInfoEmail {
-		lw.PrintLn(lw.X+9, lw.Y+5, "Email:", lw.Terminal.Bold())
+	if lw.loginMenuState == LoginUserInfoUsername {
+		lw.PrintLn(lw.X+6, lw.Y+5, "Username:", lw.Terminal.Bold())
 	} else {
-		lw.PrintLn(lw.X+9, lw.Y+5, "Email:", "")
+		lw.PrintLn(lw.X+6, lw.Y+5, "Username:", "")
 	}
-	email := ""
-	// We only want the last 12 characters of the email
-	if len(lw.loginSubmitData.Email) > 12 {
-		email = lw.loginSubmitData.Email[len(lw.loginSubmitData.Email)-12:]
+	username := ""
+	// We only want the last 12 characters of the username
+	if len(lw.loginSubmitData.Username) > 12 {
+		username = lw.loginSubmitData.Username[len(lw.loginSubmitData.Username)-12:]
 	} else {
-		email = lw.loginSubmitData.Email
+		username = lw.loginSubmitData.Username
 	}
-	lw.PrintLn(lw.X+16, lw.Y+5, email, "")
+	lw.PrintLn(lw.X+16, lw.Y+5, username, "")
 
 	if lw.loginMenuState == LoginUserInfoPassword {
 		lw.PrintLn(lw.X+6, lw.Y+6, "Password:", lw.Terminal.Bold())
@@ -96,6 +126,11 @@ func (lw *LoginWindow) drawLoginMenuUserInfo() {
 		lw.PrintLn(lw.X+7, lw.Y+8, "<Forgot Password>", fg.FG()+bg.BG())
 	} else {
 		lw.PrintLn(lw.X+7, lw.Y+8, "<Forgot Password>", lw.Terminal.Bold())
+	}
+
+	if lw.loginMenuMessage != "" {
+		// Draw the message in green
+		lw.PrintLn(lw.X+7, lw.Y+10, lw.loginMenuMessage, lw.Terminal.Bold()+util.RGBCode(0, 255, 0).FG())
 	}
 
 	//lw.loginSubmitData.Error = "This is a test error message"
@@ -145,19 +180,35 @@ func (lw *LoginWindow) drawLoginMenuForgotPassword() {
 	lw.loginForgotPasswordMutex.Lock()
 	defer lw.loginForgotPasswordMutex.Unlock()
 
-	if lw.loginForgotPasswordState == LoginForgotPasswordEmail {
-		lw.PrintLn(lw.X+9, lw.Y+5, "Email:", lw.Terminal.Bold())
+	lw.PrintLn(lw.X+6, lw.Y+2, "Please enter your username and discord account to begin the password reset process.", "")
+
+	if lw.loginForgotPasswordState == LoginForgotPasswordUsername {
+		lw.PrintLn(lw.X+9, lw.Y+5, "Username:", lw.Terminal.Bold())
 	} else {
-		lw.PrintLn(lw.X+9, lw.Y+5, "Email:", "")
+		lw.PrintLn(lw.X+9, lw.Y+5, "Username:", "")
 	}
-	email := ""
-	// We only want the last 12 characters of the email
-	if len(lw.loginForgotPasswordData.Email) > 12 {
-		email = lw.loginForgotPasswordData.Email[len(lw.loginForgotPasswordData.Email)-12:]
+	username := ""
+	// We only want to print the last 12 characters of the username
+	if len(lw.loginForgotPasswordData.Username) > 12 {
+		username = lw.loginForgotPasswordData.Username[len(lw.loginForgotPasswordData.Username)-12:]
 	} else {
-		email = lw.loginForgotPasswordData.Email
+		username = lw.loginForgotPasswordData.Username
 	}
-	lw.PrintLn(lw.X+16, lw.Y+5, email, "")
+	lw.PrintLn(lw.X+19, lw.Y+5, username, "")
+
+	if lw.loginForgotPasswordState == LoginForgotPasswordDiscord {
+		lw.PrintLn(lw.X+5, lw.Y+6, "Discord User:", lw.Terminal.Bold())
+	} else {
+		lw.PrintLn(lw.X+5, lw.Y+6, "Discord User:", "")
+	}
+	discordUser := ""
+	// We only want the last 12 characters of the username
+	if len(lw.loginForgotPasswordData.DiscordTag) > 12 {
+		discordUser = lw.loginForgotPasswordData.DiscordTag[len(lw.loginForgotPasswordData.DiscordTag)-12:]
+	} else {
+		discordUser = lw.loginForgotPasswordData.DiscordTag
+	}
+	lw.PrintLn(lw.X+19, lw.Y+6, discordUser, "")
 
 	// Draw the back and submit buttons
 	if lw.loginForgotPasswordOptionSelected == 1 {
@@ -175,5 +226,105 @@ func (lw *LoginWindow) drawLoginMenuForgotPassword() {
 	} else {
 		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", lw.Terminal.Bold())
 	}
+}
 
+func (lw *LoginWindow) drawLoginMenuForgotPasswordPending() {
+	lw.loginForgotPasswordPendingMutex.Lock()
+	defer lw.loginForgotPasswordPendingMutex.Unlock()
+
+	lw.PrintLn(lw.X+5, lw.Y+3, "If an account exists with the details you provided, a validation code will be provided", util.RGBCode(255, 0, 0).FG())
+	lw.PrintLn(lw.X+5, lw.Y+4, "to you via discord by Eden Bot, please enter it below to continue.", util.RGBCode(255, 0, 0).FG())
+
+	if lw.loginForgotPasswordPendingState == LoginForgotPendingCode {
+		lw.PrintLn(lw.X+5, lw.Y+6, "Validation Code:", lw.Terminal.Bold())
+	} else {
+		lw.PrintLn(lw.X+5, lw.Y+6, "Validation Code:", "")
+	}
+	validationCode := ""
+	// We only want the last 12 characters of the username
+	if len(lw.loginProcessForgotPasswordPendingData.Code) > 12 {
+		validationCode = lw.loginProcessForgotPasswordPendingData.Code[len(lw.loginProcessForgotPasswordPendingData.Code)-12:]
+	} else {
+		validationCode = lw.loginProcessForgotPasswordPendingData.Code
+	}
+	lw.PrintLn(lw.X+22, lw.Y+6, validationCode, "")
+
+	// Draw the back and submit buttons
+	if lw.loginForgotPasswordPendingOptionSelected == 1 {
+		fg := util.RGBCode(0, 0, 0)
+		bg := util.RGBCode(255, 255, 255)
+		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", fg.FG()+bg.BG())
+	} else {
+		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", lw.Terminal.Bold())
+	}
+
+	if lw.loginForgotPasswordPendingOptionSelected == 2 {
+		fg := util.RGBCode(0, 0, 0)
+		bg := util.RGBCode(255, 255, 255)
+		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", fg.FG()+bg.BG())
+	} else {
+		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", lw.Terminal.Bold())
+	}
+}
+
+func (lw *LoginWindow) drawLoginMenuForgotPasswordSuccess() {
+	lw.loginForgotPasswordSuccessMutex.Lock()
+	defer lw.loginForgotPasswordSuccessMutex.Unlock()
+
+	lw.PrintLn(lw.X+5, lw.Y+3, "Password reset validated, please enter a new password below to continue.", "")
+
+	if lw.loginForgotPasswordSuccessState == LoginForgotPasswordSuccessEntry {
+		lw.PrintLn(lw.X+9, lw.Y+6, "New Password:", lw.Terminal.Bold())
+	} else {
+		lw.PrintLn(lw.X+9, lw.Y+6, "New Password:", "")
+	}
+	password := ""
+	// We only want the last 12 characters of the password
+	if len(lw.loginForgotPasswordNewPasswordData.Password) > 12 {
+		password = lw.loginForgotPasswordNewPasswordData.Password[len(lw.loginForgotPasswordNewPasswordData.Password)-12:]
+	} else {
+		password = lw.loginForgotPasswordNewPasswordData.Password
+	}
+	lw.PrintLn(lw.X+23, lw.Y+6, password, "")
+
+	if lw.loginForgotPasswordSuccessState == LoginForgotPasswordSuccessConfirm {
+		lw.PrintLn(lw.X+5, lw.Y+7, "Confirm Password:", lw.Terminal.Bold())
+	} else {
+		lw.PrintLn(lw.X+5, lw.Y+7, "Confirm Password:", "")
+	}
+	confirm := ""
+	// We only want the last 12 characters of the password
+	if len(lw.loginForgotPasswordNewPasswordData.PasswordConfirm) > 12 {
+		confirm = lw.loginForgotPasswordNewPasswordData.PasswordConfirm[len(lw.loginForgotPasswordNewPasswordData.PasswordConfirm)-12:]
+	} else {
+		confirm = lw.loginForgotPasswordNewPasswordData.PasswordConfirm
+	}
+	lw.PrintLn(lw.X+23, lw.Y+7, confirm, "")
+
+	// Draw the error message if there is one
+	if lw.loginForgotPasswordNewPasswordData.Error != "" {
+		lw.PrintLn(lw.X+5, lw.Y+10, lw.loginForgotPasswordNewPasswordData.Error, util.RGBCode(255, 0, 0).FG())
+	}
+
+	if lw.loginForgotPasswordSuccessOptionSelected == 2 {
+		fg := util.RGBCode(0, 0, 0)
+		bg := util.RGBCode(255, 255, 255)
+		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", fg.FG()+bg.BG())
+	} else {
+		lw.PrintLn(lw.X+lw.Width-12, lw.Y+lw.Height, "<Submit>", lw.Terminal.Bold())
+	}
+}
+
+func (lw *LoginWindow) drawLoginMenuForgotPasswordFailed() {
+
+	lw.PrintLn(lw.X+5, lw.Y+3, "The provided authorization code was invalid, please try again.", "")
+
+	// Draw the back button
+	if lw.loginForgotPasswordFailedOptionSelected == 1 {
+		fg := util.RGBCode(0, 0, 0)
+		bg := util.RGBCode(255, 255, 255)
+		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", fg.FG()+bg.BG())
+	} else {
+		lw.PrintLn(lw.X+5, lw.Y+lw.Height, "<Back>", lw.Terminal.Bold())
+	}
 }

@@ -7,9 +7,10 @@ import (
 
 // Config is the main configuration struct
 type Config struct {
-	Logger loggingConfig `toml:"logging"`
-	Server serverConfig  `toml:"server"`
-	DB     dbConfig      `toml:"database"`
+	Logger  loggingConfig `toml:"logging"`
+	Server  serverConfig  `toml:"server"`
+	DB      dbConfig      `toml:"database"`
+	Discord discordConfig `toml:"discord"`
 }
 
 type loggingConfig struct {
@@ -33,6 +34,15 @@ type dbConfig struct {
 	User string `toml:"user"`
 	Pass string `toml:"pass"`
 	Name string `toml:"name"`
+}
+
+// discordConfig struct
+type discordConfig struct {
+	Token                 string   `toml:"bot_token"`
+	GuildID               string   `toml:"guild_id"`
+	AdminIDs              []string `toml:"admin_ids"`
+	RegistrationChannelID string   `toml:"registration_channel_id"`
+	RegisteredRoleID      string   `toml:"registered_role_id"`
 }
 
 // ReadConfig function

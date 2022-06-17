@@ -69,6 +69,21 @@ func (db *BoltDB) UpdateRecord(collectionName string, value interface{}) error {
 	return collection.Update(value)
 }
 
+func (db *BoltDB) UpdateField(collectionName string, field string, value interface{}, target interface{}) error {
+	db.queryMutex.Lock()
+	defer db.queryMutex.Unlock()
+
+	boltDB, err := storm.Open(db.Path)
+	if err != nil {
+		return err
+	}
+	defer boltDB.Close()
+
+	collection := boltDB.From(collectionName)
+
+	return collection.UpdateField(target, field, value)
+}
+
 func (db *BoltDB) AddIfNotExists(collectionName string, value interface{}) error {
 	db.queryMutex.Lock()
 	defer db.queryMutex.Unlock()

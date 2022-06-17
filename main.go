@@ -64,12 +64,20 @@ func main() {
 		log.Println(logging.LogFatal, "Error initializing database: ", err)
 	}
 
+	// Setup Edenbot
+	edenbotInput := make(chan messages.EdenbotMessage)
+	edenbotOutput := make(chan messages.SystemManagerMessage) // TODO: this needs a whole new manager created
+	edenBot, err := InitEdenbot(edenbotInput, edenbotOutput, dbConn, log, &conf)
+	if err != nil {
+		log.Println(logging.LogFatal, "Error initializing edenbot: ", err)
+	}
+
 	// Setup channels for account manager and connection manager
 	accountManagerReceiver := make(chan messages.AccountManagerMessage)
 	connectionManagerReceive := make(chan messages.ConnectionManagerMessage)
 
 	// Initialize account manager
-	_, err = InitAccountManager(accountManagerReceiver, connectionManagerReceive, dbConn, log)
+	_, err = InitAccountManager(accountManagerReceiver, connectionManagerReceive, dbConn, log, *edenBot)
 	if err != nil {
 		// Fatal errors will os.Exit(1)
 		log.Println(logging.LogFatal, "Error initializing account manager: ", err)
@@ -80,7 +88,7 @@ func main() {
 	_, err = InitCharacterManager(characterManagerReceiver, connectionManagerReceive, dbConn, &conf, log)
 
 	// Initialize the server, and by proxy, the connection manager
-	server, err := InitServer(conf, accountManagerReceiver, characterManagerReceiver, connectionManagerReceive, dbConn, log)
+	server, err := InitServer(conf, accountManagerReceiver, characterManagerReceiver, connectionManagerReceive, edenbotInput, dbConn, log)
 	if err != nil {
 		log.Println(logging.LogFatal, "Error initializing server: ", err)
 	}
@@ -96,6 +104,9 @@ func main() {
 	if log.GetTypeID() != logging.LoggerTypeID_Console {
 		fmt.Println("Caught interrupt signal, shutting down...")
 	}
+	// Issue a shutdown request to edenbot
+	edenbotInput <- messages.EdenbotMessage{Type: messages.Edenbot_Message_Shutdown}
+
 	// We need to notify our connections we're shutting down :D
 	managerMessage := messages.ConnectionManagerMessage{
 		Type: messages.ConnectManager_Message_Broadcast,

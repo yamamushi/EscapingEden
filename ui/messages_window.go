@@ -69,6 +69,30 @@ func (c *Console) CaptureWindowMessages() {
 				c.SendMessages <- managerMessage
 			// These messages require serializing to send to ConnectionManager
 
+			case messages.WM_RequestForgotPassword:
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_RequestPasswordReset,
+					Data:            windowMessage.Data,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
+
+			case messages.WM_ValidateForgotPassword:
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_ValidatePasswordReset,
+					Data:            windowMessage.Data,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
+
+			case messages.WM_ProcessForgotPassword:
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_ProcessPasswordReset,
+					Data:            windowMessage.Data,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
+
 			case messages.WM_BadLoginAttempt:
 				managerMessage := messages.ConnectionManagerMessage{
 					Type:            messages.ConnectManager_Message_BadLoginAttempt,

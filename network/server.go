@@ -7,7 +7,6 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"net"
-	"strings"
 	"sync"
 )
 
@@ -37,14 +36,15 @@ func NewServer(host string, port string, log logging.LoggerType) *Server {
 }
 
 // Start starts the server
-func (s *Server) Start(startedNotify chan bool, cmReceiveMessage chan messages.ConnectionManagerMessage, amReceiveMessages chan messages.AccountManagerMessage, characterManagerReceiveMessages chan messages.CharacterManagerMessage, db edendb.DatabaseType) error {
+func (s *Server) Start(startedNotify chan bool, cmReceiveMessage chan messages.ConnectionManagerMessage, amReceiveMessages chan messages.AccountManagerMessage, characterManagerReceiveMessages chan messages.CharacterManagerMessage,
+	ebSendMessages chan messages.EdenbotMessage, db edendb.DatabaseType) error {
 	l, err := net.Listen("tcp", s.Host+":"+s.Port)
 	if err != nil {
 		return err
 	}
 	s.ConnectionManagerSend = cmReceiveMessage
 	// Using sync.Map to not deal with concurrency slice/map issues
-	s.ConnectionManager = NewConnectionManager(s.ConnectMap, cmReceiveMessage, amReceiveMessages, characterManagerReceiveMessages, db, s.Log)
+	s.ConnectionManager = NewConnectionManager(s.ConnectMap, cmReceiveMessage, amReceiveMessages, characterManagerReceiveMessages, ebSendMessages, db, s.Log)
 	go s.ConnectionManager.Run(startedNotify)
 	go s.Listen(l)
 	return nil
@@ -60,8 +60,8 @@ func (s *Server) Listen(l net.Listener) {
 			continue
 		}
 
-		addressSlice := strings.Split(conn.RemoteAddr().String(), ":")
-		if edenutil.CheckBlacklist(addressSlice[0], edenutil.BlackListIPs) {
+		ipAddress, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+		if edenutil.CheckBlacklist(ipAddress, edenutil.BlackListIPs) {
 			s.Log.Println(logging.LogWarn, "Connection from blacklisted IP: ", conn.RemoteAddr().String())
 			_, _ = conn.Write([]byte("\r\nConnections from this IP are not allowed."))
 			_ = conn.Close()
@@ -69,7 +69,8 @@ func (s *Server) Listen(l net.Listener) {
 		}
 
 		id := uuid.New().String()
-		s.Log.Println(logging.LogInfo, "New connection from", conn.RemoteAddr(), "with id", id, "accepted")
+		ipaddress, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+		s.Log.Println(logging.LogInfo, "New connection accepted from: "+ipaddress+" with id: "+id)
 		s.ConnectionManager.AddConnection(NewConnection(conn, id, s.ConnectionManager, s.Log))
 	}
 }

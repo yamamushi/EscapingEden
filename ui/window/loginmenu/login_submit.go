@@ -33,8 +33,8 @@ func (lw *LoginWindow) loginSubmit() {
 	}
 
 	// check if username is empty
-	if lw.loginSubmitData.Email == "" {
-		lw.loginSubmitData.Error = "Email cannot be empty"
+	if lw.loginSubmitData.Username == "" {
+		lw.loginSubmitData.Error = "Username cannot be empty"
 		lw.loginResponseReceived = true
 		return
 	}
@@ -46,7 +46,7 @@ func (lw *LoginWindow) loginSubmit() {
 	}
 
 	loginData := messages.AccountLoginRequest{
-		Email:    lw.loginSubmitData.Email,
+		Username: lw.loginSubmitData.Username,
 		Password: lw.loginSubmitData.Password,
 	}
 	windowMessage := messages.WindowMessage{Type: messages.WM_RequestLogin, Data: loginData}
@@ -56,10 +56,4 @@ func (lw *LoginWindow) loginSubmit() {
 	go lw.HandleReceiveChannel() // We're going to start listening for responses now
 
 	return
-}
-
-func (lw *LoginWindow) forgotPasswordSubmit() {
-	lw.loginForgotPasswordMutex.Lock()
-	defer lw.loginForgotPasswordMutex.Unlock()
-
 }

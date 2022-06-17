@@ -10,7 +10,7 @@ type BlackListTypeID int
 const (
 	BlackListIPs BlackListTypeID = iota
 	BlackListUsernames
-	BlackListEmails
+	BlackListDiscordIDS
 )
 
 func CheckBlacklist(input string, blacklist BlackListTypeID) bool {
@@ -22,8 +22,8 @@ func CheckBlacklist(input string, blacklist BlackListTypeID) bool {
 		path = path + "/" + "ips.txt"
 	case BlackListUsernames:
 		path = path + "/" + "usernames.txt"
-	case BlackListEmails:
-		path = path + "/" + "emails.txt"
+	case BlackListDiscordIDS:
+		path = path + "/" + "discord.txt"
 	}
 
 	// Open our blacklist file - hardcoded for now, I want to change this later
@@ -33,7 +33,7 @@ func CheckBlacklist(input string, blacklist BlackListTypeID) bool {
 	}
 	// Split the file into lines
 	blacklistLines := strings.Split(string(blfile), "\n")
-	// Check if the email is in the blacklist
+	// Check if the input is in the blacklist
 	for _, line := range blacklistLines {
 		// if line begins with a # we ignore it
 		if strings.HasPrefix(line, "#") {

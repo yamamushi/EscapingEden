@@ -17,6 +17,14 @@ func (c *Console) CaptureManagerMessages() {
 				//log.Println("Console received registration response")
 				loginMessage := messages.WindowMessage{Type: messages.WM_RegistrationResponse, Data: consoleMessage.Data}
 				c.LoginWindowMessages <- loginMessage
+			case messages.Console_Message_ResetPasswordValidateResponse:
+				//log.Println("Console received reset password validation response")
+				loginMessage := messages.WindowMessage{Type: messages.WM_PasswordResetValidateResponse, Data: consoleMessage.Data}
+				c.LoginWindowMessages <- loginMessage
+			case messages.Console_Message_ProcessPasswordValidateResponse:
+				//log.Println("Console received process password update response")
+				loginMessage := messages.WindowMessage{Type: messages.WM_PasswordResetProcessResponse, Data: consoleMessage.Data}
+				c.LoginWindowMessages <- loginMessage
 			case messages.Console_Message_LoginResponse:
 				//log.Println("Console received login response")
 				loginMessage := messages.WindowMessage{Type: messages.WM_LoginResponse, Data: consoleMessage.Data}

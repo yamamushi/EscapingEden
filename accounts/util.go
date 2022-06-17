@@ -21,3 +21,12 @@ func (am *AccountManager) ComparePasswords(hashedPassword, password string) bool
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err == nil
 }
+
+// UpdateAccount updates the provided account in the database
+func (am *AccountManager) UpdateAccount(account messages.Account) error {
+	return am.DB.UpdateRecord("Accounts", &account)
+}
+
+func (am *AccountManager) UpdateAccountField(field string, value interface{}, account messages.Account) error {
+	return am.DB.UpdateField("Accounts", field, value, &account)
+}

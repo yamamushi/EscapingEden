@@ -1,5 +1,7 @@
 package login
 
+import "github.com/yamamushi/EscapingEden/messages"
+
 // drawMenu draws the default login menu
 func (lw *LoginWindow) drawMenu() {
 	lw.lwMutex.Lock()
@@ -7,6 +9,12 @@ func (lw *LoginWindow) drawMenu() {
 	lw.LockMutex()
 	defer lw.UnlockMutex()
 	//lw.FlushLastSent()
+	lw.registrationErrorData = RegistrationError{}
+	lw.loginResponse = messages.AccountLoginResponse{}
+	lw.loginSubmitData = LoginSubmitData{}
+	lw.loginMenuState = LoginUserInfoUsername
+	lw.loginResponseReceived = false
+	lw.registrationSubmitData = RegistrationSubmitData{}
 
 	// First we are going to setup our default login screen
 	lw.PrintLn(lw.X+10, lw.Y+5, "Welcome to Escaping Eden!", "")

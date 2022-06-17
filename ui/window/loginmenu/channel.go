@@ -23,15 +23,23 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 				switch lw.registrationResponse.Error {
 				case messages.AMError_UsernameAlreadyExists:
 					lw.registrationErrorData.usernameError = lw.registrationResponse.Error.Error()
-				case messages.AMError_EmailAlreadyExists:
-					lw.registrationErrorData.emailError = lw.registrationResponse.Error.Error()
+				case messages.AMError_DiscordAlreadyExists:
+					lw.registrationErrorData.discordError = lw.registrationResponse.Error.Error()
 				case messages.AMError_AccountAlreadyExists:
 					lw.registrationErrorData.usernameError = "This account already exists"
-					//lw.registrationErrorData.emailError = messages.AMError_EmailAlreadyExists.Error()
+					//lw.registrationErrorData.discordError = messages.AMError_DiscordAlreadyExists.Error()
+				case messages.AMError_PendingValidation:
+					lw.registrationErrorData.discordError = "This account is pending discord validation."
+				case messages.AMError_UserNotInServer:
+					lw.registrationErrorData.discordError = "This account is not in the discord server."
+				case messages.AMError_DiscordMessageError:
+					lw.registrationErrorData.discordError = "Discord message error, check your private message settings."
+				case messages.AMError_DBError:
+					lw.registrationErrorData.errorRequest = "Unhandled DB error, please report this issue"
 				case messages.AMError_SystemError:
 					lw.registrationErrorData.errorRequest = lw.registrationResponse.Error.Error()
 				default:
-					lw.registrationErrorData.errorRequest = "Unhandled Error - Please report this issue."
+					lw.registrationErrorData.errorRequest = "Unhandled error, please report this issue."
 				}
 
 				lw.registrationResponseReceived = true
@@ -58,6 +66,31 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 				lw.loginResponseReceived = true
 				//lw.RequestFlushFromConsole()
 				return
+			case messages.WM_PasswordResetValidateResponse:
+				success := windowMessage.Data.(bool)
+				if success {
+					lw.RequestFlushFromConsole()
+					lw.loginState = LoginForgotPasswordSuccess
+				} else {
+					lw.RequestFlushFromConsole()
+					lw.loginState = LoginForgotPasswordFailed
+				}
+			case messages.WM_PasswordResetProcessResponse:
+				success := windowMessage.Data.(bool)
+				if success {
+					lw.Log.Println(logging.LogInfo, "handleLogin Window received password reset success")
+					lw.loginMenuMessage = "Your password has been reset. Please login with your new password."
+					lw.RequestFlushFromConsole()
+					lw.loginProcessForgotPasswordPendingData = messages.AccountProcessForgotPasswordData{}
+					lw.loginForgotPasswordData = messages.AccountForgotPasswordData{}
+					lw.loginForgotPasswordNewPasswordData = LoginForgotPasswordSuccessData{}
+					lw.loginState = LoginNull
+					lw.windowState = LoginWindowMenu
+				} else {
+					lw.Log.Println(logging.LogInfo, "handleLogin Window received password reset failed")
+					lw.RequestFlushFromConsole()
+					lw.loginForgotPasswordNewPasswordData.Error = "Password reset failed, please try again."
+				}
 			}
 		}
 	}

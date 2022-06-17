@@ -1,2 +1,2 @@
-# A list of blacklisted email addresses.
-test@test.com
+# A list of blacklisted discord IDs
+test#0001

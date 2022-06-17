@@ -24,6 +24,7 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 		//log.Println("handleLogin selected")
 		lw.windowState = LoginWindowLogin
 		lw.loginState = LoginUserInfo
+		lw.loginMenuMessage = ""
 		//lw.ResetWindowDrawings()
 		//lw.ForceConsoleRefresh()
 		lw.RequestFlushFromConsole()
@@ -33,6 +34,7 @@ func (lw *LoginWindow) handleMenuInput(input string) {
 		//log.Println("Register selected")
 		lw.windowState = LoginWindowRegister
 		lw.registrationState = RegistrationMain
+		lw.loginMenuMessage = ""
 		//lw.ResetWindowDrawings()
 		//lw.ForceConsoleRefresh()
 		lw.RequestFlushFromConsole()
