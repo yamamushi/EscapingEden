@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/yamamushi/EscapingEden/messages"
+	"log"
 )
 
 // CaptureWindowMessages is a goroutine that listens for messages from the windows and parses them to determine
@@ -35,6 +36,12 @@ func (c *Console) CaptureWindowMessages() {
 					//log.Println("Flush message received")
 					c.flushWindowList = append(c.flushWindowList, windowMessage.TargetID)
 					continue
+				case messages.WMC_SetLoggedIn:
+					log.Println("Console received login user for " + c.ConnectionID)
+					c.LoginUser()
+				case messages.WMC_SetLoggedOut:
+					log.Println("Console received logout user for " + c.ConnectionID)
+					c.LogoutUser()
 				default:
 					continue
 				}
