@@ -90,7 +90,7 @@ func (c *Console) HandleInput(rawInput byte) {
 	}
 	// tab character input, tab input
 	if rawInput == '\t' {
-		if !c.IsPopupOpen() && !c.IsHelpOpen() && c.userLoggedIn {
+		if !c.IsPopupOpen() && !c.IsHelpOpen() && c.IsUserLoggedIn() {
 			c.SetActiveWindowNoThread(c.Windows[0])
 			for _, w := range c.Windows {
 				w.ResetWindowDrawings()

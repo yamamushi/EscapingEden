@@ -1,6 +1,9 @@
 package login
 
-import "github.com/yamamushi/EscapingEden/ui/util"
+import (
+	"github.com/yamamushi/EscapingEden/messages"
+	"github.com/yamamushi/EscapingEden/ui/util"
+)
 
 type LoginState int
 
@@ -166,8 +169,12 @@ func (lw *LoginWindow) drawLoginMenuPending() {
 			// If we got an error, we go back to the user info screen, display that error and wait
 			lw.loginState = LoginUserInfo
 		} else {
-			// If we didn't get an error, we load our user info screen
+			// If we didn't get an error, we load our user info screen, and we also notify the console the user has logged in
 			lw.windowState = LoginWindowUserDashboard
+			// Create a console message with type Console_Message_LoginUser, we don't pack any data with this message (yet, TBD)
+			msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetLoggedIn, TargetID: lw.GetID()}
+			// Send the message to the console so that we can enable the full dashboard
+			lw.SendToConsole(msg)
 		}
 		lw.loginResponseReceived = false
 		lw.RequestFlushFromConsole()

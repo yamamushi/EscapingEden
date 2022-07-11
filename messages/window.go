@@ -14,7 +14,7 @@ const (
 	WM_Error
 	WM_QuitConsole
 
-	// This sends a message to the console
+	// This sends a message to the console, needed to notify console of various status changes
 	WM_ConsoleCommand
 
 	// These messages are sent to the connection manager for processing upstream
@@ -43,6 +43,8 @@ const (
 	WMC_ToggleHelp
 	WMC_RefreshConsole
 	WMC_FlushConsoleBuffer
+	WMC_SetLoggedIn
+	WMC_SetLoggedOut
 )
 
 type WindowMessage struct {

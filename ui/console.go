@@ -226,10 +226,3 @@ func (c *Console) HandleResize(newWidth, newHeight int) {
 func (c *Console) IsConsoleValidSize() bool {
 	return c.Width > MINWIDTH && c.Height > MINHEIGHT
 }
-
-// IsUserLoggedIn returns whether or not the user is logged in
-func (c *Console) IsUserLoggedIn() bool {
-	c.mutex.Lock()
-	c.mutex.Unlock()
-	return c.userLoggedIn
-}
