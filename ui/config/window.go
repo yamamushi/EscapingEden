@@ -16,6 +16,7 @@ const (
 	WindowHelpBox
 	WindowChatBox
 	WindowLoginMenu
+	WindowUserDashboard
 	WindowToolBox
 	WindowPopupBox
 	WindowSettingsBox

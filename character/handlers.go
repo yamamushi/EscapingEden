@@ -15,27 +15,27 @@ func (cm *CharacterManager) HandleInput(started chan bool) {
 			switch managerMessage.Type {
 			case messages.CharManager_None:
 				cm.Log.Println(logging.LogError, "Character Manager Input Handler Received Message Type: None from Sender:", managerMessage.SenderConsoleID)
-				break
+				continue
 			case messages.CharManager_CreateCharacter:
 				log.Println("Character Manager: Create Character")
-				break
+				continue
 			case messages.CharManager_DeleteCharacter:
 				log.Println("Character Manager: Delete Character")
-				break
+				continue
 			case messages.CharManager_ListCharacters:
 				log.Println("Character Manager: List Characters")
-				break
+				continue
 			case messages.CharManager_UpdateCharacter:
 				log.Println("Character Manager: Update Character")
-				break
+				continue
 			case messages.CharManager_GetCharacter:
 				log.Println("Character Manager: Get Character")
-				break
+				continue
 			case messages.CharManager_GetCharacterInfo:
 				log.Println("Character Manager: Get Character Info")
-				break
+				continue
 			default:
-				break
+				continue
 			}
 		}
 	}

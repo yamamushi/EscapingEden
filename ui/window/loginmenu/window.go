@@ -87,7 +87,6 @@ const (
 	LoginWindowMenu LoginWindowState = iota
 	LoginWindowLogin
 	LoginWindowRegister
-	LoginWindowUserDashboard
 )
 
 // NewLoginWindow creates a new login window
@@ -135,8 +134,6 @@ func (lw *LoginWindow) HandleInput(input types.Input) {
 		lw.handleLoginInput(input)
 	case LoginWindowRegister:
 		lw.handleRegistrationInput(input)
-	case LoginWindowUserDashboard:
-		lw.handleUserDashboardInput(input)
 	}
 }
 
@@ -149,7 +146,5 @@ func (lw *LoginWindow) UpdateContents() {
 		lw.drawLoginMenu()
 	case LoginWindowRegister:
 		lw.drawRegistrationMenu()
-	case LoginWindowUserDashboard:
-		lw.drawUserDashboard()
 	}
 }

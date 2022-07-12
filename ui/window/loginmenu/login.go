@@ -175,7 +175,6 @@ func (lw *LoginWindow) drawLoginMenuPending() {
 			// Note that we don't send the password to the console, and we don't have an active character yet since
 			// The user hasn't chosen one yet.
 			lw.NotifyConsoleLoggedIn(userInfo) // This will also notify all active windows of the updated UserInfo for them.
-			lw.windowState = LoginWindowUserDashboard
 		}
 		lw.loginResponseReceived = false
 		lw.RequestFlushFromConsole()

@@ -5,6 +5,7 @@ import (
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
+	"github.com/yamamushi/EscapingEden/ui/window/dashboard"
 	login "github.com/yamamushi/EscapingEden/ui/window/loginmenu"
 )
 
@@ -80,8 +81,8 @@ func (c *Console) GetActiveWindow() window.WindowType {
 
 // AddWindow adds a window to the console if it is not already in the console by ID.
 func (c *Console) AddWindow(w window.WindowType) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
+	//c.mutex.Lock()
+	//defer c.mutex.Unlock()
 
 	for _, target := range c.Windows {
 		if target.GetID() == w.GetID() {
@@ -94,9 +95,6 @@ func (c *Console) AddWindow(w window.WindowType) {
 
 // RemoveWindow removes a window from the console by ID.
 func (c *Console) RemoveWindow(id config.WindowID) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
 	for i, target := range c.Windows {
 		if target.GetID() == id {
 			c.Windows = append(c.Windows[:i], c.Windows[i+1:]...)
@@ -143,11 +141,27 @@ func (c *Console) GetLoginWindow() window.WindowType {
 			return target
 		}
 	}
-	c.Log.Println(logging.LogInfo, "Login window not found, creating a new one")
+	//c.Log.Println(logging.LogInfo, "Login window not found, creating a new one")
 	// Create the login window if it doesn't exist
 	loginWindow := login.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height,
 		c.LoginWindowMessages, c.WindowMessages, c.Log, c.Terminal)
 	loginWindow.Init()
 	c.AddWindow(loginWindow)
 	return loginWindow
+}
+
+// GetUserDashboard returns the user dashboard window if it exists, if not we create one and set it to active
+func (c *Console) GetUserDashboard() window.WindowType {
+	for _, target := range c.Windows {
+		if target.GetID() == config.WindowUserDashboard {
+			return target
+		}
+	}
+	//c.Log.Println(logging.LogInfo, "User Dashboard window not found, creating a new one")
+	// Create the login window if it doesn't exist
+	dashboardWindow := dashboard.NewDashboardWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height,
+		c.LoginWindowMessages, c.WindowMessages, c.Log, c.Terminal)
+	dashboardWindow.Init()
+	c.AddWindow(dashboardWindow)
+	return dashboardWindow
 }
