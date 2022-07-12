@@ -69,7 +69,7 @@ func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, chatInput chan m
 	cw.History = append(cw.History, "The current time in Freeport is: "+edenutil.EdenTime.TimeStamp(edenutil.EdenTime{}))
 	//cw.History = append(cw.History, "There are currently __ players online. ")
 	cw.History = append(cw.History, "")
-	cw.History = append(cw.History, "There no current active world events.")
+	cw.History = append(cw.History, "There are no current active world events.")
 	cw.History = append(cw.History, "")
 
 	cw.HistoryIndex = 0

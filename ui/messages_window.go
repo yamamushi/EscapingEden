@@ -32,13 +32,19 @@ func (c *Console) CaptureWindowMessages() {
 					c.AbortSend()
 					c.ForceRedraw()
 					continue
+				//case messages.WMC_UpdateUserInfoForAllWindows:
+				//	c.userInfoMutex.Lock()
+				//	defer c.userInfoMutex.Unlock()
+				//	c.UpdateWindowsUserInfo()
+				//	continue
 				case messages.WMC_FlushConsoleBuffer:
 					//log.Println("Flush message received")
 					c.flushWindowList = append(c.flushWindowList, windowMessage.TargetID)
 					continue
 				case messages.WMC_SetLoggedIn:
-					log.Println("Console received login user for " + c.ConnectionID)
-					c.LoginUser()
+					//log.Println("Console received login user for " + c.ConnectionID)
+					c.LoginUser(windowMessage.Data.(messages.UserInfo))
+					//log.Println("User logged into console")
 				case messages.WMC_SetLoggedOut:
 					log.Println("Console received logout user for " + c.ConnectionID)
 					c.LogoutUser()

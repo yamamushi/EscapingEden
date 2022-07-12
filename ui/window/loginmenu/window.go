@@ -135,6 +135,8 @@ func (lw *LoginWindow) HandleInput(input types.Input) {
 		lw.handleLoginInput(input)
 	case LoginWindowRegister:
 		lw.handleRegistrationInput(input)
+	case LoginWindowUserDashboard:
+		lw.handleUserDashboardInput(input)
 	}
 }
 

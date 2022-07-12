@@ -6,6 +6,7 @@ import (
 	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
+	"strings"
 	"sync"
 )
 
@@ -47,6 +48,9 @@ type WindowType interface {
 	SetScrollBufferNew(bool)
 	SupportsScrolling() bool
 	GetContentStartPos() int
+
+	SetUserInfo(messages.UserInfo)
+	GetUserInfoField(string) string
 
 	LockMutex()
 	UnlockMutex()
@@ -97,6 +101,9 @@ type Window struct {
 	ConsoleReceive chan messages.WindowMessage // Receive messages from the Console
 
 	DirectionInput types.InputType // The last direction input from the user
+
+	UserInfo      messages.UserInfo // The user info of the current user
+	userInfoMutex sync.Mutex
 
 	mutex               sync.Mutex
 	pmapMutex           sync.Mutex
@@ -289,4 +296,29 @@ func (w *Window) GetConfig() *config.WindowConfig {
 	defer w.mutex.Unlock()
 
 	return config.NewWindowConfig(w.X, w.Y, w.Width, w.Height, w.Contents)
+}
+
+func (w *Window) SetUserInfo(userInfo messages.UserInfo) {
+	w.userInfoMutex.Lock()
+	defer w.userInfoMutex.Unlock()
+	w.UserInfo = userInfo
+}
+
+func (w *Window) GetUserInfoField(field string) string {
+	w.userInfoMutex.Lock()
+	defer w.userInfoMutex.Unlock()
+	field = strings.ToLower(field)
+	switch field {
+	case "username":
+		return w.UserInfo.GetUsername()
+	case "discord":
+		return w.UserInfo.GetDiscordTag()
+	case "charactername":
+		return w.UserInfo.GetCharacter()
+	case "lastlogin":
+		return w.UserInfo.GetLastLogin().String()
+	case "lastlogout":
+		return w.UserInfo.GetLastLogout().String()
+	}
+	return "unrecognized field: " + field
 }

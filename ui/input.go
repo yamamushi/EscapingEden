@@ -43,7 +43,9 @@ func (c *Console) HandleInput(rawInput byte) {
 		return
 	}
 
-	if rawInput == 27 {
+	//c.Log.Println(logging.LogWarn, "Debugging escape sequence: ", strconv.Itoa(int(rawInput)))
+
+	if rawInput == 17 {
 		options := &config.WindowConfig{X: c.Width/2 - 40, Y: c.Height/2 - 10, Width: 100, Height: 20, Page: 0}
 		go c.ToggleSettings(options)
 		return

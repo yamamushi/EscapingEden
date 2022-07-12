@@ -5,6 +5,7 @@ import (
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
+	login "github.com/yamamushi/EscapingEden/ui/window/loginmenu"
 )
 
 // ForceRedrawOn forces redrawing of the given window.
@@ -133,4 +134,20 @@ func (c *Console) GetWindowByID(id config.WindowID) window.WindowType {
 		}
 	}
 	return nil
+}
+
+// GetLoginWindow returns the login window if it exists, if not we create one and set it to active
+func (c *Console) GetLoginWindow() window.WindowType {
+	for _, target := range c.Windows {
+		if target.GetID() == config.WindowLoginMenu {
+			return target
+		}
+	}
+	c.Log.Println(logging.LogInfo, "Login window not found, creating a new one")
+	// Create the login window if it doesn't exist
+	loginWindow := login.NewLoginWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height,
+		c.LoginWindowMessages, c.WindowMessages, c.Log, c.Terminal)
+	loginWindow.Init()
+	c.AddWindow(loginWindow)
+	return loginWindow
 }
