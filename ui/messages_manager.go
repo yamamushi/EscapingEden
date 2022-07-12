@@ -26,9 +26,13 @@ func (c *Console) CaptureManagerMessages() {
 				loginMessage := messages.WindowMessage{Type: messages.WM_PasswordResetProcessResponse, Data: consoleMessage.Data}
 				c.LoginWindowMessages <- loginMessage
 			case messages.Console_Message_LoginResponse:
-				//log.Println("Console received login response")
+				//log.Println("Console received login response, sending to login window")
 				loginMessage := messages.WindowMessage{Type: messages.WM_LoginResponse, Data: consoleMessage.Data}
 				c.LoginWindowMessages <- loginMessage
+			case messages.Console_Message_LoginUser:
+				//log.Println("Console received login user request")
+				userInfo := consoleMessage.Data.(messages.UserInfo)
+				c.UpdateUserInfo(userInfo)
 			case messages.Console_Message_Chat:
 				//log.Println("Chat message received from manager")
 				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: consoleMessage.Data.(string)}

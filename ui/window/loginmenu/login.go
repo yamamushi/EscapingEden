@@ -173,14 +173,14 @@ func (lw *LoginWindow) drawLoginMenuPending() {
 			lw.windowState = LoginWindowUserDashboard
 			// Create a console message with type Console_Message_LoginUser, we don't pack any data with this message (yet, TBD)
 			msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetLoggedIn, TargetID: lw.GetID()}
-			// Send the message to the console so that we can enable the full dashboard
+			// Send the message to the console so that we can enable the full dashboard control
 			lw.SendToConsole(msg)
 		}
 		lw.loginResponseReceived = false
 		lw.RequestFlushFromConsole()
+	} else {
+		lw.PrintLn(lw.X+lw.Width/2-5, lw.Y+lw.Height/2, "Login Pending...", lw.Terminal.Bold())
 	}
-
-	lw.PrintLn(lw.X+lw.Width/2-5, lw.Y+lw.Height/2, "Login Pending...", lw.Terminal.Bold())
 }
 
 func (lw *LoginWindow) drawLoginMenuForgotPassword() {

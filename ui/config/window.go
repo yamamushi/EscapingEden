@@ -18,6 +18,7 @@ const (
 	WindowLoginMenu
 	WindowToolBox
 	WindowPopupBox
+	WindowSettingsBox
 )
 
 // String returns the string representation of the WindowID

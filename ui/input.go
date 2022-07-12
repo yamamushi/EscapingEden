@@ -25,6 +25,7 @@ func (c *Console) HandleInput(rawInput byte) {
 
 	//log.Println("Console received input: ", int(rawInput))
 
+	// ctrl-h toggles the help menu
 	if rawInput == 8 {
 		options := &config.WindowConfig{X: c.Width/2 - 40, Y: c.Height/2 - 10, Width: 100, Height: 20, Page: 0}
 		go c.ToggleHelp(options)
@@ -42,9 +43,15 @@ func (c *Console) HandleInput(rawInput byte) {
 		return
 	}
 
+	if rawInput == 27 {
+		options := &config.WindowConfig{X: c.Width/2 - 40, Y: c.Height/2 - 10, Width: 100, Height: 20, Page: 0}
+		go c.ToggleSettings(options)
+		return
+	}
+
 	// Captures things like the arrow keys.
 	if rawInput == '\033' {
-		c.escapeBuffer = "\\033" // Just used for logging the escape sequence buffer, nothing else
+		c.escapeBuffer = "\\033" // Just used for starting the escape sequence buffer, nothing else
 		c.escapeSequence = true  // Lets us know that the next few bytes are going to be related to the escape sequence
 		return
 	}
@@ -90,7 +97,7 @@ func (c *Console) HandleInput(rawInput byte) {
 	}
 	// tab character input, tab input
 	if rawInput == '\t' {
-		if !c.IsPopupOpen() && !c.IsHelpOpen() && c.IsUserLoggedIn() {
+		if !c.IsPopupOpen() && !c.IsHelpOpen() && c.IsUserLoggedIn() && c.IsCharacterLoggedIn() {
 			c.SetActiveWindowNoThread(c.Windows[0])
 			for _, w := range c.Windows {
 				w.ResetWindowDrawings()
