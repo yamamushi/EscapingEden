@@ -6,12 +6,24 @@ import (
 )
 
 // handleMenuInput handles input for the login window
-func (dw *DashboardWindow) handleCreateCharacterInput(input types.Input) {
+func (dw *DashboardWindow) handleCreateCharacterMenuInput(input types.Input) {
 	dw.dwMutex.Lock()
 	defer dw.dwMutex.Unlock()
 
 	if !dw.GetActive() {
 		return
+	}
+
+	switch dw.characterCreatorState {
+	case CharacterCreatorDefaultNull:
+		return // do nothing
+	case CharacterCreatorFirstTimeLoginWelcome:
+		switch input.Type {
+		case types.InputReturn:
+			// Continue to character details input screen
+			dw.firstTimeLogin = false
+			dw.RequestFlushFromConsole()
+		}
 	}
 
 	switch input.Type {

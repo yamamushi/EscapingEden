@@ -23,6 +23,10 @@ type DashboardWindow struct {
 	firstTimeLogin bool
 
 	// Vars for navigation
+	characterCreatorState CharacterCreatorState
+
+	// Vars for CharacterCreator
+	charColorOption int // 0 = red, 1 = green, 2 = blue
 }
 
 // LoginWindowState is an enum for storing login window state
@@ -35,6 +39,15 @@ const (
 	DashboardManageCharacters
 	DashboardManageSettings
 	DashboardLogout
+)
+
+type CharacterCreatorState int
+
+const (
+	CharacterCreatorDefaultNull = iota
+	CharacterCreatorFirstTimeLoginWelcome
+	CharacterCreatorCharacterDetails
+	CharacterCreatorConfirmCharacter
 )
 
 // NewDashboardWindow creates a new login window
@@ -78,7 +91,7 @@ func (dw *DashboardWindow) HandleInput(input types.Input) {
 	case DashboardMainMenu:
 		dw.handleMenuInput(input)
 	case DashboardCreateCharacter:
-		dw.handleCreateCharacterInput(input)
+		dw.handleCreateCharacterMenuInput(input)
 	case DashboardLogin:
 		//dw.handleLoginInput(input)
 	case DashboardManageCharacters:
