@@ -31,7 +31,7 @@ func (dw *DashboardWindow) handleMenuInput(input types.Input) {
 				return
 			} else {
 				// TODO - login to last character
-				dw.LoginCharacter(lastCharacter)
+				//dw.LoginCharacter(lastCharacter)
 				return
 			}
 		case "b":

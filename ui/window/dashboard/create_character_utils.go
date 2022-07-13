@@ -12,9 +12,9 @@ func (dw *DashboardWindow) CreateCharacter() {
 	go dw.HandleReceiveChannel()
 }
 
-func (dw *DashboardWindow) LoginCharacter(charID string) {
+func (dw *DashboardWindow) LoginCharacter(charInfo messages.CharacterInfo) {
 	// Create a console message with type Console_Message_LoginUser, we don't pack any data with this message (yet, TBD)
-	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetCharacterLoggedIn, TargetID: dw.GetID(), Data: messages.CharacterInfo{Name: dw.charCreatorName, ID: charID}}
+	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetCharacterLoggedIn, TargetID: dw.GetID(), Data: charInfo}
 	// Send the message to the console so that we can enable the full dashboard control
 	dw.SendToConsole(msg)
 }

@@ -3,6 +3,7 @@ package dashboard
 import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
+	"github.com/yamamushi/EscapingEden/ui/util"
 )
 
 func (dw *DashboardWindow) HandleReceiveChannel() {
@@ -23,7 +24,10 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 					dw.RequestFlushFromConsole()
 				} else {
 					dw.Log.Println(logging.LogInfo, "Character Name Not In Use")
-					dw.LoginCharacter("tmpID")
+					colorCode := util.ColorCode{0, 255, 0}
+					bgColorCode := util.ColorCode{255, 0, 0}
+					charInfo := messages.CharacterInfo{Name: dw.charCreatorName, ID: "tmpID", FGColor: colorCode, BGColor: bgColorCode, InventoryID: "tmpInventoryID"}
+					dw.LoginCharacter(charInfo)
 				}
 			}
 		}

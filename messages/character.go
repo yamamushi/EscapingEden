@@ -1,11 +1,15 @@
 package messages
 
-import "time"
+import (
+	"github.com/yamamushi/EscapingEden/ui/util"
+	"time"
+)
 
 type CharacterInfo struct {
-	ID            string `storm:"index"`
-	Name          string `storm:"unique"`
-	Color         string // The escape code of the color of the character, can include both FG and BG
+	ID            string         `storm:"index"`
+	Name          string         `storm:"unique"`
+	FGColor       util.ColorCode // The escape code of the FG color of the character
+	BGColor       util.ColorCode
 	InventoryID   string `storm:"unique"`
 	LastLoginTime time.Time
 }
@@ -14,8 +18,12 @@ func (c *CharacterInfo) GetID() string {
 	return c.ID
 }
 
-func (c *CharacterInfo) GetColor() string {
-	return c.Color
+func (c *CharacterInfo) GetColorFG() util.ColorCode {
+	return c.FGColor
+}
+
+func (c *CharacterInfo) GetColorBG() util.ColorCode {
+	return c.BGColor
 }
 
 func (c *CharacterInfo) GetName() string {

@@ -81,5 +81,11 @@ func (gw *GameWindow) UpdateContents() {
 	switch gw.windowState {
 	case GW_DefaultView:
 		gw.PrintLn(gw.X+2, gw.Y+2, "Game Window", gw.Terminal.Bold())
+
+		// At center of window draw an @
+		gw.PrintLn(gw.X+gw.Width/2, gw.Y+gw.Height/2, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
+
+		gw.PrintLn(gw.X+2, gw.Y+2, "test", "")
+
 	}
 }
