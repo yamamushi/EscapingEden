@@ -10,6 +10,8 @@ func (dw *DashboardWindow) drawCreateCharacterMenu() {
 		dw.drawCharacterCreator()
 	case CharacterCreatorConfirmCharacter:
 		dw.drawConfirmCharacter()
+	case CharacterCreatorPending:
+		dw.drawCreateCharacterPending()
 	}
 }
 

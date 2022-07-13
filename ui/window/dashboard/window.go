@@ -54,6 +54,7 @@ const (
 	CharacterCreatorFirstTimeLoginWelcome
 	CharacterCreatorCharacterDetails
 	CharacterCreatorConfirmCharacter
+	CharacterCreatorPending
 )
 
 // NewDashboardWindow creates a new login window

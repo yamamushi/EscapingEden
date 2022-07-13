@@ -6,6 +6,7 @@ import (
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"github.com/yamamushi/EscapingEden/ui/window/dashboard"
+	"github.com/yamamushi/EscapingEden/ui/window/gamewindow"
 	login "github.com/yamamushi/EscapingEden/ui/window/loginmenu"
 )
 
@@ -164,4 +165,20 @@ func (c *Console) GetUserDashboard() window.WindowType {
 	dashboardWindow.Init()
 	c.AddWindow(dashboardWindow)
 	return dashboardWindow
+}
+
+// GetGameWindow returns the user game window if it exists, if not we create one and set it to active
+func (c *Console) GetGameWindow() window.WindowType {
+	for _, target := range c.Windows {
+		if target.GetID() == config.WindowGameDisplay {
+			return target
+		}
+	}
+	//c.Log.Println(logging.LogInfo, "User Dashboard window not found, creating a new one")
+	// Create the login window if it doesn't exist
+	gameWindow := gamewindow.NewGameWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height,
+		c.GameWindowMessages, c.WindowMessages, c.Log, c.Terminal)
+	gameWindow.Init()
+	c.AddWindow(gameWindow)
+	return gameWindow
 }

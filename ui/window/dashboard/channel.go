@@ -18,10 +18,13 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 					if data.Error != "" {
 						dw.Log.Println(logging.LogInfo, data.Error)
 					}
+					dw.charCreatorUsernameError = "Character Name In Use"
+					dw.characterCreatorState = CharacterCreatorCharacterDetails
+					dw.RequestFlushFromConsole()
 				} else {
 					dw.Log.Println(logging.LogInfo, "Character Name Not In Use")
+					dw.LoginCharacter("tmpID")
 				}
-
 			}
 		}
 	}

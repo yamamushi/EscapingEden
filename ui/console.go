@@ -51,6 +51,7 @@ type Console struct {
 	// Channels for communicating with windows
 	LoginWindowMessages    chan messages.WindowMessage
 	UserDashboardMessages  chan messages.WindowMessage
+	GameWindowMessages     chan messages.WindowMessage
 	ChatMessageReceive     chan messages.ChatMessage
 	ChatWindowMessages     chan messages.WindowMessage
 	ToolboxWindowMessages  chan messages.WindowMessage
@@ -84,6 +85,7 @@ func NewConsole(height int, width int, connectionID string, outputChannel chan m
 	receiveFromConnectionManager := make(chan messages.ConsoleMessage)
 	windowMessages := make(chan messages.WindowMessage)
 	loginMessages := make(chan messages.WindowMessage)
+	gameWindowMessages := make(chan messages.WindowMessage)
 	chatMessageReceive := make(chan messages.ChatMessage)
 	chatMessageSend := make(chan messages.WindowMessage)
 	toolboxMessages := make(chan messages.WindowMessage)
@@ -93,6 +95,7 @@ func NewConsole(height int, width int, connectionID string, outputChannel chan m
 	return &Console{Height: height, Width: width, ConnectionID: connectionID, SendMessages: outputChannel,
 		ReceiveMessages: receiveFromConnectionManager, WindowMessages: windowMessages, LoginWindowMessages: loginMessages,
 		ChatMessageReceive: chatMessageReceive, ChatWindowMessages: chatMessageSend, UserDashboardMessages: userDashboardMessages, ToolboxWindowMessages: toolboxMessages,
+		GameWindowMessages:     gameWindowMessages,
 		PopupBoxWindowMessages: popupBoxMessage, Log: log, Terminal: term}
 }
 
@@ -218,6 +221,8 @@ func (c *Console) HandleResize(newWidth, newHeight int) {
 		case config.WindowLoginMenu:
 			w.UpdateParams(0, 0, c.Width-50, c.Height-13, c.Width, c.Height)
 		case config.WindowUserDashboard:
+			w.UpdateParams(0, 0, c.Width-50, c.Height-13, c.Width, c.Height)
+		case config.WindowGameDisplay:
 			w.UpdateParams(0, 0, c.Width-50, c.Height-13, c.Width, c.Height)
 		case config.WindowToolBox:
 			w.UpdateParams(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height)
