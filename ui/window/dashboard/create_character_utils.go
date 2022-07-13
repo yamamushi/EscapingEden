@@ -42,6 +42,13 @@ func (dw *DashboardWindow) CreateCharacter() {
 	dw.SendToConsole(msg)
 }
 
+func (dw *DashboardWindow) GetCharacterByID(charID string) {
+	dw.Log.Println(logging.LogInfo, "GetCharacterByID:", charID)
+	charInfo := messages.CharacterInfo{ID: charID, UserID: dw.UserInfo.ID}
+	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_RequestCharacterByID, Data: charInfo}
+	dw.SendToConsole(msg)
+}
+
 func (dw *DashboardWindow) LoginCharacter(charInfo messages.CharacterInfo) {
 	// Create a console message with type Console_Message_LoginUser, we don't pack any data with this message (yet, TBD)
 	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetCharacterLoggedIn, TargetID: dw.GetID(), Data: charInfo}
@@ -53,6 +60,13 @@ func (dw *DashboardWindow) LoginCharacter(charInfo messages.CharacterInfo) {
 func (dw *DashboardWindow) LogoutCharacter() {
 	// Create a console message with type Console_Message_LoginUser, we don't pack any data with this message (yet, TBD)
 	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetCharacterLoggedOut, TargetID: dw.GetID()}
+	// Send the message to the console so that we can enable the full dashboard control
+	dw.SendToConsole(msg)
+}
+
+func (dw *DashboardWindow) ValidateCharacterLogin(charInfo messages.CharacterInfo) {
+	// Create a console message with type WMC_RequestCharacterHistoryUpdate
+	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_RequestCharacterHistoryUpdate, TargetID: dw.GetID(), Data: charInfo}
 	// Send the message to the console so that we can enable the full dashboard control
 	dw.SendToConsole(msg)
 }

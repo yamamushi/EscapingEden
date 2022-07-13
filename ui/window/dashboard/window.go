@@ -35,6 +35,13 @@ type DashboardWindow struct {
 	charCreatorConfirmNavOptionSelected int // 0 = none, 1 = cancel, 2 = submit
 	charCreatorName                     string
 	charCreatorUsernameError            string
+
+	// Vars for pending login screen
+	pendingLoginMessage       string
+	accountManagerValidated   bool
+	characterManagerValidated bool
+	stopHandler               bool
+	pendingLoginMutex         sync.Mutex
 }
 
 // LoginWindowState is an enum for storing login window state
@@ -42,7 +49,6 @@ type DashboardState int
 
 const (
 	DashboardMainMenu DashboardState = iota
-	DashboardLogin
 	DashboardCreateCharacter
 	DashboardManageCharacters
 	DashboardManageSettings
@@ -102,8 +108,6 @@ func (dw *DashboardWindow) HandleInput(input types.Input) {
 		dw.handleMenuInput(input)
 	case DashboardCreateCharacter:
 		dw.handleCreateCharacterMenuInput(input)
-	case DashboardLogin:
-		//dw.handleLoginInput(input)
 	case DashboardManageCharacters:
 		//dw.handleRegistrationInput(input)
 	case DashboardManageSettings:

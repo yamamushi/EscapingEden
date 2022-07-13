@@ -24,7 +24,7 @@ func (am *AccountManager) HandleMessages(started chan bool) {
 				registrationResponse := am.CreateAccount(req.Username, req.Password, req.DiscordID)
 				response := messages.ConnectionManagerMessage{
 					Type:               messages.ConnectManager_Message_RegisterResponse,
-					RecipientConsoleID: managerMessage.SenderSessionID,
+					RecipientConsoleID: managerMessage.SenderConsoleID,
 					Data:               registrationResponse,
 				}
 				am.Log.Println(logging.LogInfo, "Sending registration response")
@@ -34,10 +34,10 @@ func (am *AccountManager) HandleMessages(started chan bool) {
 				req := managerMessage.Data.(messages.AccountLoginRequest)
 				am.Log.Println(logging.LogInfo, "Account Manager received login request")
 
-				loginResponse := am.handleLogin(req.Username, req.Password, managerMessage.SenderSessionID)
+				loginResponse := am.handleLogin(req.Username, req.Password, managerMessage.SenderConsoleID)
 				response := messages.ConnectionManagerMessage{
 					Type:               messages.ConnectManager_Message_LoginResponse,
-					RecipientConsoleID: managerMessage.SenderSessionID,
+					RecipientConsoleID: managerMessage.SenderConsoleID,
 					Data:               loginResponse,
 				}
 				am.Log.Println(logging.LogInfo, "Sending login response")
@@ -50,7 +50,7 @@ func (am *AccountManager) HandleMessages(started chan bool) {
 
 				response := messages.ConnectionManagerMessage{
 					Type:               messages.ConnectManager_Message_ValidatePasswordResetResponse,
-					RecipientConsoleID: managerMessage.SenderSessionID,
+					RecipientConsoleID: managerMessage.SenderConsoleID,
 					Data:               validated,
 				}
 				am.Log.Println(logging.LogInfo, "Sending reset password validation response")
@@ -63,19 +63,23 @@ func (am *AccountManager) HandleMessages(started chan bool) {
 				status := am.handleChangePassword(req)
 				response := messages.ConnectionManagerMessage{
 					Type:               messages.ConnectManager_Message_ProcessPasswordResetResponse,
-					RecipientConsoleID: managerMessage.SenderSessionID,
+					RecipientConsoleID: managerMessage.SenderConsoleID,
 					Data:               status,
 				}
 				am.Log.Println(logging.LogInfo, "Sending process reset password response")
 				am.SendChannel <- response
 
 			case messages.AccountManager_Message_UpdateCharacterHistory:
+				am.Log.Println(logging.LogInfo, "Account Manager received update character history request")
 				req := managerMessage.Data.(messages.CharacterInfo)
 				response := messages.ConnectionManagerMessage{
 					Type:               messages.ConnectManager_Message_UpdateAccountHistoryResponse,
-					RecipientConsoleID: managerMessage.SenderSessionID,
+					RecipientConsoleID: managerMessage.SenderConsoleID,
+					Data: messages.CharManagerUpdateHistoryResponse{
+						Data:              am.UpdateLoginCharacterHistory(req),
+						RespondingManager: "account",
+					},
 				}
-				response.Data = am.UpdateLoginCharacterHistory(req)
 				am.SendChannel <- response
 			}
 		}

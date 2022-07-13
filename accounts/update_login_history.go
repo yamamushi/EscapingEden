@@ -22,5 +22,6 @@ func (am *AccountManager) UpdateLoginCharacterHistory(info messages.CharacterInf
 		userAccount.Error = messages.AMError_DBError.Error()
 		return userAccount
 	}
+	userAccount.Error = messages.AMError_Null.Error()
 	return userAccount
 }

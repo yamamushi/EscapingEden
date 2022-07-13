@@ -26,6 +26,9 @@ const (
 	WM_RequestCharNameValidationResponse
 	WM_RequestCharacterCreation
 	WM_RequestCharacterCreationResponse
+	WM_RequestCharacterHistoryAccountUpdateResponse
+	WM_RequestCharacterHistoryCharacterUpdateResponse
+	WM_RequestCharacterResponse
 	WM_RequestForgotPassword
 	WM_ValidateForgotPassword
 	WM_ProcessForgotPassword
@@ -50,7 +53,9 @@ const (
 	WMC_SetAccountLoggedIn
 	WMC_SetAccountLoggedOut
 	WMC_SetCharacterLoggedIn
+	WMC_RequestCharacterHistoryUpdate
 	WMC_SetCharacterLoggedOut
+	WMC_RequestCharacterByID
 	WMC_UpdateUserInfoForAllWindows
 )
 

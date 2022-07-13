@@ -141,29 +141,61 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				go func() {
 					//cm.Log.Println(logging.LogInfo, "Sending registration request to AccountManager")
 					registrationRequest := managerMessage.Data.(messages.AccountRegistrationRequest)
-					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Register, Data: registrationRequest, SenderSessionID: managerMessage.SenderConsoleID}
+					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Register, Data: registrationRequest, SenderConsoleID: managerMessage.SenderConsoleID}
 				}()
 
 			case messages.ConnectManager_Message_AccountLogin:
 				go func() {
 					//cm.Log.Println(logging.LogInfo, "Sending login request to AccountManager")
 					loginRequest := managerMessage.Data.(messages.AccountLoginRequest)
-					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Login, Data: loginRequest, SenderSessionID: managerMessage.SenderConsoleID}
+					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Login, Data: loginRequest, SenderConsoleID: managerMessage.SenderConsoleID}
 				}()
 
 			case messages.ConnectManager_Message_CharacterLoggedInNotify:
 				go func() {
 					amMessage := messages.AccountManagerMessage{
-						Type: messages.AccountManager_Message_UpdateCharacterHistory,
-						Data: managerMessage.Data,
+						Type:            messages.AccountManager_Message_UpdateCharacterHistory,
+						Data:            managerMessage.Data,
+						SenderConsoleID: managerMessage.SenderConsoleID,
 					}
 					cm.AMSendMessages <- amMessage
 
 					cmMessage := messages.CharacterManagerMessage{
-						Type: messages.CharManager_UpdateLoginHistory,
-						Data: managerMessage.Data,
+						Type:            messages.CharManager_UpdateLoginHistory,
+						Data:            managerMessage.Data,
+						SenderConsoleID: managerMessage.SenderConsoleID,
 					}
 					cm.CMSendMessages <- cmMessage
+				}()
+
+			case messages.ConnectManager_Message_RequestCharacterByID:
+				cm.Log.Println(logging.LogInfo, "Requesting character by ID: ", managerMessage.Data)
+				go func() {
+					cmMessage := messages.CharacterManagerMessage{
+						Type:            messages.CharManager_RequestCharacterByID,
+						Data:            managerMessage.Data,
+						SenderConsoleID: managerMessage.SenderConsoleID,
+					}
+					cm.CMSendMessages <- cmMessage
+				}()
+
+			case messages.ConnectManager_Message_CharacterRequestResponse:
+				go func() {
+					cm.Log.Println(logging.LogInfo, "Sending character to client that requested it")
+					//log.Println(managerMessage.RecipientConsoleID)
+					cm.connectionMap.Range(func(key, value interface{}) bool {
+						if conn, ok := value.(*Connection); ok {
+							if managerMessage.RecipientConsoleID == conn.ID {
+								cm.Log.Println(logging.LogInfo, "Sending character to console: ", conn.ID)
+								consoleMessage := messages.ConsoleMessage{
+									Type: messages.Console_Message_CharacterRequestResponse,
+									Data: managerMessage.Data,
+								}
+								conn.SendToConsole(consoleMessage)
+							}
+						}
+						return true
+					})
 				}()
 
 			case messages.ConnectManager_Message_RequestPasswordReset:
@@ -239,14 +271,14 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				// Send the password reset validation request to the AccountManager
 				go func() {
 					//cm.Log.Println(logging.LogInfo, "Sending password reset validation request to AccountManager")
-					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_ResetPasswordValidate, Data: managerMessage.Data.(messages.AccountProcessForgotPasswordData), SenderSessionID: managerMessage.SenderConsoleID}
+					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_ResetPasswordValidate, Data: managerMessage.Data.(messages.AccountProcessForgotPasswordData), SenderConsoleID: managerMessage.SenderConsoleID}
 				}()
 
 			case messages.ConnectManager_Message_ProcessPasswordReset:
 				// Send the new password data to the AccountManager
 				go func() {
 					cm.Log.Println(logging.LogInfo, "Sending new password request to AccountManager")
-					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_ResetPasswordProcess, Data: managerMessage.Data.(messages.AccountProcessForgotPasswordData), SenderSessionID: managerMessage.SenderConsoleID}
+					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_ResetPasswordProcess, Data: managerMessage.Data.(messages.AccountProcessForgotPasswordData), SenderConsoleID: managerMessage.SenderConsoleID}
 				}()
 
 			case messages.ConnectManager_Message_ValidatePasswordResetResponse:
@@ -327,9 +359,11 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				})
 
 			case messages.ConnectManager_Message_UpdateCharacterHistoryResponse:
+
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
+							cm.Log.Println(logging.LogInfo, "Sending character history update response to console")
 							//cm.Log.Println(logging.LogInfo, "Sending login response to Console that requested login")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_CharacterHistoryCharacterUpdateResponse, Data: managerMessage.Data}
 							conn.SendToConsole(consoleMessage)
@@ -342,6 +376,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
+							cm.Log.Println(logging.LogInfo, "Sending account history update response to console")
 							//cm.Log.Println(logging.LogInfo, "Sending login response to Console that requested login")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_CharacterHistoryAccountUpdateResponse, Data: managerMessage.Data}
 							conn.SendToConsole(consoleMessage)

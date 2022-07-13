@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 )
 
@@ -44,6 +45,32 @@ func (c *Console) CaptureManagerMessages() {
 					Data: consoleMessage.Data,
 				}
 				c.UserDashboardMessages <- charCreatorMessage
+
+			case messages.Console_Message_CharacterRequestResponse:
+				c.Log.Println(logging.LogInfo, "Console received character request response")
+				charRequestResponse := messages.WindowMessage{
+					Type: messages.WM_RequestCharacterResponse,
+					Data: consoleMessage.Data,
+				}
+				c.Log.Println(logging.LogInfo, "Sending character request response to user dashboard")
+				c.UserDashboardMessages <- charRequestResponse
+				c.Log.Println(logging.LogInfo, "Response sent to user dashboard")
+
+			case messages.Console_Message_CharacterHistoryAccountUpdateResponse:
+				c.Log.Println(logging.LogInfo, "Console received character history account update response")
+				charHistoryAccountUpdateResponse := messages.WindowMessage{
+					Type: messages.WM_RequestCharacterHistoryAccountUpdateResponse,
+					Data: consoleMessage.Data,
+				}
+				c.UserDashboardMessages <- charHistoryAccountUpdateResponse
+
+			case messages.Console_Message_CharacterHistoryCharacterUpdateResponse:
+				c.Log.Println(logging.LogInfo, "Console received character history character update response")
+				charHistoryCharacterUpdateResponse := messages.WindowMessage{
+					Type: messages.WM_RequestCharacterHistoryCharacterUpdateResponse,
+					Data: consoleMessage.Data,
+				}
+				c.UserDashboardMessages <- charHistoryCharacterUpdateResponse
 			//case messages.Console_Message_LoginUser:
 			//log.Println("Console received login user request")
 			//		userInfo := consoleMessage.Data.(messages.UserInfo)

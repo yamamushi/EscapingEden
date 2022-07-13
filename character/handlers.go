@@ -29,15 +29,16 @@ func (cm *CharacterManager) HandleInput(started chan bool) {
 				continue
 			case messages.CharManager_UpdateLoginHistory:
 				cm.Log.Println(logging.LogInfo, "Character Manager: Update Login History")
-				err := cm.UpdateLoginHistory(managerMessage.Data.(messages.CharacterInfo))
-				if err != messages.CMError_Null {
-					cm.Log.Println(logging.LogError, "Character Manager: Update Login History Error:", err.Error())
+				charInfo := cm.UpdateLoginHistory(managerMessage.Data.(messages.CharacterInfo))
+				if charInfo.Error != messages.CMError_Null.Error() {
+					cm.Log.Println(logging.LogError, "Character Manager: Update Login History Error")
 				}
-
 				response := messages.ConnectionManagerMessage{
 					Type:               messages.ConnectManager_Message_UpdateCharacterHistoryResponse,
 					RecipientConsoleID: managerMessage.SenderConsoleID,
-					Data:               err.Error(),
+					Data: messages.CharManagerUpdateHistoryResponse{
+						Data:              charInfo,
+						RespondingManager: "character"},
 				}
 				cm.OutputChannel <- response
 				continue
@@ -51,9 +52,20 @@ func (cm *CharacterManager) HandleInput(started chan bool) {
 				cm.Log.Println(logging.LogInfo, "Character Manager: Get Character Info")
 				continue
 			case messages.CharManager_CheckName:
+				cm.Log.Println(logging.LogInfo, "Character Manager: Check Name")
 				inUse, err := cm.CheckCharNameInUse(managerMessage.Data.(string))
-				cm.OutputChannel <- messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_CharNameValidationResponse, Data: messages.CharManagerNameCheckResponse{NameInUse: inUse, Error: err.Error()}, RecipientConsoleID: managerMessage.SenderConsoleID}
-
+				cm.OutputChannel <- messages.ConnectionManagerMessage{
+					Type: messages.ConnectManager_Message_CharNameValidationResponse,
+					Data: messages.CharManagerNameCheckResponse{
+						NameInUse: inUse,
+						Error:     err.Error(),
+					},
+					RecipientConsoleID: managerMessage.SenderConsoleID,
+				}
+			case messages.CharManager_RequestCharacterByID:
+				cm.Log.Println(logging.LogInfo, "Character Manager: Request Character By ID")
+				characterInfo := cm.GetCharacterByID(managerMessage.Data.(messages.CharacterInfo).ID)
+				cm.OutputChannel <- messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_CharacterRequestResponse, Data: characterInfo, RecipientConsoleID: managerMessage.SenderConsoleID}
 			default:
 				continue
 			}

@@ -53,6 +53,25 @@ func (c *Console) CaptureWindowMessages() {
 					chatMessage := messages.ChatMessage{Type: messages.Chat_Message_System, Content: "You have logged out."}
 					c.ChatMessageReceive <- chatMessage
 					continue
+				case messages.WMC_RequestCharacterByID:
+					//log.Println("Console received request for character by ID")
+					// Request Character by ID from character manager
+					requestByID := messages.ConnectionManagerMessage{
+						Type:            messages.ConnectManager_Message_RequestCharacterByID,
+						Data:            windowMessage.Data,
+						SenderConsoleID: c.ConnectionID,
+					}
+					c.SendMessages <- requestByID
+
+				case messages.WMC_RequestCharacterHistoryUpdate:
+					// Tell account manager AND character manager that a character is attempting to log in
+					loggedInMessage := messages.ConnectionManagerMessage{
+						Type:            messages.ConnectManager_Message_CharacterLoggedInNotify,
+						Data:            windowMessage.Data,
+						SenderConsoleID: c.ConnectionID,
+					}
+					c.SendMessages <- loggedInMessage
+
 				case messages.WMC_SetCharacterLoggedIn:
 					//log.Println("Console received login character for " + c.ConnectionID)
 					charInfo := windowMessage.Data.(messages.CharacterInfo)
@@ -64,12 +83,6 @@ func (c *Console) CaptureWindowMessages() {
 						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome back " + c.GetCharacterName() + "!"}
 					}
 					c.ChatMessageReceive <- chatMessage
-					// Notify account manager and character manager that a character has logged in
-					loggedInMessage := messages.ConnectionManagerMessage{
-						Type: messages.ConnectManager_Message_CharacterLoggedInNotify,
-						Data: charInfo,
-					}
-					c.SendMessages <- loggedInMessage
 
 				case messages.WMC_SetCharacterLoggedOut:
 					log.Println("Console received logout character for " + c.ConnectionID)

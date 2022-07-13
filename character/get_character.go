@@ -2,13 +2,15 @@ package character
 
 import "github.com/yamamushi/EscapingEden/messages"
 
-func (cm *CharacterManager) GetCharacter(ID string) (messages.CharacterInfo, messages.CMErrorType) {
+func (cm *CharacterManager) GetCharacterByID(ID string) messages.CharacterInfo {
 	charInfo := messages.CharacterInfo{}
 
 	err := cm.DB.One("Characters", "ID", ID, &charInfo)
 	if err != nil {
-		return charInfo, messages.CMError_DBError
+		charInfo.Error = messages.CMError_DBError.Error()
+		return charInfo
 	}
 
-	return charInfo, messages.CMError_Null
+	charInfo.Error = messages.CMError_Null.Error()
+	return charInfo
 }

@@ -71,7 +71,7 @@ const (
 
 type AccountManagerMessage struct {
 	Type            AccountManagerMessageType
-	SenderSessionID string
+	SenderConsoleID string
 	Data            interface{}
 }
 
