@@ -20,13 +20,22 @@ func (dw *DashboardWindow) handleMenuInput(input types.Input) {
 		case "a":
 			lastCharacter := dw.GetUserInfoField("lastcharacter")
 			if lastCharacter == "" {
+				if dw.firstTimeLogin {
+					dw.characterCreatorState = CharacterCreatorFirstTimeLoginWelcome
+				} else {
+					dw.characterCreatorState = CharacterCreatorCharacterDetails
+				}
 				dw.windowState = DashboardCreateCharacter
 				//dw.ForceConsoleRefresh() // don't use these both together
 				dw.RequestFlushFromConsole()
 				return
 			} else {
-				// TODO - login to last character
-				dw.LoginCharacter(lastCharacter)
+				// Login by last character ID
+				dw.loginCharacterByID(dw.UserInfo.LastCharacterID)
+				// Need to use this ID to request the character info struct
+				// Need to add the messages necessary for this, and the outbound message as well as listener on the window here
+				dw.windowState = DashboardCharacterLoginPending
+				dw.RequestFlushFromConsole()
 				return
 			}
 		case "b":

@@ -46,9 +46,12 @@ func (c *Console) IsCharacterLoggedIn() bool {
 }
 
 // LoginCharacter logs in the character, sets the characterLoggedIn flag to true
-func (c *Console) LoginCharacter() {
+func (c *Console) LoginCharacter(charInfo messages.CharacterInfo) {
 	c.characterLoggedInMutex.Lock()
 	defer c.characterLoggedInMutex.Unlock()
+	c.RemoveWindow(c.GetUserDashboard().GetID())
+	c.SetActiveWindowNoThread(c.GetGameWindow())
+	c.UpdateCharacterInfo(charInfo)
 	c.characterLoggedIn = true
 }
 
@@ -58,4 +61,6 @@ func (c *Console) LogoutCharacter() {
 	defer c.characterLoggedInMutex.Unlock()
 	c.characterLoggedIn = false
 	c.UpdateCharacterInfo(messages.CharacterInfo{})
+	c.RemoveWindow(c.GetGameWindow().GetID())
+	c.SetActiveWindowNoThread(c.GetUserDashboard())
 }

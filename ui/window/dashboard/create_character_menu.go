@@ -3,12 +3,15 @@ package dashboard
 import "github.com/yamamushi/EscapingEden/ui/util"
 
 func (dw *DashboardWindow) drawCreateCharacterMenu() {
-	if dw.firstTimeLogin {
-		dw.characterCreatorState = CharacterCreatorFirstTimeLoginWelcome
+	switch dw.characterCreatorState {
+	case CharacterCreatorFirstTimeLoginWelcome:
 		dw.drawFirstTimeLogin()
-	} else {
-		dw.characterCreatorState = CharacterCreatorCharacterDetails
+	case CharacterCreatorCharacterDetails:
 		dw.drawCharacterCreator()
+	case CharacterCreatorConfirmCharacter:
+		dw.drawConfirmCharacter()
+	case CharacterCreatorPending:
+		dw.drawCreateCharacterPending()
 	}
 }
 
@@ -41,10 +44,30 @@ func (dw *DashboardWindow) drawCharacterCreator() {
 	dw.PrintLn(dw.X+(dw.Width/2)-(len(welcomeHeader)/2), dw.Y+2, welcomeHeader, "")
 
 	usernameField := "Name: "
-	dw.PrintLn(dw.X+2, dw.Y+4, usernameField, "")
+	if dw.charCreatorOptionSelected == 1 {
+		dw.PrintLn(dw.X+2, dw.Y+4, usernameField, dw.Terminal.Bold())
+	} else {
+		dw.PrintLn(dw.X+2, dw.Y+4, usernameField, "")
+	}
+	dw.PrintLn(dw.X+2+len(usernameField), dw.Y+4, dw.charCreatorName, "")
 
-	colorField := "Color: "
-	dw.PrintLn(dw.X+2, dw.Y+6, colorField, "")
+	if dw.charCreatorUsernameError != "" {
+		colorRed := util.ColorCode{255, 0, 0}
+		dw.PrintLn(dw.X+dw.Width-2-len(dw.charCreatorUsernameError), dw.Y+4, dw.charCreatorUsernameError, colorRed.FG())
+	}
+
+	colorField := "Color -> (Press right arrow to select, left to deselect) "
+	if dw.charCreatorOptionSelected == 2 {
+		if dw.charColorOptionActive {
+			greenColor := util.ColorCode{0, 255, 0}
+			dw.PrintLn(dw.X+2, dw.Y+6, colorField, dw.Terminal.Bold()+greenColor.FG())
+		} else {
+			dw.PrintLn(dw.X+2, dw.Y+6, colorField, dw.Terminal.Bold())
+		}
+	} else {
+		dw.PrintLn(dw.X+2, dw.Y+6, colorField, "")
+	}
+
 	greenOption := "( ) Green"
 	redOption := "( ) Red"
 	blueOption := "( ) Blue"
@@ -58,12 +81,61 @@ func (dw *DashboardWindow) drawCharacterCreator() {
 
 	dw.PrintLn(dw.X+5, dw.Y+8+dw.charColorOption, "*", dw.Terminal.Bold())
 
-	footerMessage := "When you are ready, press Enter to create your character."
+	footerMessage := "When you are ready, select submit to create your character."
 	dw.PrintLn(dw.X+(dw.Width/2)-(len(footerMessage)/2), dw.Y+dw.Height-4, footerMessage, "")
 
 	submitOption := "<Submit>"
 	cancelOption := "<Cancel>"
-	dw.PrintLn(dw.X+2, dw.Y+dw.Height-1, cancelOption, "")
-	dw.PrintLn(dw.X+dw.Width-2-len(submitOption), dw.Y+dw.Height-1, submitOption, "")
+	if dw.charCreatorNavOptionSelected == 1 {
+		dw.PrintLn(dw.X+2, dw.Y+dw.Height-1, cancelOption, dw.Terminal.Bold())
+	} else {
+		dw.PrintLn(dw.X+2, dw.Y+dw.Height-1, cancelOption, "")
+	}
 
+	if dw.charCreatorNavOptionSelected == 2 {
+		dw.PrintLn(dw.X+dw.Width-2-len(submitOption), dw.Y+dw.Height-1, submitOption, dw.Terminal.Bold())
+	} else {
+		dw.PrintLn(dw.X+dw.Width-2-len(submitOption), dw.Y+dw.Height-1, submitOption, "")
+	}
+
+}
+
+func (dw *DashboardWindow) drawConfirmCharacter() {
+	dw.PrintLn(dw.X+(dw.Width/2)-(len("Confirm Character")/2), dw.Y+2, "Confirm Character", "")
+
+	colorRed := util.ColorCode{255, 0, 0}
+	colorBlue := util.ColorCode{0, 0, 255}
+	colorGreen := util.ColorCode{0, 255, 0}
+	color := util.ColorCode{}
+
+	if dw.charColorOption == 0 {
+		color = colorRed
+	} else if dw.charColorOption == 1 {
+		color = colorBlue
+	} else if dw.charColorOption == 2 {
+		color = colorGreen
+	}
+
+	dw.PrintLn(dw.X+2, dw.Y+4, "Name: "+dw.charCreatorName, "")
+
+	colorText := "Color:"
+	dw.PrintLn(dw.X+2, dw.Y+6, "Color:", "")
+	dw.PrintLn(dw.X+3+len(colorText), dw.Y+6, "@", color.FG())
+
+	footerMessage := "If everything looks correct, select confirm to create your character."
+	dw.PrintLn(dw.X+(dw.Width/2)-(len(footerMessage)/2), dw.Y+dw.Height-4, footerMessage, "")
+
+	submitOption := "<Confirm>"
+	cancelOption := "<Cancel>"
+	if dw.charCreatorConfirmNavOptionSelected == 1 {
+		dw.PrintLn(dw.X+2, dw.Y+dw.Height-1, cancelOption, dw.Terminal.Bold())
+	} else {
+		dw.PrintLn(dw.X+2, dw.Y+dw.Height-1, cancelOption, "")
+	}
+
+	if dw.charCreatorConfirmNavOptionSelected == 2 {
+		dw.PrintLn(dw.X+dw.Width-2-len(submitOption), dw.Y+dw.Height-1, submitOption, dw.Terminal.Bold())
+	} else {
+		dw.PrintLn(dw.X+dw.Width-2-len(submitOption), dw.Y+dw.Height-1, submitOption, "")
+	}
 }

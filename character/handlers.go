@@ -3,7 +3,6 @@ package character
 import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"log"
 )
 
 func (cm *CharacterManager) HandleInput(started chan bool) {
@@ -17,23 +16,56 @@ func (cm *CharacterManager) HandleInput(started chan bool) {
 				cm.Log.Println(logging.LogError, "Character Manager Input Handler Received Message Type: None from Sender:", managerMessage.SenderConsoleID)
 				continue
 			case messages.CharManager_CreateCharacter:
-				log.Println("Character Manager: Create Character")
+				cm.Log.Println(logging.LogInfo, "Character Manager: Create Character")
+				newCharacterInfo := cm.CreateCharacter(managerMessage.Data.(messages.CharacterInfo))
+				cm.OutputChannel <- messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_CharacterCreationResponse, Data: newCharacterInfo, RecipientConsoleID: managerMessage.SenderConsoleID}
+				cm.Log.Println(logging.LogInfo, "Character Manager: Create Character response sent")
 				continue
 			case messages.CharManager_DeleteCharacter:
-				log.Println("Character Manager: Delete Character")
+				cm.Log.Println(logging.LogInfo, "Character Manager: Delete Character")
 				continue
 			case messages.CharManager_ListCharacters:
-				log.Println("Character Manager: List Characters")
+				cm.Log.Println(logging.LogInfo, "Character Manager: List Characters")
+				continue
+			case messages.CharManager_UpdateLoginHistory:
+				cm.Log.Println(logging.LogInfo, "Character Manager: Update Login History")
+				charInfo := cm.UpdateLoginHistory(managerMessage.Data.(messages.CharacterInfo))
+				if charInfo.Error != messages.CMError_Null.Error() {
+					cm.Log.Println(logging.LogError, "Character Manager: Update Login History Error")
+				}
+				response := messages.ConnectionManagerMessage{
+					Type:               messages.ConnectManager_Message_UpdateCharacterHistoryResponse,
+					RecipientConsoleID: managerMessage.SenderConsoleID,
+					Data: messages.CharManagerUpdateHistoryResponse{
+						Data:              charInfo,
+						RespondingManager: "character"},
+				}
+				cm.OutputChannel <- response
 				continue
 			case messages.CharManager_UpdateCharacter:
-				log.Println("Character Manager: Update Character")
+				cm.Log.Println(logging.LogInfo, "Character Manager: Update Character")
 				continue
 			case messages.CharManager_GetCharacter:
-				log.Println("Character Manager: Get Character")
+				cm.Log.Println(logging.LogInfo, "Character Manager: Get Character")
 				continue
 			case messages.CharManager_GetCharacterInfo:
-				log.Println("Character Manager: Get Character Info")
+				cm.Log.Println(logging.LogInfo, "Character Manager: Get Character Info")
 				continue
+			case messages.CharManager_CheckName:
+				cm.Log.Println(logging.LogInfo, "Character Manager: Check Name")
+				inUse, err := cm.CheckCharNameInUse(managerMessage.Data.(string))
+				cm.OutputChannel <- messages.ConnectionManagerMessage{
+					Type: messages.ConnectManager_Message_CharNameValidationResponse,
+					Data: messages.CharManagerNameCheckResponse{
+						NameInUse: inUse,
+						Error:     err.Error(),
+					},
+					RecipientConsoleID: managerMessage.SenderConsoleID,
+				}
+			case messages.CharManager_RequestCharacterByID:
+				cm.Log.Println(logging.LogInfo, "Character Manager: Request Character By ID")
+				characterInfo := cm.GetCharacterByID(managerMessage.Data.(messages.CharacterInfo).ID)
+				cm.OutputChannel <- messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_CharacterRequestResponse, Data: characterInfo, RecipientConsoleID: managerMessage.SenderConsoleID}
 			default:
 				continue
 			}

@@ -86,6 +86,9 @@ func main() {
 	// Initialize the character manager
 	characterManagerReceiver := make(chan messages.CharacterManagerMessage)
 	_, err = InitCharacterManager(characterManagerReceiver, connectionManagerReceive, dbConn, &conf, log)
+	if err != nil {
+		log.Println(logging.LogFatal, "Error initializing character manager: ", err)
+	}
 
 	// Initialize the server, and by proxy, the connection manager
 	server, err := InitServer(conf, accountManagerReceiver, characterManagerReceiver, connectionManagerReceive, edenbotInput, dbConn, log)

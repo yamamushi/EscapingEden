@@ -20,13 +20,28 @@ type DashboardWindow struct {
 	dwInitialized bool
 
 	// The current login states
-	firstTimeLogin bool
+	firstTimeLogin    bool
+	lastCharacterName string
+	lastCharacterID   string
 
 	// Vars for navigation
 	characterCreatorState CharacterCreatorState
 
 	// Vars for CharacterCreator
-	charColorOption int // 0 = red, 1 = green, 2 = blue
+	charColorOption                     int // 0 = red, 1 = green, 2 = blue
+	charCreatorOptionSelected           int // 0 = none, 1 = name, 2 = color
+	charColorOptionActive               bool
+	charCreatorNavOptionSelected        int // 0 = none, 1 = cancel, 2 = submit
+	charCreatorConfirmNavOptionSelected int // 0 = none, 1 = cancel, 2 = submit
+	charCreatorName                     string
+	charCreatorUsernameError            string
+
+	// Vars for pending login screen
+	pendingLoginMessage       string
+	accountManagerValidated   bool
+	characterManagerValidated bool
+	stopHandler               bool
+	pendingLoginMutex         sync.Mutex
 }
 
 // LoginWindowState is an enum for storing login window state
@@ -34,11 +49,11 @@ type DashboardState int
 
 const (
 	DashboardMainMenu DashboardState = iota
-	DashboardLogin
 	DashboardCreateCharacter
 	DashboardManageCharacters
 	DashboardManageSettings
 	DashboardLogout
+	DashboardCharacterLoginPending
 )
 
 type CharacterCreatorState int
@@ -48,6 +63,7 @@ const (
 	CharacterCreatorFirstTimeLoginWelcome
 	CharacterCreatorCharacterDetails
 	CharacterCreatorConfirmCharacter
+	CharacterCreatorPending
 )
 
 // NewDashboardWindow creates a new login window
@@ -92,8 +108,6 @@ func (dw *DashboardWindow) HandleInput(input types.Input) {
 		dw.handleMenuInput(input)
 	case DashboardCreateCharacter:
 		dw.handleCreateCharacterMenuInput(input)
-	case DashboardLogin:
-		//dw.handleLoginInput(input)
 	case DashboardManageCharacters:
 		//dw.handleRegistrationInput(input)
 	case DashboardManageSettings:
@@ -110,5 +124,7 @@ func (dw *DashboardWindow) UpdateContents() {
 		dw.drawMenu()
 	case DashboardCreateCharacter:
 		dw.drawCreateCharacterMenu()
+	case DashboardCharacterLoginPending:
+		dw.drawCharacterLoginPending()
 	}
 }

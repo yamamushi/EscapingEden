@@ -18,6 +18,9 @@ type Account struct {
 	LastLogoutTime      time.Time // Last time the account was logged out.
 	LastConnectionID    string    // Last connection ID of the account, used to force a disconnect.
 	LastCharacterID     string    // Last character ID used.
+	LastCharacterName   string    // Last character name used.
+	Characters          []string  // List of character IDs.
+	Error               string    // Error message, if any.
 }
 
 type AccountRegistrationRequest struct {
@@ -61,13 +64,14 @@ const (
 	AccountManager_Message_Login
 	AccountManager_Message_ResetPasswordValidate
 	AccountManager_Message_ResetPasswordProcess
+	AccountManager_Message_UpdateCharacterHistory
 	AccountManager_Message_Logout
 	AccountManager_Message_GetCharacters
 )
 
 type AccountManagerMessage struct {
 	Type            AccountManagerMessageType
-	SenderSessionID string
+	SenderConsoleID string
 	Data            interface{}
 }
 

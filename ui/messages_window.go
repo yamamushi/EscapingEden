@@ -42,28 +42,48 @@ func (c *Console) CaptureWindowMessages() {
 					c.flushWindowList = append(c.flushWindowList, windowMessage.TargetID)
 					continue
 				case messages.WMC_SetAccountLoggedIn:
-					log.Println("Console received login user for " + c.ConnectionID)
+					//log.Println("Console received login user for " + c.ConnectionID)
 					c.LoginUser(windowMessage.Data.(messages.UserInfo))
 					chatMessage := messages.ChatMessage{Type: messages.Chat_Message_System, Content: "You have logged in as " + c.GetUserName() + "."}
 					c.ChatMessageReceive <- chatMessage
 					continue
 				case messages.WMC_SetAccountLoggedOut:
-					log.Println("Console received logout user for " + c.ConnectionID)
+					//log.Println("Console received logout user for " + c.ConnectionID)
 					c.LogoutUser() // This also logs out a character, no need to force both.
 					chatMessage := messages.ChatMessage{Type: messages.Chat_Message_System, Content: "You have logged out."}
 					c.ChatMessageReceive <- chatMessage
 					continue
+				case messages.WMC_RequestCharacterByID:
+					//log.Println("Console received request for character by ID")
+					// Request Character by ID from character manager
+					requestByID := messages.ConnectionManagerMessage{
+						Type:            messages.ConnectManager_Message_RequestCharacterByID,
+						Data:            windowMessage.Data,
+						SenderConsoleID: c.ConnectionID,
+					}
+					c.SendMessages <- requestByID
+
+				case messages.WMC_RequestCharacterHistoryUpdate:
+					// Tell account manager AND character manager that a character is attempting to log in
+					loggedInMessage := messages.ConnectionManagerMessage{
+						Type:            messages.ConnectManager_Message_CharacterLoggedInNotify,
+						Data:            windowMessage.Data,
+						SenderConsoleID: c.ConnectionID,
+					}
+					c.SendMessages <- loggedInMessage
+
 				case messages.WMC_SetCharacterLoggedIn:
-					log.Println("Console received login character for " + c.ConnectionID)
-					c.LoginCharacter()
-					firstTimeLogin := windowMessage.Data.(bool)
+					//log.Println("Console received login character for " + c.ConnectionID)
+					charInfo := windowMessage.Data.(messages.CharacterInfo)
+					c.LoginCharacter(charInfo)
 					chatMessage := messages.ChatMessage{}
-					if firstTimeLogin {
+					if int(charInfo.FirstLogin) == 1 {
 						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome " + c.GetCharacterName() + "!"}
 					} else {
-						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome back" + c.GetCharacterName() + "!"}
+						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome back " + c.GetCharacterName() + "!"}
 					}
 					c.ChatMessageReceive <- chatMessage
+
 				case messages.WMC_SetCharacterLoggedOut:
 					log.Println("Console received logout character for " + c.ConnectionID)
 					c.LogoutCharacter()
@@ -97,12 +117,30 @@ func (c *Console) CaptureWindowMessages() {
 			case messages.WM_RequestLogin:
 				//log.Println("Sending login request to connection manager")
 				managerMessage := messages.ConnectionManagerMessage{
-					Type:            messages.ConnectManager_Message_Login,
+					Type:            messages.ConnectManager_Message_AccountLogin,
 					Data:            windowMessage.Data,
 					SenderConsoleID: c.ConnectionID,
 				}
 				c.SendMessages <- managerMessage
 			// These messages require serializing to send to ConnectionManager
+
+			case messages.WM_RequestCharNameValidation:
+				//log.Println("Sending character name validation request to connection manager")
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_CharNameValidation,
+					Data:            windowMessage.Data,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
+
+			case messages.WM_RequestCharacterCreation:
+				//log.Println("Sending character creation request to connection manager")
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_CharacterCreation,
+					Data:            windowMessage.Data,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
 
 			case messages.WM_RequestForgotPassword:
 				managerMessage := messages.ConnectionManagerMessage{

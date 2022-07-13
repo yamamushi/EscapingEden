@@ -26,7 +26,7 @@ func NewAccountManager(receiveChannel chan messages.AccountManagerMessage, sendC
 func (am *AccountManager) Init() error {
 
 	id, _ := uuid.NewUUID()
-	err := am.DB.AddRecord("Characters", &messages.Account{ID: id.String(), Username: "Test", HashedPassword: "Test"})
+	err := am.DB.AddRecord("Accounts", &messages.Account{ID: id.String(), Username: "Test", HashedPassword: "Test"})
 	if err != nil {
 		if err.Error() == "already exists" {
 			am.Log.Println(logging.LogInfo, "AccountManager", "Init", messages.AMError_AccountAlreadyExists.Error())
@@ -36,7 +36,7 @@ func (am *AccountManager) Init() error {
 
 	//	search := messages.Account{Username: "Test"}
 	result := messages.Account{}
-	err = am.DB.One("Characters", "Username", "Test", &result)
+	err = am.DB.One("Accounts", "Username", "Test", &result)
 	if err != nil {
 		am.Log.Println(logging.LogError, messages.AMError_AccountDoesNotExist.Error(), err)
 		return err
