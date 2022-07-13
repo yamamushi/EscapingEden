@@ -57,4 +57,5 @@ func (c *Console) LogoutCharacter() {
 	c.characterLoggedInMutex.Lock()
 	defer c.characterLoggedInMutex.Unlock()
 	c.characterLoggedIn = false
+	c.UpdateCharacterInfo(messages.CharacterInfo{})
 }

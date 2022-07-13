@@ -27,12 +27,6 @@ func (c *Console) GetUserName() string {
 	return c.UserInfo.Username
 }
 
-func (c *Console) GetCharacterName() string {
-	c.userInfoMutex.Lock()
-	defer c.userInfoMutex.Unlock()
-	return c.UserInfo.Character
-}
-
 func (c *Console) GetDiscordTag() string {
 	c.userInfoMutex.Lock()
 	defer c.userInfoMutex.Unlock()

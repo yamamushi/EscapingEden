@@ -54,6 +54,9 @@ type WindowType interface {
 	SetUserInfo(messages.UserInfo)
 	GetUserInfoField(string) string
 
+	SetCharacterInfo(info messages.CharacterInfo)
+	GetCharacterInfoField(string) string
+
 	LockMutex()
 	UnlockMutex()
 
@@ -106,6 +109,9 @@ type Window struct {
 
 	UserInfo      messages.UserInfo // The user info of the current user
 	userInfoMutex sync.Mutex
+
+	CharacterInfo      messages.CharacterInfo // The character info of the current character
+	characterInfoMutex sync.Mutex
 
 	mutex               sync.Mutex
 	pmapMutex           sync.Mutex
@@ -298,6 +304,27 @@ func (w *Window) GetConfig() *config.WindowConfig {
 	defer w.mutex.Unlock()
 
 	return config.NewWindowConfig(w.X, w.Y, w.Width, w.Height, w.Contents)
+}
+
+func (w *Window) SetCharacterInfo(charInfo messages.CharacterInfo) {
+	w.characterInfoMutex.Lock()
+	defer w.characterInfoMutex.Unlock()
+	w.CharacterInfo = charInfo
+}
+
+func (w *Window) GetCharacterInfoField(field string) string {
+	w.characterInfoMutex.Lock()
+	defer w.characterInfoMutex.Unlock()
+	field = strings.ToLower(field)
+	switch field {
+	case "name":
+		return w.CharacterInfo.GetName()
+	case "id":
+		return w.CharacterInfo.GetID()
+	case "inventory":
+		return w.CharacterInfo.GetInventoryID()
+	}
+	return "unrecognized field: " + field
 }
 
 func (w *Window) SetUserInfo(userInfo messages.UserInfo) {

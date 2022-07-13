@@ -31,6 +31,9 @@ type Console struct {
 	UserInfo      messages.UserInfo // The user info for the user using this console, generated after logging in, and updated as needed
 	userInfoMutex sync.Mutex
 
+	CharacterInfo      messages.CharacterInfo // The character info for the user using this console, generated after logging in, and updated as needed
+	characterInfoMutex sync.Mutex
+
 	Windows            []window.WindowType // The list of windows that are currently in the console
 	ConsoleCommands    string
 	LastSentOutput     string

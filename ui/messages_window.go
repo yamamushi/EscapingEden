@@ -44,17 +44,32 @@ func (c *Console) CaptureWindowMessages() {
 				case messages.WMC_SetAccountLoggedIn:
 					log.Println("Console received login user for " + c.ConnectionID)
 					c.LoginUser(windowMessage.Data.(messages.UserInfo))
+					chatMessage := messages.ChatMessage{Type: messages.Chat_Message_System, Content: "You have logged in as " + c.GetUserName() + "."}
+					c.ChatMessageReceive <- chatMessage
 					continue
 				case messages.WMC_SetAccountLoggedOut:
 					log.Println("Console received logout user for " + c.ConnectionID)
 					c.LogoutUser() // This also logs out a character, no need to force both.
+					chatMessage := messages.ChatMessage{Type: messages.Chat_Message_System, Content: "You have logged out."}
+					c.ChatMessageReceive <- chatMessage
 					continue
 				case messages.WMC_SetCharacterLoggedIn:
 					log.Println("Console received login character for " + c.ConnectionID)
 					c.LoginCharacter()
+					firstTimeLogin := windowMessage.Data.(bool)
+					chatMessage := messages.ChatMessage{}
+					if firstTimeLogin {
+						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome " + c.GetCharacterName() + "!"}
+					} else {
+						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome back" + c.GetCharacterName() + "!"}
+					}
+					c.ChatMessageReceive <- chatMessage
 				case messages.WMC_SetCharacterLoggedOut:
 					log.Println("Console received logout character for " + c.ConnectionID)
 					c.LogoutCharacter()
+					chatMessage := messages.ChatMessage{Type: messages.Chat_Message_System, Content: "You have logged out."}
+					c.ChatMessageReceive <- chatMessage
+					continue
 				default:
 					continue
 				}
