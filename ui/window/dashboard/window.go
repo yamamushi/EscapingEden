@@ -26,12 +26,13 @@ type DashboardWindow struct {
 	characterCreatorState CharacterCreatorState
 
 	// Vars for CharacterCreator
-	charColorOption              int // 0 = red, 1 = green, 2 = blue
-	charCreatorOptionSelected    int // 0 = none, 1 = name, 2 = color
-	charColorOptionActive        bool
-	charCreatorNavOptionSelected int // 0 = none, 1 = cancel, 2 = submit
-	charCreatorUsername          string
-	charCreatorUsernameError     string
+	charColorOption                     int // 0 = red, 1 = green, 2 = blue
+	charCreatorOptionSelected           int // 0 = none, 1 = name, 2 = color
+	charColorOptionActive               bool
+	charCreatorNavOptionSelected        int // 0 = none, 1 = cancel, 2 = submit
+	charCreatorConfirmNavOptionSelected int // 0 = none, 1 = cancel, 2 = submit
+	charCreatorName                     string
+	charCreatorUsernameError            string
 }
 
 // LoginWindowState is an enum for storing login window state

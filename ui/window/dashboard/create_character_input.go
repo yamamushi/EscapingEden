@@ -23,7 +23,32 @@ func (dw *DashboardWindow) handleCreateCharacterMenuInput(input types.Input) {
 		case types.InputReturn:
 			// Continue to character details input screen
 			dw.firstTimeLogin = false
+			dw.characterCreatorState = CharacterCreatorCharacterDetails
 			dw.RequestFlushFromConsole()
+		}
+
+	case CharacterCreatorConfirmCharacter:
+		switch input.Type {
+		case types.InputLeft:
+			dw.charCreatorConfirmNavOptionSelected = 1 // back to character creation menu
+		case types.InputRight:
+			dw.charCreatorConfirmNavOptionSelected = 2 // confirm
+		case types.InputReturn:
+			if dw.charCreatorConfirmNavOptionSelected == 1 {
+				dw.charCreatorConfirmNavOptionSelected = 0
+				dw.charCreatorNavOptionSelected = 0 // back to character creation menu
+				dw.charCreatorOptionSelected = 0
+				dw.characterCreatorState = CharacterCreatorCharacterDetails
+				dw.RequestFlushFromConsole()
+				return
+			}
+			if dw.charCreatorConfirmNavOptionSelected == 2 {
+				dw.Log.Println(logging.LogInfo, "User: "+dw.charCreatorName+" created character: "+dw.charCreatorName)
+				// TODO - save character to DB and login user
+				// Also needs to validate that the character name is not already in use
+				dw.RequestFlushFromConsole()
+				return
+			}
 		}
 
 	case CharacterCreatorCharacterDetails:
@@ -84,6 +109,12 @@ func (dw *DashboardWindow) handleCreateCharacterMenuInput(input types.Input) {
 			}
 
 		case types.InputReturn:
+			if dw.charCreatorNavOptionSelected == 0 {
+				dw.charCreatorOptionSelected = 0
+				dw.charColorOptionActive = false // reset color option
+				dw.charCreatorNavOptionSelected = 2
+				return
+			}
 			if dw.charCreatorNavOptionSelected == 1 {
 				// go back to the menu
 				dw.windowState = DashboardMainMenu
@@ -91,7 +122,8 @@ func (dw *DashboardWindow) handleCreateCharacterMenuInput(input types.Input) {
 				dw.charCreatorNavOptionSelected = 0 // reset to default
 				dw.charCreatorOptionSelected = 0    // reset to default
 				dw.charColorOption = 0              // reset color option
-				dw.charCreatorUsername = ""         // reset username
+				dw.charColorOptionActive = false    // reset color option
+				dw.charCreatorName = ""             // reset username
 				dw.charCreatorUsernameError = ""    // reset username error
 				if dw.GetUserInfoField("lastcharacter") == "" {
 					dw.firstTimeLogin = true // reset first time login
@@ -100,8 +132,15 @@ func (dw *DashboardWindow) handleCreateCharacterMenuInput(input types.Input) {
 				return
 			}
 			if dw.charCreatorNavOptionSelected == 2 {
+				if len(dw.charCreatorName) < 4 {
+					dw.charCreatorUsernameError = "Name must be at least 4 characters"
+					return
+				}
 				// Go to character details confirmation screen
 				dw.Log.Println(logging.LogInfo, "Character submitted for confirmation")
+				dw.characterCreatorState = CharacterCreatorConfirmCharacter
+				dw.RequestFlushFromConsole()
+				return
 			}
 		}
 	}
@@ -117,14 +156,14 @@ func (dw *DashboardWindow) handleCharacterCreatorUsernameInput(character string)
 	}
 	dw.charCreatorUsernameError = ""
 
-	if len(dw.charCreatorUsername) < 16 {
-		dw.charCreatorUsername += character
+	if len(dw.charCreatorName) < 16 {
+		dw.charCreatorName += character
 	}
 }
 
 func (dw *DashboardWindow) handleCharacterCreatorBackspaceInput() {
 	dw.charCreatorUsernameError = ""
-	if len(dw.charCreatorUsername) > 0 {
-		dw.charCreatorUsername = dw.charCreatorUsername[:len(dw.charCreatorUsername)-1]
+	if len(dw.charCreatorName) > 0 {
+		dw.charCreatorName = dw.charCreatorName[:len(dw.charCreatorName)-1]
 	}
 }

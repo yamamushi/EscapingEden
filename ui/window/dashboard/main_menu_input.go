@@ -20,6 +20,11 @@ func (dw *DashboardWindow) handleMenuInput(input types.Input) {
 		case "a":
 			lastCharacter := dw.GetUserInfoField("lastcharacter")
 			if lastCharacter == "" {
+				if lastCharacter == "" {
+					dw.characterCreatorState = CharacterCreatorFirstTimeLoginWelcome
+				} else {
+					dw.characterCreatorState = CharacterCreatorCharacterDetails
+				}
 				dw.windowState = DashboardCreateCharacter
 				//dw.ForceConsoleRefresh() // don't use these both together
 				dw.RequestFlushFromConsole()
