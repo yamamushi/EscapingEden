@@ -174,6 +174,34 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 				}()
 
+			case messages.ConnectManager_Message_CharacterCreation:
+				go func() {
+					cm.Log.Println(logging.LogInfo, "Sending character creation request to CharacterManager")
+					cm.CMSendMessages <- messages.CharacterManagerMessage{
+						Type:            messages.CharManager_CreateCharacter,
+						Data:            managerMessage.Data,
+						SenderConsoleID: managerMessage.SenderConsoleID,
+					}
+				}()
+
+			case messages.ConnectManager_Message_CharacterCreationResponse:
+				go func() {
+					cm.Log.Println(logging.LogInfo, "Sending character name validation response to Console")
+					cm.connectionMap.Range(func(key, value interface{}) bool {
+						if conn, ok := value.(*Connection); ok {
+							if managerMessage.RecipientConsoleID == conn.ID {
+								//cm.Log.Println(logging.LogInfo, "Quit message found, sending to conn.Console.ReceiveMessages")
+								consoleMessage := messages.ConsoleMessage{
+									Type: messages.Console_Message_CharacterCreationResponse,
+									Data: managerMessage.Data,
+								}
+								conn.SendToConsole(consoleMessage)
+							}
+						}
+						return true
+					})
+				}()
+
 			case messages.ConnectManager_Message_CharNameValidationResponse:
 				go func() {
 					cm.Log.Println(logging.LogInfo, "Sending character name validation response to Console")

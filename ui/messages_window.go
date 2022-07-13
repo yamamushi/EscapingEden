@@ -58,10 +58,10 @@ func (c *Console) CaptureWindowMessages() {
 					charInfo := windowMessage.Data.(messages.CharacterInfo)
 					c.LoginCharacter(charInfo)
 					chatMessage := messages.ChatMessage{}
-					if int(charInfo.LastLoginTime.Second()) == 0 {
+					if int(charInfo.FirstLogin) == 1 {
 						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome " + c.GetCharacterName() + "!"}
 					} else {
-						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome back" + c.GetCharacterName() + "!"}
+						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome back " + c.GetCharacterName() + "!"}
 					}
 					c.ChatMessageReceive <- chatMessage
 				case messages.WMC_SetCharacterLoggedOut:
@@ -108,6 +108,15 @@ func (c *Console) CaptureWindowMessages() {
 				//log.Println("Sending character name validation request to connection manager")
 				managerMessage := messages.ConnectionManagerMessage{
 					Type:            messages.ConnectManager_Message_CharNameValidation,
+					Data:            windowMessage.Data,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
+
+			case messages.WM_RequestCharacterCreation:
+				//log.Println("Sending character creation request to connection manager")
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_CharacterCreation,
 					Data:            windowMessage.Data,
 					SenderConsoleID: c.ConnectionID,
 				}

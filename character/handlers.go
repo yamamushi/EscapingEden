@@ -3,7 +3,6 @@ package character
 import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"log"
 )
 
 func (cm *CharacterManager) HandleInput(started chan bool) {
@@ -17,22 +16,25 @@ func (cm *CharacterManager) HandleInput(started chan bool) {
 				cm.Log.Println(logging.LogError, "Character Manager Input Handler Received Message Type: None from Sender:", managerMessage.SenderConsoleID)
 				continue
 			case messages.CharManager_CreateCharacter:
-				log.Println("Character Manager: Create Character")
+				cm.Log.Println(logging.LogInfo, "Character Manager: Create Character")
+				// TODO - Replace with actual character creation and storage in database
+				cm.OutputChannel <- messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_CharacterCreationResponse, Data: managerMessage.Data, RecipientConsoleID: managerMessage.SenderConsoleID}
+				cm.Log.Println(logging.LogInfo, "Character Manager: Create Character response sent")
 				continue
 			case messages.CharManager_DeleteCharacter:
-				log.Println("Character Manager: Delete Character")
+				cm.Log.Println(logging.LogInfo, "Character Manager: Delete Character")
 				continue
 			case messages.CharManager_ListCharacters:
-				log.Println("Character Manager: List Characters")
+				cm.Log.Println(logging.LogInfo, "Character Manager: List Characters")
 				continue
 			case messages.CharManager_UpdateCharacter:
-				log.Println("Character Manager: Update Character")
+				cm.Log.Println(logging.LogInfo, "Character Manager: Update Character")
 				continue
 			case messages.CharManager_GetCharacter:
-				log.Println("Character Manager: Get Character")
+				cm.Log.Println(logging.LogInfo, "Character Manager: Get Character")
 				continue
 			case messages.CharManager_GetCharacterInfo:
-				log.Println("Character Manager: Get Character Info")
+				cm.Log.Println(logging.LogInfo, "Character Manager: Get Character Info")
 				continue
 			case messages.CharManager_CheckName:
 				inUse, err := cm.CheckCharNameInUse(managerMessage.Data.(string))

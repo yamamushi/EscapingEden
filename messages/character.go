@@ -12,6 +12,7 @@ type CharacterInfo struct {
 	BGColor       util.ColorCode
 	InventoryID   string `storm:"unique"`
 	LastLoginTime time.Time
+	FirstLogin    int // 0 = false, 1 = true
 }
 
 func (c *CharacterInfo) GetID() string {

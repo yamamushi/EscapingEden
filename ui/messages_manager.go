@@ -36,6 +36,14 @@ func (c *Console) CaptureManagerMessages() {
 					Data: consoleMessage.Data,
 				}
 				c.UserDashboardMessages <- charCreatorMessage
+
+			case messages.Console_Message_CharacterCreationResponse:
+				//log.Println("Console received character creation response")
+				charCreatorMessage := messages.WindowMessage{
+					Type: messages.WM_RequestCharacterCreationResponse,
+					Data: consoleMessage.Data,
+				}
+				c.UserDashboardMessages <- charCreatorMessage
 			//case messages.Console_Message_LoginUser:
 			//log.Println("Console received login user request")
 			//		userInfo := consoleMessage.Data.(messages.UserInfo)

@@ -14,6 +14,8 @@ const (
 	ConnectManager_Message_Login
 	ConnectManager_Message_CharNameValidation
 	ConnectManager_Message_CharNameValidationResponse
+	ConnectManager_Message_CharacterCreation
+	ConnectManager_Message_CharacterCreationResponse
 	ConnectManager_Message_RequestPasswordReset
 	ConnectManager_Message_ValidatePasswordReset
 	ConnectManager_Message_ProcessPasswordReset

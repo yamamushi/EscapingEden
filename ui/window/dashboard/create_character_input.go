@@ -44,7 +44,7 @@ func (dw *DashboardWindow) handleCreateCharacterMenuInput(input types.Input) {
 			}
 			if dw.charCreatorConfirmNavOptionSelected == 2 {
 				dw.Log.Println(logging.LogInfo, "User: "+dw.charCreatorName+" submit character: "+dw.charCreatorName)
-				dw.CreateCharacter()
+				dw.ValidateCharacterName()
 				dw.characterCreatorState = CharacterCreatorPending
 				dw.RequestFlushFromConsole()
 				return

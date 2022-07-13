@@ -24,6 +24,8 @@ const (
 	WM_RequestLogin
 	WM_RequestCharNameValidation
 	WM_RequestCharNameValidationResponse
+	WM_RequestCharacterCreation
+	WM_RequestCharacterCreationResponse
 	WM_RequestForgotPassword
 	WM_ValidateForgotPassword
 	WM_ProcessForgotPassword
