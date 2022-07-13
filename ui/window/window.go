@@ -348,8 +348,10 @@ func (w *Window) GetUserInfoField(field string) string {
 		return w.UserInfo.GetLastLogin().String()
 	case "lastlogout":
 		return w.UserInfo.GetLastLogout().String()
-	case "lastcharacter":
+	case "lastcharacterid":
 		return w.UserInfo.GetLastCharacterID()
+	case "lastcharactername":
+		return w.UserInfo.GetLastCharacterName()
 	}
 	return "unrecognized field: " + field
 }

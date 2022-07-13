@@ -18,6 +18,7 @@ type Account struct {
 	LastLogoutTime      time.Time // Last time the account was logged out.
 	LastConnectionID    string    // Last connection ID of the account, used to force a disconnect.
 	LastCharacterID     string    // Last character ID used.
+	LastCharacterName   string    // Last character name used.
 }
 
 type AccountRegistrationRequest struct {

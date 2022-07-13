@@ -6,12 +6,13 @@ import (
 
 // This struct is used to store some general information about an account after a successful login.
 type UserInfo struct {
-	Username        string
-	Character       string
-	LastCharacterID string
-	DiscordTag      string
-	LastLogin       time.Time
-	LastLogout      time.Time
+	Username          string
+	CharacterName     string
+	LastCharacterID   string
+	LastCharacterName string
+	DiscordTag        string
+	LastLogin         time.Time
+	LastLogout        time.Time
 }
 
 func (u *UserInfo) GetUsername() string {
@@ -19,7 +20,7 @@ func (u *UserInfo) GetUsername() string {
 }
 
 func (u *UserInfo) GetCharacter() string {
-	return u.Character
+	return u.CharacterName
 }
 
 func (u *UserInfo) GetDiscordTag() string {
@@ -36,4 +37,8 @@ func (u *UserInfo) GetLastLogout() time.Time {
 
 func (u *UserInfo) GetLastCharacterID() string {
 	return u.LastCharacterID
+}
+
+func (u *UserInfo) GetLastCharacterName() string {
+	return u.LastCharacterName
 }

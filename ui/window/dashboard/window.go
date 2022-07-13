@@ -20,7 +20,9 @@ type DashboardWindow struct {
 	dwInitialized bool
 
 	// The current login states
-	firstTimeLogin bool
+	firstTimeLogin    bool
+	lastCharacterName string
+	lastCharacterID   string
 
 	// Vars for navigation
 	characterCreatorState CharacterCreatorState

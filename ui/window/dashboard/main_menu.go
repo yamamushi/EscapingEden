@@ -6,12 +6,15 @@ func (dw *DashboardWindow) drawMenu() {
 	dw.dwMutex.Lock()
 	defer dw.dwMutex.Unlock()
 
-	lastCharacter := dw.GetUserInfoField("lastcharacter")
+	lastCharacter := dw.GetUserInfoField("lastcharactername")
 
 	if !(dw.dwInitialized) {
 		dw.RequestFlushFromConsole()
 		if lastCharacter == "" {
 			dw.firstTimeLogin = true
+		} else {
+			dw.lastCharacterID = dw.GetUserInfoField("lastcharacterid")
+			dw.lastCharacterName = dw.GetUserInfoField("lastcharactername")
 		}
 		dw.dwInitialized = true
 	}
@@ -26,7 +29,7 @@ func (dw *DashboardWindow) drawMenu() {
 	if dw.firstTimeLogin {
 		dw.PrintLn(dw.X+13, dw.Y+9, ") Create a new character ", "")
 	} else {
-		dw.PrintLn(dw.X+13, dw.Y+9, ") Login as last character used ", "")
+		dw.PrintLn(dw.X+13, dw.Y+9, ") Login as last character used ("+dw.lastCharacterName+")", "")
 		dw.PrintLn(dw.X+11, dw.Y+10, "(", "")
 		dw.PrintLn(dw.X+12, dw.Y+10, "b", dw.Terminal.Bold())
 		dw.PrintLn(dw.X+13, dw.Y+10, ") Manage characters", "")
