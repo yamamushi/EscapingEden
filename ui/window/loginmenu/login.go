@@ -170,17 +170,21 @@ func (lw *LoginWindow) drawLoginMenuPending() {
 			lw.loginState = LoginUserInfo
 		} else {
 			// If we didn't get an error, we load our user info screen, and we also notify the console the user has logged in
-			lw.windowState = LoginWindowUserDashboard
-			// Create a console message with type Console_Message_LoginUser, we don't pack any data with this message (yet, TBD)
-			msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetLoggedIn, TargetID: lw.GetID()}
-			// Send the message to the console so that we can enable the full dashboard
-			lw.SendToConsole(msg)
+			userInfo := messages.UserInfo{Username: lw.loginResponse.Account.Username,
+				DiscordTag:      lw.loginResponse.Account.DiscordTag,
+				LastCharacterID: lw.loginResponse.Account.LastCharacterID,
+				LastLogin:       lw.loginResponse.Account.LastLoginTime,
+				LastLogout:      lw.loginResponse.Account.LastLogoutTime,
+			}
+			// Note that we don't send the password to the console, and we don't have an active character yet since
+			// The user hasn't chosen one yet.
+			lw.NotifyConsoleLoggedIn(userInfo) // This will also notify all active windows of the updated UserInfo for them.
 		}
 		lw.loginResponseReceived = false
 		lw.RequestFlushFromConsole()
+	} else {
+		lw.PrintLn(lw.X+lw.Width/2-5, lw.Y+lw.Height/2, "Login Pending...", lw.Terminal.Bold())
 	}
-
-	lw.PrintLn(lw.X+lw.Width/2-5, lw.Y+lw.Height/2, "Login Pending...", lw.Terminal.Bold())
 }
 
 func (lw *LoginWindow) drawLoginMenuForgotPassword() {

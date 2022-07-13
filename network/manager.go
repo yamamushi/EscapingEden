@@ -227,6 +227,18 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					return true
 				})
 
+			case messages.ConnectManager_Message_ForceLogout:
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						if managerMessage.RecipientConsoleID == conn.ID {
+							cm.Log.Println(logging.LogInfo, "Sending logout to existing connection")
+							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_LogoutUser, Data: managerMessage.Data}
+							conn.SendToConsole(consoleMessage)
+						}
+					}
+					return true
+				})
+
 			case messages.ConnectManager_Message_BadLoginAttempt:
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {

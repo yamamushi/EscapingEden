@@ -28,6 +28,12 @@ type Console struct {
 	Height int // The height of the console
 	Width  int // The width of the console
 
+	UserInfo      messages.UserInfo // The user info for the user using this console, generated after logging in, and updated as needed
+	userInfoMutex sync.Mutex
+
+	CharacterInfo      messages.CharacterInfo // The character info for the user using this console, generated after logging in, and updated as needed
+	characterInfoMutex sync.Mutex
+
 	Windows            []window.WindowType // The list of windows that are currently in the console
 	ConsoleCommands    string
 	LastSentOutput     string
@@ -56,15 +62,18 @@ type Console struct {
 	LastSentPointMap types.PointMap
 	pmapMutex        sync.Mutex
 
-	escapeBuffer       string
-	escapeSequence     bool
-	returnSequence     bool
-	forceScreenRefresh bool
-	abortSend          bool
-	abortSync          sync.Mutex
-	resizeActive       bool
-	userLoggedIn       bool
-	flushWindowList    []config.WindowID
+	escapeBuffer           string
+	escapeSequence         bool
+	returnSequence         bool
+	forceScreenRefresh     bool
+	abortSend              bool
+	abortSync              sync.Mutex
+	resizeActive           bool
+	userLoggedIn           bool
+	userLoggedInMutex      sync.Mutex
+	characterLoggedIn      bool // Whether or not the user has logged in with a character, chat windows will only be active for input if this is true
+	characterLoggedInMutex sync.Mutex
+	flushWindowList        []config.WindowID
 }
 
 // NewConsole creates a new console with no windows.
@@ -206,8 +215,11 @@ func (c *Console) HandleResize(newWidth, newHeight int) {
 			w.UpdateParams(0, c.Height-10, c.Width-50, 9, c.Width, c.Height)
 		case config.WindowLoginMenu:
 			w.UpdateParams(0, 0, c.Width-50, c.Height-13, c.Width, c.Height)
+		case config.WindowUserDashboard:
+			w.UpdateParams(0, 0, c.Width-50, c.Height-13, c.Width, c.Height)
 		case config.WindowToolBox:
 			w.UpdateParams(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height)
+
 		}
 	}
 

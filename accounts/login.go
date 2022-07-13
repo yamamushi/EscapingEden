@@ -3,9 +3,10 @@ package accounts
 import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
+	"time"
 )
 
-func (am *AccountManager) handleLogin(username, password string) (response messages.AccountLoginResponse) {
+func (am *AccountManager) handleLogin(username, password string, connectionID string) (response messages.AccountLoginResponse) {
 
 	response = messages.AccountLoginResponse{}
 	account := messages.Account{}
@@ -33,6 +34,31 @@ func (am *AccountManager) handleLogin(username, password string) (response messa
 	if account.PasswordResetStatus > 0 {
 		am.Log.Println(logging.LogWarn, "Attempted login to account that is pending password reset:", username)
 		response.Error = messages.AMError_PendingPasswordReset
+		return response
+	}
+
+	account.LastLoginTime = time.Now()
+	err = am.UpdateAccount(account)
+	if err != nil {
+		am.Log.Println(logging.LogWarn, "Failed to update account last login time after login:", username)
+		response.Error = messages.AMError_DBError
+		return response
+	}
+
+	// As the connection manager to log out the user if they are still logged in on another connection
+	logoutExisting := messages.ConnectionManagerMessage{
+		Type:               messages.ConnectManager_Message_ForceLogout,
+		RecipientConsoleID: account.LastConnectionID,
+		Data:               "You have been logged out as your account has logged in from another connection.",
+	}
+	am.Log.Println(logging.LogInfo, "Sending logout request to connection manager:", account.LastConnectionID)
+	am.SendChannel <- logoutExisting
+
+	account.LastConnectionID = connectionID
+	err = am.UpdateAccount(account)
+	if err != nil {
+		am.Log.Println(logging.LogWarn, "Failed to update account last connection ID after login:", username)
+		response.Error = messages.AMError_DBError
 		return response
 	}
 

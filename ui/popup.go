@@ -41,10 +41,10 @@ func (c *Console) HandlePopupMessage(message messages.WindowMessage) {
 	}
 }
 
-// IsPopupOpen returns true if a popup window is open
+// IsPopupOpen returns true if a popup window is open, including the help and settings popups
 func (c *Console) IsPopupOpen() bool {
 	for _, w := range c.Windows {
-		if w.GetID() == config.WindowPopupBox {
+		if w.GetID() == config.WindowPopupBox || w.GetID() == config.WindowHelpBox || w.GetID() == config.WindowSettingsBox {
 			return true
 		}
 	}

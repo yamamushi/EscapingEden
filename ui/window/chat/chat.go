@@ -7,10 +7,13 @@ import (
 	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
+	"github.com/yamamushi/EscapingEden/ui/util"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"sync"
 	"time"
 )
+
+const CHAR_BUFFER_SIZE = 128
 
 // Implements a Chat Window
 
@@ -66,7 +69,7 @@ func NewChatWindow(x, y, w, h, consoleWidth, consoleHeight int, chatInput chan m
 	cw.History = append(cw.History, "The current time in Freeport is: "+edenutil.EdenTime.TimeStamp(edenutil.EdenTime{}))
 	//cw.History = append(cw.History, "There are currently __ players online. ")
 	cw.History = append(cw.History, "")
-	cw.History = append(cw.History, "There no current active world events.")
+	cw.History = append(cw.History, "There are no current active world events.")
 	cw.History = append(cw.History, "")
 
 	cw.HistoryIndex = 0
@@ -108,8 +111,10 @@ func (cw *ChatWindow) HandleInput(input types.Input) {
 		return
 	case types.InputBackspace:
 		//log.Println("ChatWindow Backspace")
-		// remove one character from the input buffer
-		cw.cwInputBuffer = cw.cwInputBuffer[:len(cw.cwInputBuffer)-1]
+		// remove one character from the input buffer if there is one
+		if len(cw.cwInputBuffer) > 0 {
+			cw.cwInputBuffer = cw.cwInputBuffer[:len(cw.cwInputBuffer)-1]
+		}
 		return
 	case types.InputReturn:
 		//log.Println("ChatWindow Return")
@@ -121,9 +126,42 @@ func (cw *ChatWindow) HandleInput(input types.Input) {
 		}
 		return
 	case types.InputCharacter:
-		cw.cwInputBuffer += input.Data
+		cw.HandleCharacterInput(input.Data)
 	}
 	//log.Println("Chatwindow Receive: ", input.Data)
+}
+
+func (cw *ChatWindow) DrawInputLine() {
+
+	colorCode := new(util.ColorCode)
+	if len(cw.cwInputBuffer) >= CHAR_BUFFER_SIZE {
+		colorCode = util.RGBCode(255, 0, 0)
+	} else {
+		colorCode = util.RGBCode(255, 255, 255)
+	}
+	// Clear the input line first with the correct color
+	for i := 0; i < cw.Width; i++ {
+		cw.PrintLn(cw.X+i, cw.Y+cw.Height, " ", colorCode.FG())
+	}
+	// Draw a > at the bottom of the chat window
+	if len("> "+cw.cwInputBuffer)+2 > cw.Width {
+		// Only show the last part of the input buffer that fits in the window
+		// If the input buffer is 256 characters, we draw it in red to indicate that no more characters can be added
+		cw.PrintLn(cw.X+1, cw.Y+cw.Height, "> "+cw.cwInputBuffer[len(cw.cwInputBuffer)-cw.Width+4:], colorCode.FG())
+	} else {
+		cw.PrintLn(cw.X+1, cw.Y+cw.Height, "> "+cw.cwInputBuffer, colorCode.FG())
+	}
+}
+
+func (cw *ChatWindow) HandleCharacterInput(character string) {
+	// We set a 256 character limit on the input buffer
+	if len(cw.cwInputBuffer) < CHAR_BUFFER_SIZE {
+		cw.cwInputBuffer += character
+	}
+}
+
+func (cw *ChatWindow) SendChatMessage() {
+
 }
 
 // ConsoleMessage is called by console to manually write a console message to the history
@@ -161,6 +199,8 @@ func (cw *ChatWindow) Listen() {
 func (cw *ChatWindow) UpdateContents() {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()
+	// First clear the window
+	cw.ResetWindowDrawings()
 
 	// only keep the newest 500 messages in cw.history
 	if len(cw.History) > 500 {
@@ -173,4 +213,6 @@ func (cw *ChatWindow) UpdateContents() {
 	}
 
 	cw.SetContents(output)
+	cw.DrawInputLine()
+
 }

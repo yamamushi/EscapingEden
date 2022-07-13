@@ -1,17 +1,23 @@
 package messages
 
+import "time"
+
 // Account is used for registration/db records/etc to store player accounts.
 // It has no knowledge of any other data.
 type Account struct {
-	ID                  string `storm:"index"`  // Indexed Unique ID for the account, we use UUID, not the auto-increment, ever.
-	Username            string `storm:"unique"` // Username of the account, must be unique.
-	DiscordTag          string `storm:"unique"` // Discord Tag of the account, must be unique in username#0000 format.
-	DiscordID           string `storm:"unique"` // Discord ID of the account, must be unique.
-	HashedPassword      string // Hashed password of the account.
-	ValidationStatus    int    // 0 = pending, 1 = validated
-	ValidationCode      string // The validation code for the account.
-	PasswordResetStatus int    // 0 = no reset requested, 1 = reset requested, 2 = password reset required by admin
-	PasswordResetCode   string // The temporary reset code for the account.
+	ID                  string    `storm:"index"`  // Indexed Unique ID for the account, we use UUID, not the auto-increment, ever.
+	Username            string    `storm:"unique"` // Username of the account, must be unique.
+	DiscordTag          string    `storm:"unique"` // Discord Tag of the account, must be unique in username#0000 format.
+	DiscordID           string    `storm:"unique"` // Discord ID of the account, must be unique.
+	HashedPassword      string    // Hashed password of the account.
+	ValidationStatus    int       // 0 = pending, 1 = validated
+	ValidationCode      string    // The validation code for the account.
+	PasswordResetStatus int       // 0 = no reset requested, 1 = reset requested, 2 = password reset required by admin
+	PasswordResetCode   string    // The temporary reset code for the account.
+	LastLoginTime       time.Time // Last time the account was logged in successfully.
+	LastLogoutTime      time.Time // Last time the account was logged out.
+	LastConnectionID    string    // Last connection ID of the account, used to force a disconnect.
+	LastCharacterID     string    // Last character ID used.
 }
 
 type AccountRegistrationRequest struct {

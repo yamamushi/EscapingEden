@@ -6,6 +6,7 @@ import (
 	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
+	"strings"
 	"sync"
 )
 
@@ -47,6 +48,14 @@ type WindowType interface {
 	SetScrollBufferNew(bool)
 	SupportsScrolling() bool
 	GetContentStartPos() int
+
+	NotifyConsoleLoggedOut()
+	NotifyConsoleLoggedIn(info messages.UserInfo)
+	SetUserInfo(messages.UserInfo)
+	GetUserInfoField(string) string
+
+	SetCharacterInfo(info messages.CharacterInfo)
+	GetCharacterInfoField(string) string
 
 	LockMutex()
 	UnlockMutex()
@@ -97,6 +106,12 @@ type Window struct {
 	ConsoleReceive chan messages.WindowMessage // Receive messages from the Console
 
 	DirectionInput types.InputType // The last direction input from the user
+
+	UserInfo      messages.UserInfo // The user info of the current user
+	userInfoMutex sync.Mutex
+
+	CharacterInfo      messages.CharacterInfo // The character info of the current character
+	characterInfoMutex sync.Mutex
 
 	mutex               sync.Mutex
 	pmapMutex           sync.Mutex
@@ -289,4 +304,68 @@ func (w *Window) GetConfig() *config.WindowConfig {
 	defer w.mutex.Unlock()
 
 	return config.NewWindowConfig(w.X, w.Y, w.Width, w.Height, w.Contents)
+}
+
+func (w *Window) SetCharacterInfo(charInfo messages.CharacterInfo) {
+	w.characterInfoMutex.Lock()
+	defer w.characterInfoMutex.Unlock()
+	w.CharacterInfo = charInfo
+}
+
+func (w *Window) GetCharacterInfoField(field string) string {
+	w.characterInfoMutex.Lock()
+	defer w.characterInfoMutex.Unlock()
+	field = strings.ToLower(field)
+	switch field {
+	case "name":
+		return w.CharacterInfo.GetName()
+	case "id":
+		return w.CharacterInfo.GetID()
+	case "inventory":
+		return w.CharacterInfo.GetInventoryID()
+	}
+	return "unrecognized field: " + field
+}
+
+func (w *Window) SetUserInfo(userInfo messages.UserInfo) {
+	w.userInfoMutex.Lock()
+	defer w.userInfoMutex.Unlock()
+	w.UserInfo = userInfo
+}
+
+func (w *Window) GetUserInfoField(field string) string {
+	w.userInfoMutex.Lock()
+	defer w.userInfoMutex.Unlock()
+	field = strings.ToLower(field)
+	switch field {
+	case "username":
+		return w.UserInfo.GetUsername()
+	case "discord":
+		return w.UserInfo.GetDiscordTag()
+	case "charactername":
+		return w.UserInfo.GetCharacter()
+	case "lastlogin":
+		return w.UserInfo.GetLastLogin().String()
+	case "lastlogout":
+		return w.UserInfo.GetLastLogout().String()
+	case "lastcharacter":
+		return w.UserInfo.GetLastCharacterID()
+	}
+	return "unrecognized field: " + field
+}
+
+// NotifyConsoleLoggedOut is called when the user logs out
+func (w *Window) NotifyConsoleLoggedOut() {
+	// Create a console message with type Console_Message_LoginUser, we don't pack any data with this message (yet, TBD)
+	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetAccountLoggedOut, TargetID: w.GetID()}
+	// Send the message to the console so that we can enable the full dashboard control
+	w.SendToConsole(msg)
+}
+
+// NotifyConsoleLoggedIn is called when the user logs in
+func (w *Window) NotifyConsoleLoggedIn(info messages.UserInfo) {
+	// Create a console message with type Console_Message_LoginUser, we don't pack any data with this message (yet, TBD)
+	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetAccountLoggedIn, TargetID: w.GetID(), Data: info}
+	// Send the message to the console so that we can enable the full dashboard control
+	w.SendToConsole(msg)
 }

@@ -34,7 +34,7 @@ func (lw *LoginWindow) loginSubmit() {
 
 	// check if username is empty
 	if lw.loginSubmitData.Username == "" {
-		lw.loginSubmitData.Error = "Username cannot be empty"
+		lw.loginSubmitData.Error = "username cannot be empty"
 		lw.loginResponseReceived = true
 		return
 	}
@@ -56,4 +56,11 @@ func (lw *LoginWindow) loginSubmit() {
 	go lw.HandleReceiveChannel() // We're going to start listening for responses now
 
 	return
+}
+
+func (lw *LoginWindow) UpdateUserInfo() {
+	message := messages.WindowMessage{
+		Type:    messages.WM_ConsoleCommand,
+		Command: messages.WMC_UpdateUserInfoForAllWindows}
+	lw.SendToConsole(message)
 }

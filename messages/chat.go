@@ -7,6 +7,8 @@ const (
 	Chat_Message_Normal
 	Chat_Message_Whisper
 	Chat_Message_Broadcast
+	Chat_Message_GM
+	Chat_Message_System
 )
 
 type ChatMessageChannel int

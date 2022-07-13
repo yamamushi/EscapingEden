@@ -43,8 +43,11 @@ const (
 	WMC_ToggleHelp
 	WMC_RefreshConsole
 	WMC_FlushConsoleBuffer
-	WMC_SetLoggedIn
-	WMC_SetLoggedOut
+	WMC_SetAccountLoggedIn
+	WMC_SetAccountLoggedOut
+	WMC_SetCharacterLoggedIn
+	WMC_SetCharacterLoggedOut
+	WMC_UpdateUserInfoForAllWindows
 )
 
 type WindowMessage struct {
