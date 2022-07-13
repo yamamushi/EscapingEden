@@ -65,6 +65,7 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 				data := windowMessage.Data.(messages.CharManagerUpdateHistoryResponse)
 				account := data.Data.(messages.Account)
 				if account.Error != "Null Error" {
+					// TODO - This error needs to be handled better - right now we basically ignore it, and logins can break.
 					dw.Log.Println(logging.LogError, "Something went wrong when trying to update your account, please try again later.")
 					dw.windowState = DashboardMainMenu
 					dw.RequestFlushFromConsole()
@@ -82,6 +83,7 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 				data := windowMessage.Data.(messages.CharManagerUpdateHistoryResponse)
 				charInfo := data.Data.(messages.CharacterInfo)
 				if charInfo.Error != "Null Error" {
+					// TODO - This error needs to be handled better - right now we basically ignore it, and logins can break.
 					dw.Error("Something went wrong when trying to update your character, please try again later.")
 					dw.windowState = DashboardMainMenu
 					dw.RequestFlushFromConsole()
