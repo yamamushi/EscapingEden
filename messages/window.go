@@ -44,7 +44,7 @@ const (
 	WMC_RefreshConsole
 	WMC_FlushConsoleBuffer
 	WMC_SetAccountLoggedIn
-	WMC_SetLoggedOut
+	WMC_SetAccountLoggedOut
 	WMC_SetCharacterLoggedIn
 	WMC_SetCharacterLoggedOut
 	WMC_UpdateUserInfoForAllWindows

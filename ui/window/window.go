@@ -328,7 +328,7 @@ func (w *Window) GetUserInfoField(field string) string {
 // NotifyConsoleLoggedOut is called when the user logs out
 func (w *Window) NotifyConsoleLoggedOut() {
 	// Create a console message with type Console_Message_LoginUser, we don't pack any data with this message (yet, TBD)
-	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetLoggedOut, TargetID: w.GetID()}
+	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetAccountLoggedOut, TargetID: w.GetID()}
 	// Send the message to the console so that we can enable the full dashboard control
 	w.SendToConsole(msg)
 }

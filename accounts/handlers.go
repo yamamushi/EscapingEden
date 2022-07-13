@@ -34,7 +34,7 @@ func (am *AccountManager) HandleMessages(started chan bool) {
 				req := managerMessage.Data.(messages.AccountLoginRequest)
 				am.Log.Println(logging.LogInfo, "Account Manager received login request")
 
-				loginResponse := am.handleLogin(req.Username, req.Password)
+				loginResponse := am.handleLogin(req.Username, req.Password, managerMessage.SenderSessionID)
 				response := messages.ConnectionManagerMessage{
 					Type:               messages.ConnectManager_Message_LoginResponse,
 					RecipientConsoleID: managerMessage.SenderSessionID,

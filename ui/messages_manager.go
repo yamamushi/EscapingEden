@@ -29,15 +29,24 @@ func (c *Console) CaptureManagerMessages() {
 				//log.Println("Console received login response, sending to login window")
 				loginMessage := messages.WindowMessage{Type: messages.WM_LoginResponse, Data: consoleMessage.Data}
 				c.LoginWindowMessages <- loginMessage
-			case messages.Console_Message_LoginUser:
-				//log.Println("Console received login user request")
-				userInfo := consoleMessage.Data.(messages.UserInfo)
-				c.UpdateUserInfo(userInfo)
+			//case messages.Console_Message_LoginUser:
+			//log.Println("Console received login user request")
+			//		userInfo := consoleMessage.Data.(messages.UserInfo)
+			//		c.UpdateUserInfo(userInfo)
+			//		c.ChatMessageReceive <- messages.ChatMessage{Type: messages.Chat_Message_System, Content: "You are now logged in as " + userInfo.Username}
+			case messages.Console_Message_LogoutUser:
+				//log.Println("Console received logout user request")
+				if c.IsUserLoggedIn() {
+					c.LogoutUser()
+					c.ChatMessageReceive <- messages.ChatMessage{Type: messages.Chat_Message_System, Content: consoleMessage.Data.(string)}
+				}
 			case messages.Console_Message_Chat:
 				//log.Println("Chat message received from manager")
-				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: consoleMessage.Data.(string)}
-				c.ChatMessageReceive <- chatMessage
-				continue
+				if c.IsCharacterLoggedIn() {
+					chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: consoleMessage.Data.(string)}
+					c.ChatMessageReceive <- chatMessage
+					continue
+				}
 			case messages.Console_Message_Error:
 				//log.Println("Error message received from manager")
 				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: "Error: " + consoleMessage.Data.(string)}

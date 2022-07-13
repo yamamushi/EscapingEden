@@ -19,6 +19,7 @@ const (
 	ConnectManager_Message_ProcessPasswordResetResponse
 	ConnectManager_Message_LoginResponse
 	ConnectManager_Message_BadLoginAttempt
+	ConnectManager_Message_ForceLogout
 )
 
 // ConnectionManagerMessage is a message sent meant for parsing by the ConnectionManager

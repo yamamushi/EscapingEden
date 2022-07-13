@@ -45,7 +45,7 @@ func (c *Console) CaptureWindowMessages() {
 					log.Println("Console received login user for " + c.ConnectionID)
 					c.LoginUser(windowMessage.Data.(messages.UserInfo))
 					continue
-				case messages.WMC_SetLoggedOut:
+				case messages.WMC_SetAccountLoggedOut:
 					log.Println("Console received logout user for " + c.ConnectionID)
 					c.LogoutUser() // This also logs out a character, no need to force both.
 					continue
