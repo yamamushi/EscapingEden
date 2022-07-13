@@ -104,6 +104,15 @@ func (c *Console) CaptureWindowMessages() {
 				c.SendMessages <- managerMessage
 			// These messages require serializing to send to ConnectionManager
 
+			case messages.WM_RequestCharNameValidation:
+				//log.Println("Sending character name validation request to connection manager")
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_CharNameValidation,
+					Data:            windowMessage.Data,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
+
 			case messages.WM_RequestForgotPassword:
 				managerMessage := messages.ConnectionManagerMessage{
 					Type:            messages.ConnectManager_Message_RequestPasswordReset,

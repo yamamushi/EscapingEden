@@ -34,6 +34,10 @@ func (cm *CharacterManager) HandleInput(started chan bool) {
 			case messages.CharManager_GetCharacterInfo:
 				log.Println("Character Manager: Get Character Info")
 				continue
+			case messages.CharManager_CheckName:
+				inUse, err := cm.CheckCharNameInUse(managerMessage.Data.(string))
+				cm.OutputChannel <- messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_CharNameValidationResponse, Data: messages.CharManagerNameCheckResponse{NameInUse: inUse, Error: err.Error()}, RecipientConsoleID: managerMessage.SenderConsoleID}
+
 			default:
 				continue
 			}

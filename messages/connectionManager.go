@@ -12,6 +12,8 @@ const (
 	ConnectManager_Message_Register
 	ConnectManager_Message_RegisterResponse
 	ConnectManager_Message_Login
+	ConnectManager_Message_CharNameValidation
+	ConnectManager_Message_CharNameValidationResponse
 	ConnectManager_Message_RequestPasswordReset
 	ConnectManager_Message_ValidatePasswordReset
 	ConnectManager_Message_ProcessPasswordReset

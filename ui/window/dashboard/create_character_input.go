@@ -44,8 +44,7 @@ func (dw *DashboardWindow) handleCreateCharacterMenuInput(input types.Input) {
 			}
 			if dw.charCreatorConfirmNavOptionSelected == 2 {
 				dw.Log.Println(logging.LogInfo, "User: "+dw.charCreatorName+" created character: "+dw.charCreatorName)
-				// TODO - save character to DB and login user
-				// Also needs to validate that the character name is not already in use
+				dw.CreateCharacter()
 				dw.RequestFlushFromConsole()
 				return
 			}

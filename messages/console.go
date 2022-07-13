@@ -14,6 +14,7 @@ const (
 	Console_Message_ResetPasswordValidateResponse
 	Console_Message_ProcessPasswordValidateResponse
 	Console_Message_LoginResponse
+	Console_Message_ValidateCharNameResponse
 	Console_Message_LogoutResponse
 	Console_Message_LoginUser
 	Console_Message_LogoutUser

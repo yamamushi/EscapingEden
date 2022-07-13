@@ -50,6 +50,7 @@ type Console struct {
 
 	// Channels for communicating with windows
 	LoginWindowMessages    chan messages.WindowMessage
+	UserDashboardMessages  chan messages.WindowMessage
 	ChatMessageReceive     chan messages.ChatMessage
 	ChatWindowMessages     chan messages.WindowMessage
 	ToolboxWindowMessages  chan messages.WindowMessage
@@ -87,10 +88,11 @@ func NewConsole(height int, width int, connectionID string, outputChannel chan m
 	chatMessageSend := make(chan messages.WindowMessage)
 	toolboxMessages := make(chan messages.WindowMessage)
 	popupBoxMessage := make(chan messages.WindowMessage)
+	userDashboardMessages := make(chan messages.WindowMessage)
 
 	return &Console{Height: height, Width: width, ConnectionID: connectionID, SendMessages: outputChannel,
 		ReceiveMessages: receiveFromConnectionManager, WindowMessages: windowMessages, LoginWindowMessages: loginMessages,
-		ChatMessageReceive: chatMessageReceive, ChatWindowMessages: chatMessageSend, ToolboxWindowMessages: toolboxMessages,
+		ChatMessageReceive: chatMessageReceive, ChatWindowMessages: chatMessageSend, UserDashboardMessages: userDashboardMessages, ToolboxWindowMessages: toolboxMessages,
 		PopupBoxWindowMessages: popupBoxMessage, Log: log, Terminal: term}
 }
 

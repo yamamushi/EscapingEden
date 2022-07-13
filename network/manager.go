@@ -28,7 +28,7 @@ type ConnectionManager struct {
 	AMSendMessages chan messages.AccountManagerMessage
 
 	// Our CharacterManager outbound Channel
-	CharacterManagerMessages chan messages.CharacterManagerMessage
+	CMSendMessages chan messages.CharacterManagerMessage
 
 	// Our EdenBot Manager
 	EBSendMessages chan messages.EdenbotMessage
@@ -38,13 +38,13 @@ type ConnectionManager struct {
 func NewConnectionManager(connectionMap *sync.Map, receiveMessages chan messages.ConnectionManagerMessage,
 	accountManagerMessages chan messages.AccountManagerMessage, characterManagerReceiveMessages chan messages.CharacterManagerMessage, ebSendMessages chan messages.EdenbotMessage, db edendb.DatabaseType, log logging.LoggerType) *ConnectionManager {
 	return &ConnectionManager{
-		connectionMap:            connectionMap,
-		CMReceiveMessages:        receiveMessages,
-		AMSendMessages:           accountManagerMessages,
-		CharacterManagerMessages: characterManagerReceiveMessages,
-		EBSendMessages:           ebSendMessages,
-		Log:                      log,
-		DB:                       db,
+		connectionMap:     connectionMap,
+		CMReceiveMessages: receiveMessages,
+		AMSendMessages:    accountManagerMessages,
+		CMSendMessages:    characterManagerReceiveMessages,
+		EBSendMessages:    ebSendMessages,
+		Log:               log,
+		DB:                db,
 	}
 }
 
@@ -161,6 +161,34 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 						SourceType: "console",
 						SourceID:   managerMessage.SenderConsoleID,
 					}
+				}()
+
+			case messages.ConnectManager_Message_CharNameValidation:
+				go func() {
+					cm.Log.Println(logging.LogInfo, "Sending character name validation request to CharacterManager")
+					cm.CMSendMessages <- messages.CharacterManagerMessage{
+						Type:            messages.CharManager_CheckName,
+						Data:            managerMessage.Data,
+						SenderConsoleID: managerMessage.SenderConsoleID,
+					}
+				}()
+
+			case messages.ConnectManager_Message_CharNameValidationResponse:
+				go func() {
+					cm.Log.Println(logging.LogInfo, "Sending character name validation response to Console")
+					cm.connectionMap.Range(func(key, value interface{}) bool {
+						if conn, ok := value.(*Connection); ok {
+							if managerMessage.RecipientConsoleID == conn.ID {
+								//cm.Log.Println(logging.LogInfo, "Quit message found, sending to conn.Console.ReceiveMessages")
+								consoleMessage := messages.ConsoleMessage{
+									Type: messages.Console_Message_ValidateCharNameResponse,
+									Data: managerMessage.Data,
+								}
+								conn.SendToConsole(consoleMessage)
+							}
+						}
+						return true
+					})
 				}()
 
 			case messages.ConnectManager_Message_ValidatePasswordReset:

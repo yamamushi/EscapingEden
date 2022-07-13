@@ -22,6 +22,8 @@ const (
 	WM_ParseChat
 	WM_RequestRegistration
 	WM_RequestLogin
+	WM_RequestCharNameValidation
+	WM_RequestCharNameValidationResponse
 	WM_RequestForgotPassword
 	WM_ValidateForgotPassword
 	WM_ProcessForgotPassword

@@ -160,7 +160,7 @@ func (c *Console) GetUserDashboard() window.WindowType {
 	//c.Log.Println(logging.LogInfo, "User Dashboard window not found, creating a new one")
 	// Create the login window if it doesn't exist
 	dashboardWindow := dashboard.NewDashboardWindow(0, 0, c.Width-50, c.Height-13, c.Width, c.Height,
-		c.LoginWindowMessages, c.WindowMessages, c.Log, c.Terminal)
+		c.UserDashboardMessages, c.WindowMessages, c.Log, c.Terminal)
 	dashboardWindow.Init()
 	c.AddWindow(dashboardWindow)
 	return dashboardWindow

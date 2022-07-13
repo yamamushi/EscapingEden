@@ -29,6 +29,13 @@ func (c *Console) CaptureManagerMessages() {
 				//log.Println("Console received login response, sending to login window")
 				loginMessage := messages.WindowMessage{Type: messages.WM_LoginResponse, Data: consoleMessage.Data}
 				c.LoginWindowMessages <- loginMessage
+			case messages.Console_Message_ValidateCharNameResponse:
+				//log.Println("Console received validate character name response")
+				charCreatorMessage := messages.WindowMessage{
+					Type: messages.WM_RequestCharNameValidationResponse,
+					Data: consoleMessage.Data,
+				}
+				c.UserDashboardMessages <- charCreatorMessage
 			//case messages.Console_Message_LoginUser:
 			//log.Println("Console received login user request")
 			//		userInfo := consoleMessage.Data.(messages.UserInfo)
