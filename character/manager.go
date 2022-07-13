@@ -1,9 +1,9 @@
 package character
 
 import (
+	logging "github.com/EscapingEden/Logging-Go"
 	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/edendb"
-	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 )
 

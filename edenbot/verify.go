@@ -2,8 +2,8 @@ package edenbot
 
 import (
 	"errors"
+	logging "github.com/EscapingEden/Logging-Go"
 	"github.com/bwmarrin/discordgo"
-	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"strings"
 )

@@ -2,7 +2,7 @@ package chat
 
 import (
 	"github.com/yamamushi/EscapingEden/edenutil"
-	"github.com/yamamushi/EscapingEden/logging"
+	logging "github.com/EscapingEden/Logging-Go"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui/config"

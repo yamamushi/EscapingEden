@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"github.com/yamamushi/EscapingEden/logging"
+	logging "github.com/EscapingEden/Logging-Go"
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"

@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/BurntSushi/toml v0.4.1
+	github.com/EscapingEden/Logging-Go v0.0.0-20220713225446-1540dfd089b7
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/bwmarrin/discordgo v0.25.0
 	github.com/google/uuid v1.3.0
@@ -13,6 +14,7 @@ require (
 )
 
 require (
+	github.com/EscapingEden/EdenUtil-Go v0.0.0-20220713224034-e7cabc891bf9 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20210727001814-0db043d8d5be // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/jezek/xgb v0.0.0-20210312150743-0e0f116e1240 // indirect

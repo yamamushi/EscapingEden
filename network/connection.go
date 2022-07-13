@@ -2,7 +2,7 @@ package network
 
 import (
 	"bufio"
-	"github.com/yamamushi/EscapingEden/logging"
+	logging "github.com/EscapingEden/Logging-Go"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
 	xterm_256color "github.com/yamamushi/EscapingEden/terminals/xterm-256color"

@@ -1,8 +1,8 @@
 package edenbot
 
 import (
+	logging "github.com/EscapingEden/Logging-Go"
 	"github.com/yamamushi/EscapingEden/edenutil"
-	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"log"
 	"regexp"

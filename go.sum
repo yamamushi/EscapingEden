@@ -3,6 +3,10 @@ github.com/BurntSushi/toml v0.4.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbi
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/DataDog/zstd v1.4.1 h1:3oxKN3wbHibqx897utPC2LTQU4J+IHWWJO+glkAkpFM=
 github.com/DataDog/zstd v1.4.1/go.mod h1:1jcaCB/ufaK+sKp1NBhlGmpz41jOoPQ35bpF36t7BBo=
+github.com/EscapingEden/EdenUtil-Go v0.0.0-20220713224034-e7cabc891bf9 h1:hZ+Kg5hvs0mnQBzbIgYX0s/I5i3uK+1eG8as0D8yNcc=
+github.com/EscapingEden/EdenUtil-Go v0.0.0-20220713224034-e7cabc891bf9/go.mod h1:/SJZCFN01r1eS4ATURXecJ0UP1Rjp4YTZEM7IjTOcdY=
+github.com/EscapingEden/Logging-Go v0.0.0-20220713225446-1540dfd089b7 h1:1rjSNNrUSXGtkz+p7sF3aFouGec/YIaSmsQkvxVspUE=
+github.com/EscapingEden/Logging-Go v0.0.0-20220713225446-1540dfd089b7/go.mod h1:Y9yJweSDtnZ+LMJJKq3094RMZAjyFx7noCdslqjrcYQ=
 github.com/Sereal/Sereal v0.0.0-20190618215532-0b8ac451a863 h1:BRrxwOZBolJN4gIwvZMJY1tzqBvQgpaZiQRuIDD40jM=
 github.com/Sereal/Sereal v0.0.0-20190618215532-0b8ac451a863/go.mod h1:D0JMgToj/WdxCgd30Kc1UcA9E+WdZoJqeVOuYW7iTBM=
 github.com/asdine/storm/v3 v3.2.1 h1:I5AqhkPK6nBZ/qJXySdI7ot5BlXSZ7qvDY1zAn5ZJac=

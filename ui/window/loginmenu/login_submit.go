@@ -1,7 +1,7 @@
 package login
 
 import (
-	"github.com/yamamushi/EscapingEden/logging"
+	logging "github.com/EscapingEden/Logging-Go"
 	"github.com/yamamushi/EscapingEden/messages"
 	"time"
 )

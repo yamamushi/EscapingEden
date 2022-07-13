@@ -1,8 +1,8 @@
 package accounts
 
 import (
+	logging "github.com/EscapingEden/Logging-Go"
 	"github.com/google/uuid"
-	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"strings"
 )

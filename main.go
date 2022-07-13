@@ -7,8 +7,8 @@ Escaping Eden is a simple text adventure mud ;)
 import (
 	"flag"
 	"fmt"
+	logging "github.com/EscapingEden/Logging-Go"
 	"github.com/yamamushi/EscapingEden/edenconfig"
-	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"os"
 	"os/signal"

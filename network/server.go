@@ -1,10 +1,10 @@
 package network
 
 import (
+	logging "github.com/EscapingEden/Logging-Go"
 	"github.com/google/uuid"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/edenutil"
-	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"net"
 	"sync"

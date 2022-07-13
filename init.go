@@ -5,15 +5,15 @@ These functions are used to initialize various components, to keep main clean :)
 */
 import (
 	"errors"
+	logging "github.com/EscapingEden/Logging-Go"
+	"github.com/EscapingEden/Logging-Go/logconsole"
+	"github.com/EscapingEden/Logging-Go/logfile"
 	"github.com/yamamushi/EscapingEden/accounts"
 	"github.com/yamamushi/EscapingEden/character"
 	"github.com/yamamushi/EscapingEden/edenbot"
 	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/edendb/bolt"
-	"github.com/yamamushi/EscapingEden/logging"
-	"github.com/yamamushi/EscapingEden/logging/logconsole"
-	"github.com/yamamushi/EscapingEden/logging/logfile"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/network"
 	"strings"
