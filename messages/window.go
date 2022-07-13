@@ -43,8 +43,10 @@ const (
 	WMC_ToggleHelp
 	WMC_RefreshConsole
 	WMC_FlushConsoleBuffer
-	WMC_SetLoggedIn
+	WMC_SetAccountLoggedIn
 	WMC_SetLoggedOut
+	WMC_SetCharacterLoggedIn
+	WMC_SetCharacterLoggedOut
 	WMC_UpdateUserInfoForAllWindows
 )
 

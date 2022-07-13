@@ -34,6 +34,7 @@ func (c *Console) LogoutUser() {
 	defer c.userLoggedInMutex.Unlock()
 	c.userLoggedIn = false
 	c.UpdateUserInfo(messages.UserInfo{})
+	c.LogoutCharacter()
 	c.RemoveWindow(c.GetUserDashboard().GetID())
 	c.SetActiveWindowNoThread(c.GetLoginWindow())
 }

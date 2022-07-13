@@ -41,15 +41,20 @@ func (c *Console) CaptureWindowMessages() {
 					//log.Println("Flush message received")
 					c.flushWindowList = append(c.flushWindowList, windowMessage.TargetID)
 					continue
-				case messages.WMC_SetLoggedIn:
-					//log.Println("Console received login user for " + c.ConnectionID)
+				case messages.WMC_SetAccountLoggedIn:
+					log.Println("Console received login user for " + c.ConnectionID)
 					c.LoginUser(windowMessage.Data.(messages.UserInfo))
-					//log.Println("User logged into console")
 					continue
 				case messages.WMC_SetLoggedOut:
 					log.Println("Console received logout user for " + c.ConnectionID)
-					c.LogoutUser()
+					c.LogoutUser() // This also logs out a character, no need to force both.
 					continue
+				case messages.WMC_SetCharacterLoggedIn:
+					log.Println("Console received login character for " + c.ConnectionID)
+					c.LoginCharacter()
+				case messages.WMC_SetCharacterLoggedOut:
+					log.Println("Console received logout character for " + c.ConnectionID)
+					c.LogoutCharacter()
 				default:
 					continue
 				}

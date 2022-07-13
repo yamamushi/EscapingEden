@@ -8,7 +8,7 @@ import (
 
 // ToggleHelp opens a new help window using the options
 func (c *Console) ToggleHelp(options *config.WindowConfig) {
-	if !c.IsHelpOpen() {
+	if !c.IsPopupOpen() {
 		helpWindow := help.NewHelpWindow(options.X, options.Y, options.Width, options.Height, c.Width, c.Height,
 			options.Page, c.PopupBoxWindowMessages, c.WindowMessages, c.Log, c.Terminal)
 		helpWindow.Init()

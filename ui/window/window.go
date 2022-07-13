@@ -336,7 +336,7 @@ func (w *Window) NotifyConsoleLoggedOut() {
 // NotifyConsoleLoggedIn is called when the user logs in
 func (w *Window) NotifyConsoleLoggedIn(info messages.UserInfo) {
 	// Create a console message with type Console_Message_LoginUser, we don't pack any data with this message (yet, TBD)
-	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetLoggedIn, TargetID: w.GetID(), Data: info}
+	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetAccountLoggedIn, TargetID: w.GetID(), Data: info}
 	// Send the message to the console so that we can enable the full dashboard control
 	w.SendToConsole(msg)
 }
