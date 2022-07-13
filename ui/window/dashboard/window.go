@@ -19,6 +19,9 @@ type DashboardWindow struct {
 	// Initialize the window
 	dwInitialized bool
 
+	// The current login states
+	firstTimeLogin bool
+
 	// Vars for navigation
 }
 
@@ -28,6 +31,7 @@ type DashboardState int
 const (
 	DashboardMainMenu DashboardState = iota
 	DashboardLogin
+	DashboardCreateCharacter
 	DashboardManageCharacters
 	DashboardManageSettings
 	DashboardLogout
@@ -73,6 +77,8 @@ func (dw *DashboardWindow) HandleInput(input types.Input) {
 	switch dw.windowState {
 	case DashboardMainMenu:
 		dw.handleMenuInput(input)
+	case DashboardCreateCharacter:
+		dw.handleCreateCharacterInput(input)
 	case DashboardLogin:
 		//dw.handleLoginInput(input)
 	case DashboardManageCharacters:
@@ -89,5 +95,7 @@ func (dw *DashboardWindow) UpdateContents() {
 	switch dw.windowState {
 	case DashboardMainMenu:
 		dw.drawMenu()
+	case DashboardCreateCharacter:
+		dw.drawCreateCharacterMenu()
 	}
 }

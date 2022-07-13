@@ -171,7 +171,11 @@ func (lw *LoginWindow) drawLoginMenuPending() {
 		} else {
 			// If we didn't get an error, we load our user info screen, and we also notify the console the user has logged in
 			userInfo := messages.UserInfo{Username: lw.loginResponse.Account.Username,
-				DiscordTag: lw.loginResponse.Account.DiscordTag}
+				DiscordTag:      lw.loginResponse.Account.DiscordTag,
+				LastCharacterID: lw.loginResponse.Account.LastCharacterID,
+				LastLogin:       lw.loginResponse.Account.LastLoginTime,
+				LastLogout:      lw.loginResponse.Account.LastLogoutTime,
+			}
 			// Note that we don't send the password to the console, and we don't have an active character yet since
 			// The user hasn't chosen one yet.
 			lw.NotifyConsoleLoggedIn(userInfo) // This will also notify all active windows of the updated UserInfo for them.

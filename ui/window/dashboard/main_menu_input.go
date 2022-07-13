@@ -18,16 +18,28 @@ func (dw *DashboardWindow) handleMenuInput(input types.Input) {
 	case types.InputCharacter:
 		switch input.Data {
 		case "a":
-			//log.Println("login as last selected")
-			return
+			lastCharacter := dw.GetUserInfoField("lastcharacter")
+			if lastCharacter == "" {
+				dw.windowState = DashboardCreateCharacter
+				//dw.ForceConsoleRefresh() // don't use these both together
+				dw.RequestFlushFromConsole()
+				return
+			} else {
+				// TODO - login to last character
+				dw.LoginCharacter(lastCharacter)
+				return
+			}
 		case "b":
-			//log.Println("manage characters selected")
-			//dw.ResetWindowDrawings() // needed?
-			//dw.ForceConsoleRefresh()
-			//dw.RequestFlushFromConsole()
-			return
+			lastCharacter := dw.GetUserInfoField("lastcharacter")
+			if lastCharacter != "" {
+				dw.Log.Println(logging.LogInfo, "manage characters selected")
+				//dw.ResetWindowDrawings() // needed?
+				//dw.ForceConsoleRefresh()
+				//dw.RequestFlushFromConsole()
+				return
+			}
 		case "c":
-			//log.Println("manage settings selected")
+			dw.Log.Println(logging.LogInfo, "manage user settings selected")
 			return
 		case "d":
 			//log.Println("logout selected")

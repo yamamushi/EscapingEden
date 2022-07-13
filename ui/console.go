@@ -215,8 +215,11 @@ func (c *Console) HandleResize(newWidth, newHeight int) {
 			w.UpdateParams(0, c.Height-10, c.Width-50, 9, c.Width, c.Height)
 		case config.WindowLoginMenu:
 			w.UpdateParams(0, 0, c.Width-50, c.Height-13, c.Width, c.Height)
+		case config.WindowUserDashboard:
+			w.UpdateParams(0, 0, c.Width-50, c.Height-13, c.Width, c.Height)
 		case config.WindowToolBox:
 			w.UpdateParams(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height)
+
 		}
 	}
 
