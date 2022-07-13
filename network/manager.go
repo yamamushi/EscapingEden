@@ -144,11 +144,26 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Register, Data: registrationRequest, SenderSessionID: managerMessage.SenderConsoleID}
 				}()
 
-			case messages.ConnectManager_Message_Login:
+			case messages.ConnectManager_Message_AccountLogin:
 				go func() {
 					//cm.Log.Println(logging.LogInfo, "Sending login request to AccountManager")
 					loginRequest := managerMessage.Data.(messages.AccountLoginRequest)
 					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Login, Data: loginRequest, SenderSessionID: managerMessage.SenderConsoleID}
+				}()
+
+			case messages.ConnectManager_Message_CharacterLoggedInNotify:
+				go func() {
+					amMessage := messages.AccountManagerMessage{
+						Type: messages.AccountManager_Message_UpdateCharacterHistory,
+						Data: managerMessage.Data,
+					}
+					cm.AMSendMessages <- amMessage
+
+					cmMessage := messages.CharacterManagerMessage{
+						Type: messages.CharManager_UpdateLoginHistory,
+						Data: managerMessage.Data,
+					}
+					cm.CMSendMessages <- cmMessage
 				}()
 
 			case messages.ConnectManager_Message_RequestPasswordReset:
@@ -306,6 +321,30 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 								conn.Write([]byte("\033c\r\nToo many bad login attempts, your IP has been temporarily blocked.\r\n"))
 								conn.Close()
 							}
+						}
+					}
+					return true
+				})
+
+			case messages.ConnectManager_Message_UpdateCharacterHistoryResponse:
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						if managerMessage.RecipientConsoleID == conn.ID {
+							//cm.Log.Println(logging.LogInfo, "Sending login response to Console that requested login")
+							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_CharacterHistoryCharacterUpdateResponse, Data: managerMessage.Data}
+							conn.SendToConsole(consoleMessage)
+						}
+					}
+					return true
+				})
+
+			case messages.ConnectManager_Message_UpdateAccountHistoryResponse:
+				cm.connectionMap.Range(func(key, value interface{}) bool {
+					if conn, ok := value.(*Connection); ok {
+						if managerMessage.RecipientConsoleID == conn.ID {
+							//cm.Log.Println(logging.LogInfo, "Sending login response to Console that requested login")
+							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_CharacterHistoryAccountUpdateResponse, Data: managerMessage.Data}
+							conn.SendToConsole(consoleMessage)
 						}
 					}
 					return true

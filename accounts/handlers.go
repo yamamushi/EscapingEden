@@ -68,6 +68,15 @@ func (am *AccountManager) HandleMessages(started chan bool) {
 				}
 				am.Log.Println(logging.LogInfo, "Sending process reset password response")
 				am.SendChannel <- response
+
+			case messages.AccountManager_Message_UpdateCharacterHistory:
+				req := managerMessage.Data.(messages.CharacterInfo)
+				response := messages.ConnectionManagerMessage{
+					Type:               messages.ConnectManager_Message_UpdateAccountHistoryResponse,
+					RecipientConsoleID: managerMessage.SenderSessionID,
+				}
+				response.Data = am.UpdateLoginCharacterHistory(req)
+				am.SendChannel <- response
 			}
 		}
 	}

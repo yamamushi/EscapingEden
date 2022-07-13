@@ -171,6 +171,7 @@ func (lw *LoginWindow) drawLoginMenuPending() {
 		} else {
 			// If we didn't get an error, we load our user info screen, and we also notify the console the user has logged in
 			userInfo := messages.UserInfo{
+				ID:                lw.loginResponse.Account.ID,
 				Username:          lw.loginResponse.Account.Username,
 				DiscordTag:        lw.loginResponse.Account.DiscordTag,
 				LastLogin:         lw.loginResponse.Account.LastLoginTime,

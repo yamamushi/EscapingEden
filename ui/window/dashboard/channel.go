@@ -30,7 +30,16 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 			case messages.WM_RequestCharacterCreationResponse:
 				dw.Log.Println(logging.LogInfo, "Received WM_RequestCharacterCreationResponse")
 				data := windowMessage.Data.(messages.CharacterInfo)
-				dw.LoginCharacter(data)
+				if data.Error != "Null Error" {
+					dw.Log.Println(logging.LogInfo, data.Error)
+					dw.charCreatorUsernameError = data.Error // TODO - Send these errors through the chat window
+					dw.characterCreatorState = CharacterCreatorCharacterDetails
+					dw.RequestFlushFromConsole()
+				} else {
+					dw.Log.Println(logging.LogInfo, "Character Created")
+					dw.LoginCharacter(data)
+					dw.RequestFlushFromConsole()
+				}
 			}
 		}
 	}

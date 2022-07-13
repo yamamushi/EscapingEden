@@ -32,6 +32,7 @@ const (
 	CharManager_CreateCharacter
 	CharManager_DeleteCharacter
 	CharManager_ListCharacters
+	CharManager_UpdateLoginHistory
 	CharManager_UpdateCharacter
 	CharManager_GetCharacter
 	CharManager_GetCharacterInfo

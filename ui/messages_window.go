@@ -64,6 +64,13 @@ func (c *Console) CaptureWindowMessages() {
 						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome back " + c.GetCharacterName() + "!"}
 					}
 					c.ChatMessageReceive <- chatMessage
+					// Notify account manager and character manager that a character has logged in
+					loggedInMessage := messages.ConnectionManagerMessage{
+						Type: messages.ConnectManager_Message_CharacterLoggedInNotify,
+						Data: charInfo,
+					}
+					c.SendMessages <- loggedInMessage
+
 				case messages.WMC_SetCharacterLoggedOut:
 					log.Println("Console received logout character for " + c.ConnectionID)
 					c.LogoutCharacter()
@@ -97,7 +104,7 @@ func (c *Console) CaptureWindowMessages() {
 			case messages.WM_RequestLogin:
 				//log.Println("Sending login request to connection manager")
 				managerMessage := messages.ConnectionManagerMessage{
-					Type:            messages.ConnectManager_Message_Login,
+					Type:            messages.ConnectManager_Message_AccountLogin,
 					Data:            windowMessage.Data,
 					SenderConsoleID: c.ConnectionID,
 				}

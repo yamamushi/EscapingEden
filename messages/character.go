@@ -6,13 +6,15 @@ import (
 )
 
 type CharacterInfo struct {
-	ID            string         `storm:"index"`
+	ID            string `storm:"index"`
+	UserID        string
 	Name          string         `storm:"unique"`
 	FGColor       util.ColorCode // The escape code of the FG color of the character
 	BGColor       util.ColorCode
 	InventoryID   string `storm:"unique"`
 	LastLoginTime time.Time
 	FirstLogin    int // 0 = false, 1 = true
+	Error         string
 }
 
 func (c *CharacterInfo) GetID() string {

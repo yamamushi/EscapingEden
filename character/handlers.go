@@ -17,8 +17,8 @@ func (cm *CharacterManager) HandleInput(started chan bool) {
 				continue
 			case messages.CharManager_CreateCharacter:
 				cm.Log.Println(logging.LogInfo, "Character Manager: Create Character")
-				// TODO - Replace with actual character creation and storage in database
-				cm.OutputChannel <- messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_CharacterCreationResponse, Data: managerMessage.Data, RecipientConsoleID: managerMessage.SenderConsoleID}
+				newCharacterInfo := cm.CreateCharacter(managerMessage.Data.(messages.CharacterInfo))
+				cm.OutputChannel <- messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_CharacterCreationResponse, Data: newCharacterInfo, RecipientConsoleID: managerMessage.SenderConsoleID}
 				cm.Log.Println(logging.LogInfo, "Character Manager: Create Character response sent")
 				continue
 			case messages.CharManager_DeleteCharacter:
@@ -26,6 +26,20 @@ func (cm *CharacterManager) HandleInput(started chan bool) {
 				continue
 			case messages.CharManager_ListCharacters:
 				cm.Log.Println(logging.LogInfo, "Character Manager: List Characters")
+				continue
+			case messages.CharManager_UpdateLoginHistory:
+				cm.Log.Println(logging.LogInfo, "Character Manager: Update Login History")
+				err := cm.UpdateLoginHistory(managerMessage.Data.(messages.CharacterInfo))
+				if err != messages.CMError_Null {
+					cm.Log.Println(logging.LogError, "Character Manager: Update Login History Error:", err.Error())
+				}
+
+				response := messages.ConnectionManagerMessage{
+					Type:               messages.ConnectManager_Message_UpdateCharacterHistoryResponse,
+					RecipientConsoleID: managerMessage.SenderConsoleID,
+					Data:               err.Error(),
+				}
+				cm.OutputChannel <- response
 				continue
 			case messages.CharManager_UpdateCharacter:
 				cm.Log.Println(logging.LogInfo, "Character Manager: Update Character")

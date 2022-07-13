@@ -30,6 +30,7 @@ func (dw *DashboardWindow) CreateCharacter() {
 	}
 
 	charInfo := messages.CharacterInfo{
+		UserID:        dw.UserInfo.ID,
 		Name:          dw.charCreatorName,
 		FGColor:       colorCode,
 		FirstLogin:    1,

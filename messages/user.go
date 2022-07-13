@@ -6,6 +6,7 @@ import (
 
 // This struct is used to store some general information about an account after a successful login.
 type UserInfo struct {
+	ID                string
 	Username          string
 	CharacterName     string
 	LastCharacterID   string
@@ -13,6 +14,10 @@ type UserInfo struct {
 	DiscordTag        string
 	LastLogin         time.Time
 	LastLogout        time.Time
+}
+
+func (u *UserInfo) GetID() string {
+	return u.ID
 }
 
 func (u *UserInfo) GetUsername() string {
