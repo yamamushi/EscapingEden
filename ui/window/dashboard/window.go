@@ -47,6 +47,7 @@ const (
 	DashboardManageCharacters
 	DashboardManageSettings
 	DashboardLogout
+	DashboardCharacterLoginPending
 )
 
 type CharacterCreatorState int
@@ -119,5 +120,7 @@ func (dw *DashboardWindow) UpdateContents() {
 		dw.drawMenu()
 	case DashboardCreateCharacter:
 		dw.drawCreateCharacterMenu()
+	case DashboardCharacterLoginPending:
+		dw.drawCharacterLoginPending()
 	}
 }

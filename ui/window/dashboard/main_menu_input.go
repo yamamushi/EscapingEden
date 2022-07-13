@@ -3,6 +3,7 @@ package dashboard
 import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/ui/types"
+	"log"
 )
 
 // handleMenuInput handles input for the login window
@@ -31,8 +32,11 @@ func (dw *DashboardWindow) handleMenuInput(input types.Input) {
 				return
 			} else {
 				// TODO - login to last character
-				dw.characterCreatorState = CharacterCreatorCharacterDetails
-				dw.windowState = DashboardCreateCharacter
+				// TODO - Add mechanism to request character info based on last character ID
+				log.Println(dw.UserInfo.LastCharacterID)
+				// Need to use this ID to request the character info struct
+				// Need to add the messages necessary for this, and the outbound message as well as listener on the window here
+				dw.windowState = DashboardCharacterLoginPending
 				dw.RequestFlushFromConsole()
 				return
 			}
