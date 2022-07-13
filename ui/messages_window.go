@@ -54,11 +54,8 @@ func (c *Console) CaptureWindowMessages() {
 					c.ChatMessageReceive <- chatMessage
 					continue
 				case messages.WMC_SetCharacterLoggedIn:
-					log.Println("Console received login character for " + c.ConnectionID)
+					//log.Println("Console received login character for " + c.ConnectionID)
 					charInfo := windowMessage.Data.(messages.CharacterInfo)
-					log.Println(charInfo.FGColor.R)
-					log.Println(charInfo.FGColor.G)
-					log.Println(charInfo.FGColor.B)
 					c.LoginCharacter(charInfo)
 					chatMessage := messages.ChatMessage{}
 					if int(charInfo.LastLoginTime.Second()) == 0 {

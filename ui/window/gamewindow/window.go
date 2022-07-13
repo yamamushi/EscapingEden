@@ -84,8 +84,5 @@ func (gw *GameWindow) UpdateContents() {
 
 		// At center of window draw an @
 		gw.PrintLn(gw.X+gw.Width/2, gw.Y+gw.Height/2, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
-
-		gw.PrintLn(gw.X+2, gw.Y+2, "test", "")
-
 	}
 }

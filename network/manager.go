@@ -86,7 +86,8 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						//cm.Log.Println(logging.LogInfo, "Chat message found, sending to conn.Console.ReceiveMessages")
-						outMessage := messages.ConsoleMessage{Data: managerMessage.SenderConsoleID + ": " + managerMessage.Data.(string), Type: messages.Console_Message_Chat}
+						//outMessage := messages.ConsoleMessage{Data: managerMessage.SenderConsoleID + ": " + managerMessage.Data.(string), Type: messages.Console_Message_Chat}
+						outMessage := messages.ConsoleMessage{Data: managerMessage.Data.(string), Type: messages.Console_Message_Chat}
 						conn.SendToConsole(outMessage)
 					}
 					return true
