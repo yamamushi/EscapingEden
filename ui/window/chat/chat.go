@@ -164,7 +164,7 @@ func (cw *ChatWindow) SendChatMessage() {
 
 }
 
-// ConsoleMessage is called by console to manually write a console message to the history
+// ConsoleMessage is only (should only) called by console to manually write a console message to the history
 func (cw *ChatWindow) ConsoleMessage(message string) {
 	cw.cwMutex.Lock()
 	defer cw.cwMutex.Unlock()

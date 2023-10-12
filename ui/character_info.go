@@ -9,7 +9,7 @@ func (c *Console) UpdateCharacterInfo(charInfo messages.CharacterInfo) {
 	c.characterInfoMutex.Lock()
 	defer c.characterInfoMutex.Unlock()
 	c.CharacterInfo = charInfo
-	c.Log.Println(logging.LogInfo, "Updated character info")
+	c.Log.Println(logging.LogInfo, "Updated character info for ", c.CharacterInfo.ID)
 	c.UpdateWindowsCharacterInfo()
 	c.Log.Println(logging.LogInfo, "Updated windows character info")
 }

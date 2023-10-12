@@ -76,6 +76,23 @@ func (c *Console) CaptureManagerMessages() {
 			//		userInfo := consoleMessage.Data.(messages.UserInfo)
 			//		c.UpdateUserInfo(userInfo)
 			//		c.ChatMessageReceive <- messages.ChatMessage{Type: messages.Chat_Message_System, Content: "You are now logged in as " + userInfo.Username}
+
+			case messages.Console_Message_GameCommand:
+				c.Log.Println(logging.LogInfo, "Console received character history character update response")
+				charHistoryCharacterUpdateResponse := messages.WindowMessage{
+					Type: messages.WM_RequestCharacterHistoryCharacterUpdateResponse,
+					Data: consoleMessage.Data,
+				}
+				c.UserDashboardMessages <- charHistoryCharacterUpdateResponse
+
+			case messages.Console_Message_GameCommandResponse:
+				c.Log.Println(logging.LogInfo, "Console received game command response")
+				gameCommandResponse := messages.WindowMessage{
+					Type: messages.WM_GameCommandResponse,
+					Data: consoleMessage.Data,
+				}
+				c.GameWindowMessages <- gameCommandResponse
+
 			case messages.Console_Message_LogoutUser:
 				//log.Println("Console received logout user request")
 				if c.IsUserLoggedIn() {

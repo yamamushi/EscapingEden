@@ -26,6 +26,10 @@ const (
 	ConnectManager_Message_ProcessPasswordResetResponse
 	ConnectManager_Message_UpdateCharacterHistoryResponse
 	ConnectManager_Message_UpdateAccountHistoryResponse
+
+	ConnectManager_Message_GameCommand
+	ConnectManager_Message_GameCommandResponse
+
 	ConnectManager_Message_LoginResponse
 	ConnectManager_Message_BadLoginAttempt
 	ConnectManager_Message_ForceLogout

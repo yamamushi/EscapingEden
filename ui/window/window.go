@@ -310,6 +310,7 @@ func (w *Window) SetCharacterInfo(charInfo messages.CharacterInfo) {
 	w.characterInfoMutex.Lock()
 	defer w.characterInfoMutex.Unlock()
 	w.CharacterInfo = charInfo
+	w.Log.Println(logging.LogInfo, "Window Updated character info for ", w.CharacterInfo.ID)
 }
 
 func (w *Window) GetCharacterInfoField(field string) string {

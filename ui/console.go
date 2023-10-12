@@ -73,7 +73,7 @@ type Console struct {
 	resizeActive           bool
 	userLoggedIn           bool
 	userLoggedInMutex      sync.Mutex
-	characterLoggedIn      bool // Whether or not the user has logged in with a character, chat windows will only be active for input if this is true
+	characterLoggedIn      bool // Whether the user has logged in with a character, chat windows will only be active for input if this is true
 	characterLoggedInMutex sync.Mutex
 	flushWindowList        []config.WindowID
 }

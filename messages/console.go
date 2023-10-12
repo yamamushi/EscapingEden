@@ -19,6 +19,10 @@ const (
 	Console_Message_CharacterHistoryAccountUpdateResponse
 	Console_Message_CharacterHistoryCharacterUpdateResponse
 	Console_Message_CharacterRequestResponse
+
+	Console_Message_GameCommand
+	Console_Message_GameCommandResponse
+
 	Console_Message_LogoutResponse
 	Console_Message_LoginUser
 	Console_Message_LogoutUser

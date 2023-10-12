@@ -5,7 +5,6 @@ import (
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui/config"
-	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"sync"
 )
@@ -13,7 +12,6 @@ import (
 // DashboardWindow is a window for users to login as a character, create a new one, manage their settings or log out.
 type GameWindow struct {
 	window.Window
-	dwMutex     sync.Mutex
 	windowState GameWindowState
 
 	// Initialize the window
@@ -21,6 +19,14 @@ type GameWindow struct {
 
 	// Vars for navigation
 	characterCreatorState CharacterCreatorState
+
+	// Vars for command input
+	commandMutex sync.Mutex
+
+	// Character Info
+	characterID string
+
+	log logging.LoggerType
 }
 
 // GameWindowState is an enum for storing game window state
@@ -65,15 +71,10 @@ func NewGameWindow(x, y, width, height, consoleWidth, consoleHeight int, input, 
 	gw.ConsoleReceive = input
 	gw.ConsoleSend = output
 	gw.windowState = GW_DefaultView
+	gw.log = log
+	gw.log.Println(logging.LogInfo, "Character ID: ", gw.characterID)
+	go gw.Listen()
 	return gw
-}
-
-// HandleInput handles input for the login window
-func (gw *GameWindow) HandleInput(input types.Input) {
-	switch gw.windowState {
-	case GW_DefaultView:
-		// Handle input for the main view
-	}
 }
 
 // UpdateContents updates the contents of the login window
@@ -84,5 +85,15 @@ func (gw *GameWindow) UpdateContents() {
 
 		// At center of window draw an @
 		gw.PrintLn(gw.X+gw.Width/2, gw.Y+gw.Height/2, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
+	}
+}
+
+// Listen listens for any messages on cw.ReceiveMessages Chan and handles them
+func (gw *GameWindow) Listen() {
+	for {
+		select {
+		case receivedMessage := <-gw.ConsoleReceive:
+			gw.log.Println(logging.LogInfo, "Game Window received message from console ", receivedMessage.Data.(messages.GameMessage).Data.CharacterID)
+		}
 	}
 }

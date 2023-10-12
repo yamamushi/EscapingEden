@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"log"
 )
@@ -75,6 +76,7 @@ func (c *Console) CaptureWindowMessages() {
 				case messages.WMC_SetCharacterLoggedIn:
 					//log.Println("Console received login character for " + c.ConnectionID)
 					charInfo := windowMessage.Data.(messages.CharacterInfo)
+					c.Log.Println(logging.LogInfo, "Setting character info for ", charInfo.Name, " to ", charInfo.ID)
 					c.LoginCharacter(charInfo)
 					chatMessage := messages.ChatMessage{}
 					if int(charInfo.FirstLogin) == 1 {
@@ -98,6 +100,15 @@ func (c *Console) CaptureWindowMessages() {
 				//log.Println("Sending Chat message: ", windowMessage.Data.(string))
 				managerMessage := messages.ConnectionManagerMessage{
 					Type:            messages.ConnectManager_Message_Chat,
+					Data:            windowMessage.Data,
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
+				continue
+
+			case messages.WM_GameCommand:
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_GameCommand,
 					Data:            windowMessage.Data,
 					SenderConsoleID: c.ConnectionID,
 				}

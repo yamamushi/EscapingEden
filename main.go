@@ -90,8 +90,14 @@ func main() {
 		log.Println(logging.LogFatal, "Error initializing character manager: ", err)
 	}
 
+	gameManagerReceiver := make(chan messages.GameManagerMessage)
+	_, err = InitGameManager(gameManagerReceiver, connectionManagerReceive, dbConn, log)
+	if err != nil {
+		log.Println(logging.LogFatal, "Error initializing game manager: ", err)
+	}
+
 	// Initialize the server, and by proxy, the connection manager
-	server, err := InitServer(conf, accountManagerReceiver, characterManagerReceiver, connectionManagerReceive, edenbotInput, dbConn, log)
+	server, err := InitServer(conf, accountManagerReceiver, characterManagerReceiver, connectionManagerReceive, edenbotInput, gameManagerReceiver, dbConn, log)
 	if err != nil {
 		log.Println(logging.LogFatal, "Error initializing server: ", err)
 	}

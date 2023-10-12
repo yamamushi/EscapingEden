@@ -34,6 +34,9 @@ const (
 	WM_ProcessForgotPassword
 	WM_BadLoginAttempt
 
+	WM_GameCommand
+	WM_GameCommandResponse
+
 	// These are messages that are parsed by the windows themselves if they receive an event
 	WM_RegistrationResponse
 	WM_LoginResponse

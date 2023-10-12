@@ -11,6 +11,7 @@ import (
 	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/edendb/bolt"
+	"github.com/yamamushi/EscapingEden/game"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/logging/logconsole"
 	"github.com/yamamushi/EscapingEden/logging/logfile"
@@ -107,6 +108,29 @@ func InitAccountManager(receiver chan messages.AccountManagerMessage, sender cha
 	return accountManager, nil
 }
 
+// InitGameManager initializes the game manager
+func InitGameManager(input chan messages.GameManagerMessage, output chan messages.ConnectionManagerMessage, dbConn edendb.DatabaseType, log logging.LoggerType) (*game.GameManager, error) {
+	log.Println(logging.LogInfo, "Starting Game Manager...")
+	gameManager := game.NewGameManager(input, output, dbConn, log)
+
+	startNotify := make(chan bool)
+	err := gameManager.Start(startNotify)
+	if err != nil {
+		return nil, err
+	}
+
+	ticker := time.NewTicker(1 * time.Second)
+	select {
+	case <-startNotify:
+		log.Println(logging.LogInfo, "Game Manager started.")
+		break
+	case <-ticker.C:
+		//fmt.Print(".")
+		// no-op
+	}
+	return gameManager, nil
+}
+
 // InitCharacterManager initializes the character manager
 func InitCharacterManager(input chan messages.CharacterManagerMessage, output chan messages.ConnectionManagerMessage, dbConn edendb.DatabaseType, conf *edenconfig.Config, log logging.LoggerType) (*character.CharacterManager, error) {
 	log.Println(logging.LogInfo, "Starting Character Manager...")
@@ -133,14 +157,14 @@ func InitCharacterManager(input chan messages.CharacterManagerMessage, output ch
 // InitServer initializes the server
 func InitServer(conf edenconfig.Config,
 	accountManagerReceive chan messages.AccountManagerMessage, characterManagerReceiver chan messages.CharacterManagerMessage,
-	connectionManagerReceive chan messages.ConnectionManagerMessage, ebMessageReceiver chan messages.EdenbotMessage,
+	connectionManagerReceive chan messages.ConnectionManagerMessage, ebMessageReceiver chan messages.EdenbotMessage, gmMessageReceiver chan messages.GameManagerMessage,
 	db edendb.DatabaseType, log logging.LoggerType) (*network.Server, error) {
 	log.Println(logging.LogInfo, "Starting Server...")
 
 	startNotify := make(chan bool)
 
 	server := network.NewServer(conf.Server.Host, conf.Server.Port, log)
-	err := server.Start(startNotify, connectionManagerReceive, accountManagerReceive, characterManagerReceiver, ebMessageReceiver, db)
+	err := server.Start(startNotify, connectionManagerReceive, accountManagerReceive, characterManagerReceiver, ebMessageReceiver, gmMessageReceiver, db)
 	if err != nil {
 		return nil, err
 	}

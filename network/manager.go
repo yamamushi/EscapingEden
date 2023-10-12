@@ -32,17 +32,20 @@ type ConnectionManager struct {
 
 	// Our EdenBot Manager
 	EBSendMessages chan messages.EdenbotMessage
+
+	GMSendMessages chan messages.GameManagerMessage
 }
 
 // NewConnectionManager creates a new ConnectionManager
 func NewConnectionManager(connectionMap *sync.Map, receiveMessages chan messages.ConnectionManagerMessage,
-	accountManagerMessages chan messages.AccountManagerMessage, characterManagerReceiveMessages chan messages.CharacterManagerMessage, ebSendMessages chan messages.EdenbotMessage, db edendb.DatabaseType, log logging.LoggerType) *ConnectionManager {
+	accountManagerMessages chan messages.AccountManagerMessage, characterManagerReceiveMessages chan messages.CharacterManagerMessage, ebSendMessages chan messages.EdenbotMessage, gmSendMessages chan messages.GameManagerMessage, db edendb.DatabaseType, log logging.LoggerType) *ConnectionManager {
 	return &ConnectionManager{
 		connectionMap:     connectionMap,
 		CMReceiveMessages: receiveMessages,
 		AMSendMessages:    accountManagerMessages,
 		CMSendMessages:    characterManagerReceiveMessages,
 		EBSendMessages:    ebSendMessages,
+		GMSendMessages:    gmSendMessages,
 		Log:               log,
 		DB:                db,
 	}
@@ -229,6 +232,34 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 						Data:            managerMessage.Data,
 						SenderConsoleID: managerMessage.SenderConsoleID,
 					}
+				}()
+
+			case messages.ConnectManager_Message_GameCommand:
+				go func() {
+					cm.Log.Println(logging.LogInfo, "Sending game command to game manager from", managerMessage.SenderConsoleID)
+					cm.GMSendMessages <- messages.GameManagerMessage{
+						Type:            messages.GameManager_GetCharacterPosition,
+						Data:            managerMessage.Data,
+						SenderConsoleID: managerMessage.SenderConsoleID,
+					}
+				}()
+
+			case messages.ConnectManager_Message_GameCommandResponse:
+				go func() {
+					cm.Log.Println(logging.LogInfo, "Sending game manager response to client console", managerMessage.SenderConsoleID)
+					cm.connectionMap.Range(func(key, value interface{}) bool {
+						if conn, ok := value.(*Connection); ok {
+							if managerMessage.RecipientConsoleID == conn.ID {
+								//cm.Log.Println(logging.LogInfo, "Quit message found, sending to conn.Console.ReceiveMessages")
+								consoleMessage := messages.ConsoleMessage{
+									Type: messages.Console_Message_GameCommandResponse,
+									Data: managerMessage.Data,
+								}
+								conn.SendToConsole(consoleMessage)
+							}
+						}
+						return true
+					})
 				}()
 
 			case messages.ConnectManager_Message_CharacterCreationResponse:
