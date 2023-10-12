@@ -18,21 +18,36 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 		case managerMessage := <-gm.ReceiveChannel:
 			gm.Log.Println(logging.LogInfo, "Game Manager received message")
 			switch managerMessage.Type {
-			case messages.GameManager_GetCharacterPosition:
-				charID := managerMessage.Data.(messages.GameMessage).Data.CharacterID
+			case messages.GameManager_GetCharacterPosition: // Non functional
+				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
 				gm.Log.Println(logging.LogInfo, "Game Manager received position request for ", charID)
+				gm.Log.Println(logging.LogInfo, "Game Manager received position request from ", managerMessage.SenderConsoleID)
+
 				// Do Something to get the position based on the provided character ID
 				response := messages.ConnectionManagerMessage{
 					Type:               messages.ConnectManager_Message_GameCommandResponse,
 					RecipientConsoleID: managerMessage.SenderConsoleID,
-					Data: messages.GameMessage{Data: messages.GameMessageData{
+					Data: messages.GameMessage{Type: messages.GM_CharacterPosition, Data: messages.GameMessageData{
 						CharacterID: charID,
-						Data:        "Test response",
+						Data:        "80, 80",
 					},
 					},
 				}
 				gm.Log.Println(logging.LogInfo, "GameManager", "Sending position request response")
 				gm.SendChannel <- response
+
+			case messages.GameManager_NotifyLoggedInCharacter:
+				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				gm.Log.Println(logging.LogInfo, "Game Manager received login notification for ", charID)
+				gm.LoadCharacter(charID)
+
+			case messages.GameManager_NotifyLoggedOutCharacter:
+				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				gm.Log.Println(logging.LogInfo, "Game Manager received logout notification for ", charID)
+
+			case messages.GameManager_NotifyDisconnect:
+				connectionID := managerMessage.Data.(string)
+				gm.Log.Println(logging.LogInfo, "Game Manager received logout notification for ", connectionID)
 
 			}
 		}

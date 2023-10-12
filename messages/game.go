@@ -7,17 +7,15 @@ Window messages are sent to/from the console from/to windows.
 type GameMessageType int
 
 const (
-	GM_Null WindowMessageType = iota
+	GM_Null GameMessageType = iota
 	// These will send messages to the connection manager ultimately
 	GM_Error
 	GM_QuitConsole
 
-	// This sends a message to the console, needed to notify console of various status changes
-	GM_ConsoleCommand
+	// Message to the game manager
 
-	// These messages are sent to the connection manager for processing upstream
-	// We can't do anything with them here, so we just pass them along
-	GM_RequestCharacterPosition
+	// Response types from the game manager
+	GM_CharacterPosition
 )
 
 type GameMessageCommand int
@@ -34,4 +32,9 @@ type GameMessage struct {
 type GameMessageData struct {
 	CharacterID string
 	Data        interface{}
+}
+
+type GameCharPosition struct {
+	X int
+	Y int
 }

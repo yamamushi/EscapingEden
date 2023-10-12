@@ -5,6 +5,7 @@ import (
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
+	"sync"
 )
 
 type GameManager struct {
@@ -13,10 +14,16 @@ type GameManager struct {
 
 	Log logging.LoggerType
 	DB  edendb.DatabaseType
+
+	// Active Characters
+	ActiveCharacters      ActiveCharacters
+	activeCharactersMutex sync.Mutex
 }
 
 func NewGameManager(receiveChannel chan messages.GameManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType) *GameManager {
-	return &GameManager{ReceiveChannel: receiveChannel, SendChannel: sendChannel, DB: db, Log: log}
+	manager := &GameManager{ReceiveChannel: receiveChannel, SendChannel: sendChannel, DB: db, Log: log}
+	manager.Init()
+	return manager
 }
 
 // Init initializes the database for the game manager if needed
@@ -38,6 +45,8 @@ func (gm *GameManager) Init() error {
 		gm.Log.Println(logging.LogError, messages.GMError_DBError.Error(), err)
 		return err
 	}
+
+	// Now we load up the world, this could take a while...
 
 	return nil
 }

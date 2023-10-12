@@ -14,8 +14,8 @@ func (gw *GameWindow) HandleInput(input types.Input) {
 		switch input.Type {
 		case types.InputReturn:
 			// Send a console message to the ConsoleSend channel
-			consoleMessage := messages.WindowMessage{Data: messages.GameMessage{Data: messages.GameMessageData{CharacterID: gw.GetCharacterInfoField("id")}}, Type: messages.WM_GameCommand}
-			gw.ConsoleSend <- consoleMessage
+			consoleMessage := messages.WindowMessage{Data: messages.GameManagerMessage{Data: messages.GameMessageData{CharacterID: gw.GetCharacterInfoField("id")}, Type: messages.GameManager_GetCharacterPosition}, Type: messages.WM_GameCommand}
+			gw.SendToConsole(consoleMessage)
 			return
 		case types.InputCharacter:
 			gw.HandleCommand(input.Data)

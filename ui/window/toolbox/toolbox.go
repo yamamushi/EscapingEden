@@ -8,6 +8,7 @@ import (
 	"github.com/yamamushi/EscapingEden/ui/config"
 	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -77,5 +78,8 @@ func (tw *ToolboxWindow) UpdateContents() {
 	// current time with second accuracy as a string
 	serverTime := time.Now().Format("15:04:05")
 	edenTime := edenutil.EdenTime.CurrentTimeString(edenutil.EdenTime{})
-	tw.SetContents("Current Server Time: " + serverTime + "\n" + "  Current Eden Time: " + edenTime)
+	edenMonth := edenutil.EdenTime.EdenMonth(edenutil.EdenTime{})
+	edenDay := edenutil.EdenTime.EdenDay(edenutil.EdenTime{})
+	edenYear := edenutil.EdenTime.Year(edenutil.EdenTime{})
+	tw.SetContents("Current Server Time: " + serverTime + "\n" + "  Current Eden Time: " + edenTime + "\n" + "  Eden Month: " + edenMonth.String() + "\n" + "  Eden Day: " + edenDay.String() + "\n" + "  Eden Year: " + strconv.FormatInt(edenYear, 10) + "\n")
 }

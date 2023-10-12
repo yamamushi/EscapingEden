@@ -68,6 +68,7 @@ func (cm *ConnectionManager) HandleDisconnect(connection *Connection) {
 	cm.mutex.Lock()
 	defer cm.mutex.Unlock()
 	cm.connectionMap.Delete(connection.ID)
+	cm.GMSendMessages <- messages.GameManagerMessage{Type: messages.GameManager_NotifyDisconnect, Data: connection.ID}
 }
 
 // Run launches the message parser handler
@@ -238,7 +239,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				go func() {
 					cm.Log.Println(logging.LogInfo, "Sending game command to game manager from", managerMessage.SenderConsoleID)
 					cm.GMSendMessages <- messages.GameManagerMessage{
-						Type:            messages.GameManager_GetCharacterPosition,
+						Type:            managerMessage.Data.(messages.GameManagerMessage).Type,
 						Data:            managerMessage.Data,
 						SenderConsoleID: managerMessage.SenderConsoleID,
 					}

@@ -29,6 +29,7 @@ type WindowType interface {
 	GetX() int
 	GetY() int
 	UpdateParams(x, y, height, width, consoleWidth, consoleHeight int)
+	PostUpdateParams()
 	GetStartX() int
 	GetStartY() int
 	GetWidth() int
@@ -265,6 +266,10 @@ func (w *Window) GetBordered() bool {
 	defer w.mutex.Unlock()
 
 	return w.Bordered
+}
+
+func (w *Window) PostUpdateParams() {
+	return
 }
 
 // GetFG returns the foreground color of the Window

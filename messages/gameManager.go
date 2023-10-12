@@ -6,12 +6,8 @@ const (
 	GMError_Null GMErrorType = iota
 	GMError_DBError
 	GMError_NameAlreadyExists
-	GMError_DeleteGameacterError
-	GMError_CreateGameacterError_Default
 	GMError_HistoryUpdatePermissionError
 	GMError_InvalidName
-	GMError_CreateGameacterError_InvalidColor
-	GMError_CreateGameacterError_InventoryCreateError
 )
 
 func (GMe GMErrorType) Error() string {
@@ -34,6 +30,9 @@ type GameManagerMessageType int
 
 const (
 	GameManager_None GameManagerMessageType = iota
+	GameManager_NotifyDisconnect
+	GameManager_NotifyLoggedInCharacter
+	GameManager_NotifyLoggedOutCharacter
 	GameManager_GetCharacterPosition
 )
 

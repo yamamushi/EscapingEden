@@ -5,6 +5,7 @@ import (
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
 	"github.com/yamamushi/EscapingEden/ui/config"
+	"github.com/yamamushi/EscapingEden/ui/types"
 	"github.com/yamamushi/EscapingEden/ui/window"
 	"sync"
 )
@@ -24,9 +25,14 @@ type GameWindow struct {
 	commandMutex sync.Mutex
 
 	// Character Info
-	characterID string
+	characterID    string
+	characterMutex sync.Mutex
 
 	log logging.LoggerType
+
+	// Current Map inside the game window (upon a redraw we need to resize the map and redraw it too)
+	visibleMap types.PointMap
+	mapMutex   sync.Mutex
 }
 
 // GameWindowState is an enum for storing game window state
@@ -74,6 +80,7 @@ func NewGameWindow(x, y, width, height, consoleWidth, consoleHeight int, input, 
 	gw.log = log
 	gw.log.Println(logging.LogInfo, "Character ID: ", gw.characterID)
 	go gw.Listen()
+	gw.SetupVisibleMap()
 	return gw
 }
 
@@ -81,10 +88,11 @@ func NewGameWindow(x, y, width, height, consoleWidth, consoleHeight int, input, 
 func (gw *GameWindow) UpdateContents() {
 	switch gw.windowState {
 	case GW_DefaultView:
-		gw.PrintLn(gw.X+2, gw.Y+2, "Game Window", gw.Terminal.Bold())
+		gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
 
 		// At center of window draw an @
-		gw.PrintLn(gw.X+gw.Width/2, gw.Y+gw.Height/2, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
+		gw.DrawToVisibleMap(gw.X+gw.Width/2, gw.Y+gw.Height/2, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
+		gw.DrawMap()
 	}
 }
 
@@ -93,7 +101,71 @@ func (gw *GameWindow) Listen() {
 	for {
 		select {
 		case receivedMessage := <-gw.ConsoleReceive:
-			gw.log.Println(logging.LogInfo, "Game Window received message from console ", receivedMessage.Data.(messages.GameMessage).Data.CharacterID)
+			message := receivedMessage.Data.(messages.GameMessage).Type
+			switch message {
+			case messages.GM_CharacterPosition:
+				gw.log.Println(logging.LogInfo, "Game Window received message from console ", receivedMessage.Data.(messages.GameMessage).Data.Data)
+
+			}
 		}
 	}
+}
+
+func (gw *GameWindow) PrintStringToMap(x int, y int, input string, escapeCode string) {
+	// For every character in the input string, starting at x, y, print the character to the visible map
+	// If x is greater than the width of the visible map, return
+	if x > len(gw.visibleMap)-1 || x < 0 {
+		return
+	}
+	// If y is greater than the height of the visible map, return
+	if y > len(gw.visibleMap[x])-1 || y < 0 {
+		return
+	}
+	for i, character := range input {
+		// Using gw.DrawToVisibleMap for each point
+		gw.DrawToVisibleMap(x+i, y, string(character), escapeCode)
+	}
+}
+
+func (gw *GameWindow) DrawToVisibleMap(x int, y int, character string, escapeCode string) {
+	gw.mapMutex.Lock()
+	defer gw.mapMutex.Unlock()
+
+	if x > len(gw.visibleMap)-1 || x < 0 {
+		return
+	}
+	if y > len(gw.visibleMap[x])-1 || y < 0 {
+		return
+	}
+	gw.visibleMap[x][y] = types.Point{X: x, Y: y, Character: character, EscapeCode: escapeCode}
+}
+
+func (gw *GameWindow) DrawMap() {
+	gw.mapMutex.Lock()
+	defer gw.mapMutex.Unlock()
+
+	for i := 0; i < gw.Width; i++ {
+		for j := 0; j < gw.Height; j++ {
+			gw.PrintLn(i+1, j+2, gw.visibleMap[i][j].Character, gw.visibleMap[i][j].EscapeCode)
+		}
+	}
+}
+
+func (gw *GameWindow) SetupVisibleMap() {
+	gw.mapMutex.Lock()
+	defer gw.mapMutex.Unlock()
+
+	// Make a [][]Point of the size of the window
+	gw.visibleMap = types.NewPointMap(gw.Width, gw.Height)
+	// Fill with # for now
+	for i := 0; i < gw.Width; i++ {
+		for j := 0; j < gw.Height; j++ {
+			gw.visibleMap[i][j] = types.Point{X: i, Y: j, Character: "#", EscapeCode: ""}
+		}
+	}
+}
+
+// UpdateParams is used when handling resize events to update the various window parameters in a safe state
+func (gw *GameWindow) PostUpdateParams() {
+	gw.SetupVisibleMap()
 }

@@ -73,6 +73,7 @@ type Console struct {
 	resizeActive           bool
 	userLoggedIn           bool
 	userLoggedInMutex      sync.Mutex
+	currentCharID          string
 	characterLoggedIn      bool // Whether the user has logged in with a character, chat windows will only be active for input if this is true
 	characterLoggedInMutex sync.Mutex
 	flushWindowList        []config.WindowID
@@ -224,6 +225,7 @@ func (c *Console) HandleResize(newWidth, newHeight int) {
 			w.UpdateParams(0, 0, c.Width-50, c.Height-13, c.Width, c.Height)
 		case config.WindowGameDisplay:
 			w.UpdateParams(0, 0, c.Width-50, c.Height-13, c.Width, c.Height)
+			w.PostUpdateParams()
 		case config.WindowToolBox:
 			w.UpdateParams(c.Width-48, 0, 48, c.Height-2, c.Width, c.Height)
 
