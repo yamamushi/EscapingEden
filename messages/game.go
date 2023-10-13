@@ -52,8 +52,3 @@ type GameCharPosition struct {
 type GameCharView struct {
 	View [][]types.Point
 }
-
-type GameCharMove struct {
-	DeltaX int
-	DeltaY int
-}

@@ -14,17 +14,8 @@ func (gw *GameWindow) drawView(view messages.GameCharView) {
 		for j := 0; j < len(receivedPoints[i]); j++ {
 			//gw.PrintStringToMap(i, j, receivedPoints[i][j].Character, receivedPoints[i][j].EscapeCode)
 			//gw.log.Println(logging.LogInfo, "Game Window received view from game manager, drawing", receivedPoints[i][j].Character)
-			if j < gw.Height-3 {
-				gw.DrawToVisibleMap(i, j, receivedPoints[i][j].Character, receivedPoints[i][j].EscapeCode)
-			}
+			gw.DrawToVisibleMap(i, j, receivedPoints[i][j].Character, receivedPoints[i][j].EscapeCode)
 		}
 	}
-	gw.FrameCounterMutext.Lock()
-	gw.FrameCounter++
-	if gw.FrameCounter > 15 {
-		gw.RequestFlushFromConsole()
-		gw.FrameCounter = 0
-	}
-	gw.FrameCounterMutext.Unlock()
 
 }

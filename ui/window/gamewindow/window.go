@@ -97,8 +97,7 @@ func NewGameWindow(x, y, width, height, consoleWidth, consoleHeight int, input, 
 func (gw *GameWindow) UpdateContents() {
 	switch gw.windowState {
 	case GW_DefaultView:
-		//gw.log.Println(logging.LogInfo, "Requesting Window View")
-		gw.SendToConsole(messages.WindowMessage{Type: messages.WM_GameCommand, Data: messages.GameManagerMessage{Type: messages.GameManager_GetCharacterView, Data: messages.GameMessageData{CharacterID: gw.GetCharacterInfoField("id"), Data: messages.GameViewDimensions{Width: gw.Width, Height: gw.Height}}}})
+		gw.SendToConsole(messages.WindowMessage{Type: messages.WM_GameCommand, Data: messages.GameManagerMessage{Type: messages.GameManager_GetCharacterView, Data: messages.GameMessageData{CharacterID: gw.GetCharacterInfoField("id")}}})
 		gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
 		gw.DrawStatusBar()
 		gw.DrawMenus()
@@ -107,42 +106,6 @@ func (gw *GameWindow) UpdateContents() {
 		//gw.DrawToVisibleMap(gw.Width/2, (gw.Height/2)-1, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
 		gw.DrawMap()
 		//xgw.RequestFlushFromConsole()
-	}
-}
-
-func (gw *GameWindow) DrawStatusBar() {
-	gw.StatusBarMutex.Lock()
-	defer gw.StatusBarMutex.Unlock()
-	messageLen := len(gw.StatusBarMessage)
-
-	// Clear the status bar
-	gw.ClearStatusBar()
-
-	//gw.PrintStringToMap(gw.X+gw.Width-messageLen-2, gw.Y+gw.Height-4, gw.StatusBarMessage, gw.Terminal.Bold())
-	gw.PrintStringToStatusBar(gw.Width-messageLen-2, 0, gw.StatusBarMessage, gw.Terminal.Bold())
-}
-
-func (gw *GameWindow) ClearStatusBar() {
-	for i := 0; i < gw.Width; i++ {
-		for j := 0; j < 4; j++ {
-			gw.PrintStringToStatusBar(i, j, " ", "")
-		}
-	}
-}
-
-func (gw *GameWindow) PrintStringToStatusBar(x, y int, input string, escapeCode string) {
-	// For every character in the input string, starting at x, y, print the character to the visible map
-	// If x is greater than the width of the visible map, return
-	if x > gw.Width-1 || x < 0 {
-		return
-	}
-	// If y is greater than the height of the visible map, return
-	if y > gw.Height-4 || y < 0 {
-		return
-	}
-	for i, character := range input {
-		// Using gw.DrawToVisibleMap for each point
-		gw.DrawToVisibleMap(x+i, y+gw.Y+gw.Height-4, string(character), escapeCode)
 	}
 }
 
