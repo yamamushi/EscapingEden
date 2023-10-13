@@ -18,6 +18,9 @@ type GameManager struct {
 	// Active Characters
 	ActiveCharacters      ActiveCharacters
 	activeCharactersMutex sync.Mutex
+
+	// Temporary will remove in a refactor of the map generation
+	MapChunks []MapChunk
 }
 
 func NewGameManager(receiveChannel chan messages.GameManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType) *GameManager {
@@ -47,6 +50,6 @@ func (gm *GameManager) Init() error {
 	}
 
 	// Now we load up the world, this could take a while...
-
+	gm.LoadWorld()
 	return nil
 }

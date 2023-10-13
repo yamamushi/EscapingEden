@@ -237,7 +237,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 
 			case messages.ConnectManager_Message_GameCommand:
 				go func() {
-					cm.Log.Println(logging.LogInfo, "Sending game command to game manager from", managerMessage.SenderConsoleID)
+					//cm.Log.Println(logging.LogInfo, "Sending game command to game manager from", managerMessage.SenderConsoleID)
 					cm.GMSendMessages <- messages.GameManagerMessage{
 						Type:            managerMessage.Data.(messages.GameManagerMessage).Type,
 						Data:            managerMessage.Data,
@@ -247,7 +247,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 
 			case messages.ConnectManager_Message_GameCommandResponse:
 				go func() {
-					cm.Log.Println(logging.LogInfo, "Sending game manager response to client console", managerMessage.SenderConsoleID)
+					//cm.Log.Println(logging.LogInfo, "Sending game manager response to client console", managerMessage.SenderConsoleID)
 					cm.connectionMap.Range(func(key, value interface{}) bool {
 						if conn, ok := value.(*Connection); ok {
 							if managerMessage.RecipientConsoleID == conn.ID {

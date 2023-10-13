@@ -107,7 +107,7 @@ func (c *Console) CaptureWindowMessages() {
 				continue
 
 			case messages.WM_GameCommand:
-				c.Log.Println(logging.LogInfo, "Sending Game Command: ", windowMessage.Data.(messages.GameManagerMessage).Type)
+				//c.Log.Println(logging.LogInfo, "Sending Game Command: ", windowMessage.Data.(messages.GameManagerMessage).Type)
 				managerMessage := messages.ConnectionManagerMessage{
 					Type:            messages.ConnectManager_Message_GameCommand,
 					Data:            windowMessage.Data,

@@ -55,6 +55,7 @@ func (c *Console) LoginCharacter(charInfo messages.CharacterInfo) {
 	c.currentCharID = charInfo.ID
 	c.SendMessages <- messages.ConnectionManagerMessage{Data: messages.GameManagerMessage{Data: messages.GameMessageData{CharacterID: charInfo.ID}, Type: messages.GameManager_NotifyLoggedInCharacter}, Type: messages.ConnectManager_Message_GameCommand}
 	c.characterLoggedIn = true
+	c.FlushLastSent()
 }
 
 // LogoutCharacter logs out the character, sets the characterLoggedIn flag to false

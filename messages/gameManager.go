@@ -34,6 +34,7 @@ const (
 	GameManager_NotifyLoggedInCharacter
 	GameManager_NotifyLoggedOutCharacter
 	GameManager_GetCharacterPosition
+	GameManager_GetCharacterView
 )
 
 type GameManagerMessage struct {

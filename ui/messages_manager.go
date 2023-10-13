@@ -86,7 +86,7 @@ func (c *Console) CaptureManagerMessages() {
 				c.UserDashboardMessages <- charHistoryCharacterUpdateResponse
 
 			case messages.Console_Message_GameCommandResponse:
-				c.Log.Println(logging.LogInfo, "Console received game command response")
+				//c.Log.Println(logging.LogInfo, "Console received game command response")
 				gameCommandResponse := messages.WindowMessage{
 					Type: messages.WM_GameCommandResponse,
 					Data: consoleMessage.Data,

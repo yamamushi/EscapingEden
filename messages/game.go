@@ -1,5 +1,7 @@
 package messages
 
+import "github.com/yamamushi/EscapingEden/ui/types"
+
 /*
 Window messages are sent to/from the console from/to windows.
 */
@@ -16,6 +18,7 @@ const (
 
 	// Response types from the game manager
 	GM_CharacterPosition
+	GM_CharacterView
 )
 
 type GameMessageCommand int
@@ -37,4 +40,8 @@ type GameMessageData struct {
 type GameCharPosition struct {
 	X int
 	Y int
+}
+
+type GameCharView struct {
+	View [][]types.Point
 }

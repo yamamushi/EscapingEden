@@ -88,11 +88,13 @@ func NewGameWindow(x, y, width, height, consoleWidth, consoleHeight int, input, 
 func (gw *GameWindow) UpdateContents() {
 	switch gw.windowState {
 	case GW_DefaultView:
+		gw.SendToConsole(messages.WindowMessage{Type: messages.WM_GameCommand, Data: messages.GameManagerMessage{Type: messages.GameManager_GetCharacterView, Data: messages.GameMessageData{CharacterID: gw.GetCharacterInfoField("id")}}})
 		gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
 
 		// At center of window draw an @
 		gw.DrawToVisibleMap(gw.X+gw.Width/2, gw.Y+gw.Height/2, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
 		gw.DrawMap()
+		//xgw.RequestFlushFromConsole()
 	}
 }
 
@@ -105,6 +107,10 @@ func (gw *GameWindow) Listen() {
 			switch message {
 			case messages.GM_CharacterPosition:
 				gw.log.Println(logging.LogInfo, "Game Window received message from console ", receivedMessage.Data.(messages.GameMessage).Data.Data)
+
+			case messages.GM_CharacterView:
+				//gw.log.Println(logging.LogInfo, "Game Window received view from console")
+				gw.drawView(receivedMessage.Data.(messages.GameMessage).Data.Data.(messages.GameCharView))
 
 			}
 		}
@@ -157,12 +163,14 @@ func (gw *GameWindow) SetupVisibleMap() {
 
 	// Make a [][]Point of the size of the window
 	gw.visibleMap = types.NewPointMap(gw.Width, gw.Height)
+
 	// Fill with # for now
 	for i := 0; i < gw.Width; i++ {
 		for j := 0; j < gw.Height; j++ {
 			gw.visibleMap[i][j] = types.Point{X: i, Y: j, Character: "#", EscapeCode: ""}
 		}
 	}
+
 }
 
 // UpdateParams is used when handling resize events to update the various window parameters in a safe state

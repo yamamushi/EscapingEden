@@ -16,7 +16,7 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 	for {
 		select {
 		case managerMessage := <-gm.ReceiveChannel:
-			gm.Log.Println(logging.LogInfo, "Game Manager received message")
+			//gm.Log.Println(logging.LogInfo, "Game Manager received message")
 			switch managerMessage.Type {
 			case messages.GameManager_GetCharacterPosition: // Non functional
 				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
@@ -47,7 +47,22 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 
 			case messages.GameManager_NotifyDisconnect:
 				connectionID := managerMessage.Data.(string)
-				gm.Log.Println(logging.LogInfo, "Game Manager received logout notification for ", connectionID)
+				gm.Log.Println(logging.LogInfo, "Game Manager received disconnect notification for ", connectionID)
+
+			case messages.GameManager_GetCharacterView:
+				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				view := gm.GetCharacterView(charID)
+				response := messages.ConnectionManagerMessage{
+					Type:               messages.ConnectManager_Message_GameCommandResponse,
+					RecipientConsoleID: managerMessage.SenderConsoleID,
+					Data: messages.GameMessage{Type: messages.GM_CharacterView, Data: messages.GameMessageData{
+						CharacterID: charID,
+						Data:        view,
+					},
+					},
+				}
+				//gm.Log.Println(logging.LogInfo, "GameManager", "Sending view request response")
+				gm.SendChannel <- response
 
 			}
 		}

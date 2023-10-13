@@ -10,6 +10,7 @@ import (
 	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"strconv"
@@ -42,6 +43,7 @@ func init() {
 // main is the entry point for Escaping Eden
 func main() {
 	timestamp := time.Now().Format("01/02/2006 15:04:05")
+	//go http.ListenAndServe("localhost:6060", nil)
 
 	fmt.Println("Preparing to launch Escaping Eden v"+EscapingEdenVersion, "at", timestamp)
 	fmt.Println("Reading config file at:", ConfPath+"\n")
