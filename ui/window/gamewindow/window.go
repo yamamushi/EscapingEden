@@ -92,7 +92,7 @@ func (gw *GameWindow) UpdateContents() {
 		gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
 
 		// At center of window draw an @
-		gw.DrawToVisibleMap(gw.X+gw.Width/2, gw.Y+gw.Height/2, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
+		gw.DrawToVisibleMap(gw.Width/2, (gw.Height/2)-1, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
 		gw.DrawMap()
 		//xgw.RequestFlushFromConsole()
 	}
@@ -167,7 +167,11 @@ func (gw *GameWindow) SetupVisibleMap() {
 	// Fill with # for now
 	for i := 0; i < gw.Width; i++ {
 		for j := 0; j < gw.Height; j++ {
-			gw.visibleMap[i][j] = types.Point{X: i, Y: j, Character: "#", EscapeCode: ""}
+			if j < gw.Height-3 {
+				gw.visibleMap[i][j] = types.Point{X: i, Y: j, Character: "#", EscapeCode: ""}
+			} else {
+				gw.visibleMap[i][j] = types.Point{X: i, Y: j, Character: " ", EscapeCode: ""}
+			}
 		}
 	}
 
