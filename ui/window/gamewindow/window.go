@@ -103,7 +103,7 @@ func (gw *GameWindow) UpdateContents() {
 		gw.DrawMenus()
 
 		// At center of window draw an @
-		//gw.DrawToVisibleMap(gw.Width/2, (gw.Height/2)-1, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
+		gw.DrawToVisibleMap(gw.Width/2, (gw.Height/2)-1, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
 		gw.DrawMap()
 		//xgw.RequestFlushFromConsole()
 	}

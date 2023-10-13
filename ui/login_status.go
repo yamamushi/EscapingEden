@@ -64,7 +64,9 @@ func (c *Console) LoginCharacter(charInfo messages.CharacterInfo) {
 		c.ChatMessageReceive <- chatMessage
 	}
 	c.characterLoggedIn = true
+	c.ClearPointMap()
 	c.FlushLastSent()
+	//c.forceScreenRefresh = true
 }
 
 // LogoutCharacter logs out the character, sets the characterLoggedIn flag to false
