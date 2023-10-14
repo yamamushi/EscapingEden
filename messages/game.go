@@ -12,6 +12,8 @@ const (
 	GM_Null GameMessageType = iota
 	// These will send messages to the connection manager ultimately
 	GM_Error
+	GM_FailedLoadCharacter
+	GM_FailedLoadView
 	GM_QuitConsole
 
 	// Message to the game manager
@@ -35,6 +37,11 @@ type GameMessage struct {
 type GameMessageData struct {
 	CharacterID string
 	Data        interface{}
+}
+
+type GameViewDimensions struct {
+	Width  int
+	Height int
 }
 
 type GameCharPosition struct {

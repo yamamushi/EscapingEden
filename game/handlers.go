@@ -38,11 +38,26 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 
 			case messages.GameManager_NotifyLoggedInCharacter:
 				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				if charID == "" {
+					continue
+				}
 				gm.Log.Println(logging.LogInfo, "Game Manager received login notification for ", charID)
-				gm.LoadCharacter(charID)
+				err := gm.LoadCharacter(charID)
+				if err != nil {
+					gm.Log.Println(logging.LogError, "Game Manager failed to load character", err.Error())
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: managerMessage.SenderConsoleID,
+						Data:               messages.GameMessage{Type: messages.GM_FailedLoadCharacter},
+					}
+					gm.SendChannel <- response
+				}
 
 			case messages.GameManager_NotifyLoggedOutCharacter:
 				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				if charID == "" {
+					continue
+				}
 				gm.Log.Println(logging.LogInfo, "Game Manager received logout notification for ", charID)
 
 			case messages.GameManager_NotifyDisconnect:
@@ -50,20 +65,35 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 				gm.Log.Println(logging.LogInfo, "Game Manager received disconnect notification for ", connectionID)
 
 			case messages.GameManager_GetCharacterView:
-				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
-				view := gm.GetCharacterView(charID)
-				response := messages.ConnectionManagerMessage{
-					Type:               messages.ConnectManager_Message_GameCommandResponse,
-					RecipientConsoleID: managerMessage.SenderConsoleID,
-					Data: messages.GameMessage{Type: messages.GM_CharacterView, Data: messages.GameMessageData{
-						CharacterID: charID,
-						Data:        view,
-					},
-					},
-				}
-				//gm.Log.Println(logging.LogInfo, "GameManager", "Sending view request response")
-				gm.SendChannel <- response
+				//gm.Log.Println(logging.LogInfo, "Game Manager received character view request ")
 
+				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				if charID == "" {
+					continue
+				}
+				width := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameViewDimensions).Width
+				height := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameViewDimensions).Width
+				view, err := gm.GetCharacterView(charID, width, height)
+				if err != nil {
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: managerMessage.SenderConsoleID,
+						Data:               messages.GameMessage{Type: messages.GM_FailedLoadView},
+					}
+					gm.SendChannel <- response
+				} else {
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: managerMessage.SenderConsoleID,
+						Data: messages.GameMessage{Type: messages.GM_CharacterView, Data: messages.GameMessageData{
+							CharacterID: charID,
+							Data:        view,
+						},
+						},
+					}
+					//gm.Log.Println(logging.LogInfo, "GameManager", "Sending view request response")
+					gm.SendChannel <- response
+				}
 			}
 		}
 	}

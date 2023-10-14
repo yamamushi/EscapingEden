@@ -14,10 +14,13 @@ func (am *AccountManager) AddCharacter(userID string, characterID string) (messa
 	}
 
 	userAccount.Characters = append(userAccount.Characters, characterID)
+	userAccount.LastCharacterID = characterID
+
 	err = am.DB.UpdateRecord("Accounts", userAccount)
 	if err != nil {
 		am.Log.Println(logging.LogError, "Error updating user account:", err)
 		return userAccount, messages.AMError_DBError
 	}
+
 	return userAccount, messages.AMError_Null
 }

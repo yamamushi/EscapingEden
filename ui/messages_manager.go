@@ -40,11 +40,13 @@ func (c *Console) CaptureManagerMessages() {
 
 			case messages.Console_Message_CharacterCreationResponse:
 				//log.Println("Console received character creation response")
+				c.Log.Println(logging.LogInfo, "Console received character request response")
 				charCreatorMessage := messages.WindowMessage{
 					Type: messages.WM_RequestCharacterCreationResponse,
 					Data: consoleMessage.Data,
 				}
 				c.UserDashboardMessages <- charCreatorMessage
+				c.Log.Println(logging.LogInfo, "Console sent character request response")
 
 			case messages.Console_Message_CharacterRequestResponse:
 				c.Log.Println(logging.LogInfo, "Console received character request response")

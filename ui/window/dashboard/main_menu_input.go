@@ -13,13 +13,14 @@ func (dw *DashboardWindow) handleMenuInput(input types.Input) {
 	if !dw.GetActive() {
 		return
 	}
+	dw.Log.Println(logging.LogInfo, "last character:", dw.UserInfo)
 
 	switch input.Type {
 	case types.InputCharacter:
 		switch input.Data {
 		case "a":
 			lastCharacter := dw.GetUserInfoField("lastcharacter")
-			if lastCharacter == "" {
+			if lastCharacter == "" || dw.UserInfo.LastCharacterID == "" {
 				if dw.firstTimeLogin {
 					dw.characterCreatorState = CharacterCreatorFirstTimeLoginWelcome
 				} else {
