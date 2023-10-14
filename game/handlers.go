@@ -42,7 +42,7 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 					continue
 				}
 				gm.Log.Println(logging.LogInfo, "Game Manager received login notification for ", charID)
-				err := gm.LoadCharacter(charID, managerMessage.SenderConsoleID)
+				err := gm.LoadCharacter(charID)
 				if err != nil {
 					gm.Log.Println(logging.LogError, "Game Manager failed to load character", err.Error())
 					response := messages.ConnectionManagerMessage{
@@ -66,32 +66,6 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 				gm.Log.Println(logging.LogInfo, "Game Manager received disconnect notification for ", connectionID)
 
 			case messages.GameManager_GetCharacterView:
-				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
-				view := gm.GetCharacterView(charID)
-				response := messages.ConnectionManagerMessage{
-					Type:               messages.ConnectManager_Message_GameCommandResponse,
-					RecipientConsoleID: managerMessage.SenderConsoleID,
-					Data: messages.GameMessage{Type: messages.GM_CharacterView, Data: messages.GameMessageData{
-						CharacterID: charID,
-						Data:        view,
-					},
-					},
-				}
-				//gm.Log.Println(logging.LogInfo, "GameManager", "Sending view request response")
-				gm.SendChannel <- response
-
-			case messages.GameManager_MoveCharacter:
-				//gm.Log.Println(logging.LogInfo, "Game Manager received move request")
-				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
-				if charID == "" {
-					continue
-				}
-				//gm.Log.Println(logging.LogInfo, "Game Manager received move request for ", charID)
-				deltax := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharMove).DeltaX
-				deltay := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharMove).DeltaY
-				gm.MovePlayer(charID, deltax, deltay)
-
-			case messages.GameManager_GetCharacterView:
 				//gm.Log.Println(logging.LogInfo, "Game Manager received character view request ")
 
 				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
@@ -99,7 +73,7 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 					continue
 				}
 				width := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameViewDimensions).Width
-				height := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameViewDimensions).Height
+				height := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameViewDimensions).Width
 				view, err := gm.GetCharacterView(charID, width, height)
 				if err != nil {
 					response := messages.ConnectionManagerMessage{

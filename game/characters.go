@@ -17,15 +17,11 @@ type ActiveCharacter struct {
 	View types.PointMap
 	// The character's DB Record which we will be managing from now on
 	Record *messages.CharacterInfo
-
-	// Connection ID for the character
-	ConnectionID string
-	Lock         sync.Mutex
 }
 
 type ActiveCharacters []*ActiveCharacter
 
-func (gm *GameManager) LoadCharacter(id string, consoleID string) (err error) {
+func (gm *GameManager) LoadCharacter(id string) (err error) {
 	gm.Log.Println(logging.LogInfo, "Loading character:", id)
 	// First load the character's info from the database
 	character := messages.CharacterInfo{}
@@ -34,28 +30,22 @@ func (gm *GameManager) LoadCharacter(id string, consoleID string) (err error) {
 		gm.Log.Println(logging.LogError, "Failed to load character:", err.Error())
 		return err
 	}
-	gm.AddToLiveCharacterList(character, consoleID)
+	gm.AddToLiveCharacterList(character)
 	return nil
 }
 
-func (gm *GameManager) AddToLiveCharacterList(character messages.CharacterInfo, consoleID string) {
+func (gm *GameManager) AddToLiveCharacterList(character messages.CharacterInfo) {
 	gm.activeCharactersMutex.Lock()
 	defer gm.activeCharactersMutex.Unlock()
-	gm.ActiveCharacters = append(gm.ActiveCharacters, &ActiveCharacter{ID: character.ID, Name: character.Name, Record: &character, ConnectionID: consoleID})
+	gm.ActiveCharacters = append(gm.ActiveCharacters, &ActiveCharacter{ID: character.ID, Name: character.Name, Record: &character})
 }
 
-func (gm *GameManager) RemoveFromLiveCharacterList(ID string) {
+func (gm *GameManager) RemoveFromLiveCharacterList(characterID string) {
 	gm.activeCharactersMutex.Lock()
 	defer gm.activeCharactersMutex.Unlock()
 	for i, character := range gm.ActiveCharacters {
-		gm.Log.Println(logging.LogInfo, "Checking character:", character.ConnectionID)
-		if character.ID == ID || character.ConnectionID == ID {
-			err := gm.DB.UpdateRecord("Characters", character.Record)
-			if err != nil {
-				gm.Log.Println(logging.LogError, "Failed to update character after removing from game manager:", err.Error())
-			}
+		if character.ID == characterID {
 			gm.ActiveCharacters = append(gm.ActiveCharacters[:i], gm.ActiveCharacters[i+1:]...)
-			gm.Log.Println(logging.LogInfo, "Removed character from game manager:", ID)
 		}
 	}
 }
@@ -71,12 +61,13 @@ func (gm *GameManager) GetCharacter(characterID string) (character *messages.Cha
 	return &messages.CharacterInfo{}, errors.New("character not found")
 }
 
-// Note this does not lock the mutex, it is assumed that the caller has already locked it!
 func (gm *GameManager) GetCharacterAt(X, Y int) (character *messages.CharacterInfo) {
+	gm.activeCharactersMutex.Lock()
+	defer gm.activeCharactersMutex.Unlock()
 	for i, character := range gm.ActiveCharacters {
 		if character.Record.Position.X == X && character.Record.Position.Y == Y {
 			return gm.ActiveCharacters[i].Record
 		}
 	}
-	return nil
+	return &messages.CharacterInfo{}
 }

@@ -16,6 +16,7 @@ func (gm *GameManager) LoadWorld() {
 	gm.Log.Println(logging.LogInfo, "Loading World...")
 	//
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Creation...")
+
 	/*
 		mapChunk := gm.CreateMapChunk(255, 255, 255, 0, 0, 0, "Test")
 
@@ -24,7 +25,9 @@ func (gm *GameManager) LoadWorld() {
 		if err != nil {
 			panic(err)
 		}
+
 	*/
+
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Loading...")
 	loaded, err := gm.LoadMapChunk("test.map")
 	if err != nil {
