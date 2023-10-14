@@ -41,12 +41,12 @@ func (gm *GameManager) LoadWorld() {
 	}
 	// append to the map chunks
 	gm.MapChunks = append(gm.MapChunks, *loaded)
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 25; i++ {
 		// generate random x1, y1, x2, y2 between 0 and 100 using go rand
-		x1 := rand.Intn(100) // 0 - 100
-		y1 := rand.Intn(50)  // 0 - 100
-		x2 := rand.Intn(100) // 0 - 100
-		y2 := rand.Intn(50)  // 0 - 100
+		x1 := rand.Intn(200) // 0 - 100
+		y1 := rand.Intn(200) // 0 - 100
+		x2 := rand.Intn(200) // 0 - 100
+		y2 := rand.Intn(200) // 0 - 100
 		gm.DrawRect(x1, y1, x2, y2)
 
 	}

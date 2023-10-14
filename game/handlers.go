@@ -72,7 +72,7 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 					continue
 				}
 				width := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameViewDimensions).Width
-				height := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameViewDimensions).Width
+				height := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameViewDimensions).Height
 				view, err := gm.GetCharacterView(charID, width, height)
 				if err != nil {
 					response := messages.ConnectionManagerMessage{
