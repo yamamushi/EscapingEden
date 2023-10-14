@@ -33,6 +33,9 @@ type GameWindow struct {
 	// Current Map inside the game window (upon a redraw we need to resize the map and redraw it too)
 	visibleMap types.PointMap
 	mapMutex   sync.Mutex
+
+	FrameCounter       int
+	FrameCounterMutext sync.Mutex
 }
 
 // GameWindowState is an enum for storing game window state
