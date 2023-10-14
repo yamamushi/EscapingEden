@@ -27,26 +27,6 @@ func (gw *GameWindow) HandleCommand(input string) {
 	gw.commandMutex.Lock()
 	defer gw.commandMutex.Unlock()
 	gw.log.Println(logging.LogInfo, "GameWindow Command: ", input)
-	//gw.Log.Println(logging.LogInfo, "GameWindow Input: ", strconv.Itoa(int(input[0])))
-	// convert input to an int and send the value to the console
-	if int(input[0]) == 4 {
-		// ^D
-		gw.Log.Println(logging.LogInfo, "GameWindow received ^D, handling dig")
-		gw.StatusBarMutex.Lock()
-		gw.StatusBarMessage = "Dig in which direction?"
-		gw.StatusBarMutex.Unlock()
-		return
-	} else if int(input[0]) == 2 {
-		// ctrl-b
-		gw.Log.Println(logging.LogInfo, "GameWindow received ^B, handling build")
-		gw.StatusBarMutex.Lock()
-		gw.StatusBarMessage = "Build in which direction?"
-		gw.StatusBarMutex.Unlock()
-		return
-	}
-	gw.StatusBarMutex.Lock()
-	gw.StatusBarMessage = ""
-	gw.StatusBarMutex.Unlock()
 	switch input {
 	// vi movement
 	case "h":
@@ -66,32 +46,7 @@ func (gw *GameWindow) HandleCommand(input string) {
 		gw.MovePlayer(-1, 1)
 	case "n":
 		gw.MovePlayer(1, 1)
-	// Up and down movement
-	case "<":
-		gw.StatusBarMutex.Lock()
-		gw.StatusBarMessage = "You cannot go up here."
-		gw.StatusBarMutex.Unlock()
-	case ">":
-		gw.StatusBarMutex.Lock()
-		gw.StatusBarMessage = "You cannot go down here."
-		gw.StatusBarMutex.Unlock()
-	// Other commands
-	case "d":
-		gw.StatusBarMutex.Lock()
-		gw.StatusBarMessage = "What do you want to drop?"
-		gw.StatusBarMutex.Unlock()
-	case ",":
-		gw.StatusBarMutex.Lock()
-		gw.StatusBarMessage = "There is nothing here to pick up."
-		gw.StatusBarMutex.Unlock()
-	case "t":
-		if len(gw.Menus) > 0 {
-			gw.RemoveMenuBox(gw.Menus[0])
-			return
-		} else {
-			gw.BuildMenu(gw.Width-25, gw.Height/2-10, 21, 20, "Build", []struct{ Data interface{} }{{Data: "wall"}, {Data: "stairs"}, {Data: "floor"}, {Data: "door"}})
-		}
-
+		// Other commands
 	default:
 		return // Do nothing
 	}

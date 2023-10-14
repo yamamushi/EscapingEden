@@ -65,6 +65,17 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 				connectionID := managerMessage.Data.(string)
 				gm.Log.Println(logging.LogInfo, "Game Manager received disconnect notification for ", connectionID)
 
+			case messages.GameManager_MoveCharacter:
+				//gm.Log.Println(logging.LogInfo, "Game Manager received move request")
+				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				if charID == "" {
+					continue
+				}
+				//gm.Log.Println(logging.LogInfo, "Game Manager received move request for ", charID)
+				deltax := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharMove).DeltaX
+				deltay := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharMove).DeltaY
+				gm.MovePlayer(charID, deltax, deltay)
+
 			case messages.GameManager_GetCharacterView:
 				//gm.Log.Println(logging.LogInfo, "Game Manager received character view request ")
 

@@ -36,12 +36,6 @@ type GameWindow struct {
 
 	FrameCounter       int
 	FrameCounterMutext sync.Mutex
-
-	StatusBarMessage string
-	StatusBarMutex   sync.Mutex
-
-	Menus      []*MenuBox
-	MenusMutex sync.Mutex
 }
 
 // GameWindowState is an enum for storing game window state

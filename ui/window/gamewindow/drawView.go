@@ -19,5 +19,12 @@ func (gw *GameWindow) drawView(view messages.GameCharView) {
 			}
 		}
 	}
+	gw.FrameCounterMutext.Lock()
+	gw.FrameCounter++
+	if gw.FrameCounter > 15 {
+		gw.RequestFlushFromConsole()
+		gw.FrameCounter = 0
+	}
+	gw.FrameCounterMutext.Unlock()
 
 }
