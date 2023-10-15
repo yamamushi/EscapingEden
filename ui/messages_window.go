@@ -83,13 +83,7 @@ func (c *Console) CaptureWindowMessages() {
 					charInfo := windowMessage.Data.(messages.CharacterInfo)
 					c.Log.Println(logging.LogInfo, "Setting character info for ", charInfo.Name, " to ", charInfo.ID)
 					c.LoginCharacter(charInfo)
-					chatMessage := messages.ChatMessage{}
-					if int(charInfo.FirstLogin) == 1 {
-						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome " + c.GetCharacterName() + "!"}
-					} else {
-						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome back " + c.GetCharacterName() + "!"}
-					}
-					c.ChatMessageReceive <- chatMessage
+
 					continue
 
 				case messages.WMC_SetCharacterLoggedOut:
