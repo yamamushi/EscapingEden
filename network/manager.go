@@ -96,6 +96,8 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
+
 			case messages.ConnectManager_Message_Broadcast:
 				// For every connection, send the message to the Console channel
 				cm.Log.Println(logging.LogInfo, "Broadcast message received on Connection Manager, sending to all connected clients: ", managerMessage.Data)
@@ -106,6 +108,8 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
+
 			case messages.ConnectManager_Message_ServerShutdown:
 				cm.Log.Println(logging.LogInfo, "Server shutdown message received on Connection Manager, disconnecting all clients.")
 				cm.connectionMap.Range(func(key, value interface{}) bool {
@@ -117,6 +121,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
 			case messages.ConnectManager_Message_Error:
 				// For every connection, send the message to the Console channel
 				cm.connectionMap.Range(func(key, value interface{}) bool {
@@ -130,6 +135,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
 			case messages.ConnectManager_Message_Quit:
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
@@ -141,12 +147,15 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
+
 			case messages.ConnectManager_Message_Register:
 				go func() {
 					//cm.Log.Println(logging.LogInfo, "Sending registration request to AccountManager")
 					registrationRequest := managerMessage.Data.(messages.AccountRegistrationRequest)
 					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Register, Data: registrationRequest, SenderConsoleID: managerMessage.SenderConsoleID}
 				}()
+				continue
 
 			case messages.ConnectManager_Message_AccountLogin:
 				go func() {
@@ -154,8 +163,10 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					loginRequest := managerMessage.Data.(messages.AccountLoginRequest)
 					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_Login, Data: loginRequest, SenderConsoleID: managerMessage.SenderConsoleID}
 				}()
+				continue
 
 			case messages.ConnectManager_Message_CharacterLoggedInNotify:
+				cm.Log.Println(logging.LogInfo, "Notifying Managers that a character has logged in")
 				go func() {
 					amMessage := messages.AccountManagerMessage{
 						Type:            messages.AccountManager_Message_UpdateCharacterHistory,
@@ -171,6 +182,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					cm.CMSendMessages <- cmMessage
 				}()
+				continue
 
 			case messages.ConnectManager_Message_RequestCharacterByID:
 				cm.Log.Println(logging.LogInfo, "Requesting character by ID: ", managerMessage.Data)
@@ -182,6 +194,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					cm.CMSendMessages <- cmMessage
 				}()
+				continue
 
 			case messages.ConnectManager_Message_CharacterRequestResponse:
 				go func() {
@@ -201,6 +214,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 						return true
 					})
 				}()
+				continue
 
 			case messages.ConnectManager_Message_RequestPasswordReset:
 				// Sending request to EdenBot to reset password for a user
@@ -214,6 +228,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 						SourceID:   managerMessage.SenderConsoleID,
 					}
 				}()
+				continue
 
 			case messages.ConnectManager_Message_CharNameValidation:
 				go func() {
@@ -224,6 +239,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 						SenderConsoleID: managerMessage.SenderConsoleID,
 					}
 				}()
+				continue
 
 			case messages.ConnectManager_Message_CharacterCreation:
 				go func() {
@@ -234,20 +250,22 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 						SenderConsoleID: managerMessage.SenderConsoleID,
 					}
 				}()
+				continue
 
 			case messages.ConnectManager_Message_GameCommand:
 				go func() {
-					cm.Log.Println(logging.LogInfo, "Sending game command to game manager from", managerMessage.SenderConsoleID)
+					//cm.Log.Println(logging.LogInfo, "Sending game command to game manager from", managerMessage.SenderConsoleID)
 					cm.GMSendMessages <- messages.GameManagerMessage{
 						Type:            managerMessage.Data.(messages.GameManagerMessage).Type,
 						Data:            managerMessage.Data,
 						SenderConsoleID: managerMessage.SenderConsoleID,
 					}
 				}()
+				continue
 
 			case messages.ConnectManager_Message_GameCommandResponse:
 				go func() {
-					cm.Log.Println(logging.LogInfo, "Sending game manager response to client console", managerMessage.SenderConsoleID)
+					//cm.Log.Println(logging.LogInfo, "Sending game manager response to client console", managerMessage.SenderConsoleID)
 					cm.connectionMap.Range(func(key, value interface{}) bool {
 						if conn, ok := value.(*Connection); ok {
 							if managerMessage.RecipientConsoleID == conn.ID {
@@ -262,10 +280,11 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 						return true
 					})
 				}()
+				continue
 
 			case messages.ConnectManager_Message_CharacterCreationResponse:
 				go func() {
-					cm.Log.Println(logging.LogInfo, "Sending character name validation response to Console")
+					cm.Log.Println(logging.LogInfo, "CM Sending character name validation response to Console")
 					cm.connectionMap.Range(func(key, value interface{}) bool {
 						if conn, ok := value.(*Connection); ok {
 							if managerMessage.RecipientConsoleID == conn.ID {
@@ -280,6 +299,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 						return true
 					})
 				}()
+				continue
 
 			case messages.ConnectManager_Message_CharNameValidationResponse:
 				go func() {
@@ -298,6 +318,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 						return true
 					})
 				}()
+				continue
 
 			case messages.ConnectManager_Message_ValidatePasswordReset:
 				// Send the password reset validation request to the AccountManager
@@ -305,6 +326,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					//cm.Log.Println(logging.LogInfo, "Sending password reset validation request to AccountManager")
 					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_ResetPasswordValidate, Data: managerMessage.Data.(messages.AccountProcessForgotPasswordData), SenderConsoleID: managerMessage.SenderConsoleID}
 				}()
+				continue
 
 			case messages.ConnectManager_Message_ProcessPasswordReset:
 				// Send the new password data to the AccountManager
@@ -312,6 +334,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					cm.Log.Println(logging.LogInfo, "Sending new password request to AccountManager")
 					cm.AMSendMessages <- messages.AccountManagerMessage{Type: messages.AccountManager_Message_ResetPasswordProcess, Data: managerMessage.Data.(messages.AccountProcessForgotPasswordData), SenderConsoleID: managerMessage.SenderConsoleID}
 				}()
+				continue
 
 			case messages.ConnectManager_Message_ValidatePasswordResetResponse:
 				// Send the password reset validation response to the Console
@@ -325,6 +348,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
 
 			case messages.ConnectManager_Message_ProcessPasswordResetResponse:
 				// Send the password reset validation response to the Console
@@ -338,6 +362,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
 
 			case messages.ConnectManager_Message_RegisterResponse:
 				cm.connectionMap.Range(func(key, value interface{}) bool {
@@ -350,6 +375,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
 
 			case messages.ConnectManager_Message_LoginResponse:
 				cm.connectionMap.Range(func(key, value interface{}) bool {
@@ -362,6 +388,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
 
 			case messages.ConnectManager_Message_ForceLogout:
 				cm.connectionMap.Range(func(key, value interface{}) bool {
@@ -374,6 +401,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
 
 			case messages.ConnectManager_Message_BadLoginAttempt:
 				cm.connectionMap.Range(func(key, value interface{}) bool {
@@ -403,6 +431,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
 
 			case messages.ConnectManager_Message_UpdateAccountHistoryResponse:
 				cm.connectionMap.Range(func(key, value interface{}) bool {
@@ -416,6 +445,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					}
 					return true
 				})
+				continue
 
 			default:
 				cm.Log.Println(logging.LogError, "Unknown message type received: ", managerMessage.Type, managerMessage.SenderConsoleID, managerMessage.RecipientConsoleID)

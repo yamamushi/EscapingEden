@@ -21,18 +21,18 @@ func (c *Console) CaptureWindowMessages() {
 				switch windowMessage.Command {
 				case messages.WMC_NewPopup:
 					c.OpenPopup(&windowMessage.PopupOptions)
-					continue
+
 					// These following messages are sent into their respective windows
 				case messages.WMC_ClosePopup:
 					c.HandlePopupMessage(windowMessage)
-					continue
+
 				case messages.WMC_ToggleHelp:
 					c.ToggleHelp(&windowMessage.HelpOptions)
-					continue
+
 				case messages.WMC_RefreshConsole:
 					c.AbortSend()
 					c.ForceRedraw()
-					continue
+
 				//case messages.WMC_UpdateUserInfoForAllWindows:
 				//	c.userInfoMutex.Lock()
 				//	defer c.userInfoMutex.Unlock()
@@ -41,19 +41,21 @@ func (c *Console) CaptureWindowMessages() {
 				case messages.WMC_FlushConsoleBuffer:
 					//log.Println("Flush message received")
 					c.flushWindowList = append(c.flushWindowList, windowMessage.TargetID)
-					continue
+
 				case messages.WMC_SetAccountLoggedIn:
 					//log.Println("Console received login user for " + c.ConnectionID)
 					c.LoginUser(windowMessage.Data.(messages.UserInfo))
 					chatMessage := messages.ChatMessage{Type: messages.Chat_Message_System, Content: "You have logged in as " + c.GetUserName() + "."}
 					c.ChatMessageReceive <- chatMessage
 					continue
+
 				case messages.WMC_SetAccountLoggedOut:
 					//log.Println("Console received logout user for " + c.ConnectionID)
 					c.LogoutUser() // This also logs out a character, no need to force both.
 					chatMessage := messages.ChatMessage{Type: messages.Chat_Message_System, Content: "You have logged out."}
 					c.ChatMessageReceive <- chatMessage
 					continue
+
 				case messages.WMC_RequestCharacterByID:
 					//log.Println("Console received request for character by ID")
 					// Request Character by ID from character manager
@@ -63,35 +65,33 @@ func (c *Console) CaptureWindowMessages() {
 						SenderConsoleID: c.ConnectionID,
 					}
 					c.SendMessages <- requestByID
+					continue
 
 				case messages.WMC_RequestCharacterHistoryUpdate:
 					// Tell account manager AND character manager that a character is attempting to log in
+					c.Log.Println(logging.LogInfo, "WMC_RequestCharacterHistoryUpdate")
 					loggedInMessage := messages.ConnectionManagerMessage{
 						Type:            messages.ConnectManager_Message_CharacterLoggedInNotify,
 						Data:            windowMessage.Data,
 						SenderConsoleID: c.ConnectionID,
 					}
 					c.SendMessages <- loggedInMessage
+					continue
 
 				case messages.WMC_SetCharacterLoggedIn:
 					//log.Println("Console received login character for " + c.ConnectionID)
 					charInfo := windowMessage.Data.(messages.CharacterInfo)
 					c.Log.Println(logging.LogInfo, "Setting character info for ", charInfo.Name, " to ", charInfo.ID)
 					c.LoginCharacter(charInfo)
-					chatMessage := messages.ChatMessage{}
-					if int(charInfo.FirstLogin) == 1 {
-						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome " + c.GetCharacterName() + "!"}
-					} else {
-						chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome back " + c.GetCharacterName() + "!"}
-					}
-					c.ChatMessageReceive <- chatMessage
+
+					continue
 
 				case messages.WMC_SetCharacterLoggedOut:
 					log.Println("Console received logout character for " + c.ConnectionID)
 					c.LogoutCharacter()
 					chatMessage := messages.ChatMessage{Type: messages.Chat_Message_System, Content: "You have logged out."}
 					c.ChatMessageReceive <- chatMessage
-					continue
+
 				default:
 					continue
 				}
@@ -104,17 +104,15 @@ func (c *Console) CaptureWindowMessages() {
 					SenderConsoleID: c.ConnectionID,
 				}
 				c.SendMessages <- managerMessage
-				continue
 
 			case messages.WM_GameCommand:
-				c.Log.Println(logging.LogInfo, "Sending Game Command: ", windowMessage.Data.(messages.GameManagerMessage).Type)
+				//c.Log.Println(logging.LogInfo, "Sending Game Command: ", windowMessage.Data.(messages.GameManagerMessage).Type)
 				managerMessage := messages.ConnectionManagerMessage{
 					Type:            messages.ConnectManager_Message_GameCommand,
 					Data:            windowMessage.Data,
 					SenderConsoleID: c.ConnectionID,
 				}
 				c.SendMessages <- managerMessage
-				continue
 
 			case messages.WM_RequestRegistration:
 				//log.Println("Sending registration request to connection manager")
@@ -193,7 +191,7 @@ func (c *Console) CaptureWindowMessages() {
 					SenderConsoleID: c.ConnectionID,
 				}
 				c.SendMessages <- managerMessage
-				continue
+
 			case messages.WM_QuitConsole:
 				//log.Println("Sending Quit request to ConnectionManager")
 				managerMessage := messages.ConnectionManagerMessage{
@@ -201,7 +199,6 @@ func (c *Console) CaptureWindowMessages() {
 					RecipientConsoleID: c.ConnectionID,
 				}
 				c.SendMessages <- managerMessage
-				continue
 
 			default:
 				continue

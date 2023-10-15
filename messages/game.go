@@ -1,5 +1,7 @@
 package messages
 
+import "github.com/yamamushi/EscapingEden/ui/types"
+
 /*
 Window messages are sent to/from the console from/to windows.
 */
@@ -10,12 +12,15 @@ const (
 	GM_Null GameMessageType = iota
 	// These will send messages to the connection manager ultimately
 	GM_Error
+	GM_FailedLoadCharacter
+	GM_FailedLoadView
 	GM_QuitConsole
 
 	// Message to the game manager
 
 	// Response types from the game manager
 	GM_CharacterPosition
+	GM_CharacterView
 )
 
 type GameMessageCommand int
@@ -34,7 +39,21 @@ type GameMessageData struct {
 	Data        interface{}
 }
 
+type GameViewDimensions struct {
+	Width  int
+	Height int
+}
+
 type GameCharPosition struct {
 	X int
 	Y int
+}
+
+type GameCharView struct {
+	View [][]types.Point
+}
+
+type GameCharMove struct {
+	DeltaX int
+	DeltaY int
 }

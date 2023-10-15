@@ -11,7 +11,7 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 		case windowMessage := <-dw.ConsoleReceive:
 			switch windowMessage.Type {
 			case messages.WM_RequestCharNameValidationResponse:
-				dw.Log.Println(logging.LogInfo, "Received WM_RequestCharNameValidationResponse")
+				//dw.Log.Println(logging.LogInfo, "Received WM_RequestCharNameValidationResponse")
 				data := windowMessage.Data.(messages.CharManagerNameCheckResponse)
 				if data.NameInUse {
 					dw.Log.Println(logging.LogInfo, "Character Name In Use")
@@ -26,10 +26,9 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 					dw.CreateCharacter()
 					dw.RequestFlushFromConsole()
 				}
-				return
 
 			case messages.WM_RequestCharacterCreationResponse:
-				dw.Log.Println(logging.LogInfo, "Received WM_RequestCharacterCreationResponse")
+				//dw.Log.Println(logging.LogInfo, "Received WM_RequestCharacterCreationResponse")
 				data := windowMessage.Data.(messages.CharacterInfo)
 				if data.Error != "Null Error" {
 					dw.Log.Println(logging.LogInfo, data.Error)
@@ -38,13 +37,14 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 					dw.RequestFlushFromConsole()
 				} else {
 					dw.Log.Println(logging.LogInfo, "Character Created")
+					go dw.ValidateCharacterLogin(data)
+					go dw.HandleReceiveChannel()
 					dw.LoginCharacter(data)
 					dw.RequestFlushFromConsole()
 				}
-				return
 
 			case messages.WM_RequestCharacterResponse:
-				dw.Log.Println(logging.LogInfo, "Received WM_RequestCharacterResponse")
+				//dw.Log.Println(logging.LogInfo, "Received WM_RequestCharacterResponse")
 				data := windowMessage.Data.(messages.CharacterInfo)
 				if data.Error != "Null Error" {
 					dw.Error("Something went wrong when trying to get your character, please try again later.")
@@ -58,10 +58,9 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 					go dw.HandleReceiveChannel()
 					dw.RequestFlushFromConsole()
 				}
-				return
 
 			case messages.WM_RequestCharacterHistoryAccountUpdateResponse:
-				dw.Log.Println(logging.LogInfo, "Received WM_RequestCharacterHistoryAccountUpdateResponse")
+				//dw.Log.Println(logging.LogInfo, "Received WM_RequestCharacterHistoryAccountUpdateResponse")
 				data := windowMessage.Data.(messages.CharManagerUpdateHistoryResponse)
 				account := data.Data.(messages.Account)
 				if account.Error != "Null Error" {
@@ -73,13 +72,12 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 					dw.pendingLoginMutex.Lock()
 					dw.accountManagerValidated = true
 					dw.pendingLoginMutex.Unlock()
-					dw.Log.Println(logging.LogInfo, "Account Login Time Updated")
+					//dw.Log.Println(logging.LogInfo, "Account Login Time Updated")
 					dw.accountManagerValidated = true
 				}
-				continue
 
 			case messages.WM_RequestCharacterHistoryCharacterUpdateResponse:
-				dw.Log.Println(logging.LogInfo, "Received WM_RequestCharacterHistoryCharacterUpdateResponse")
+				//dw.Log.Println(logging.LogInfo, "Received WM_RequestCharacterHistoryCharacterUpdateResponse")
 				data := windowMessage.Data.(messages.CharManagerUpdateHistoryResponse)
 				charInfo := data.Data.(messages.CharacterInfo)
 				if charInfo.Error != "Null Error" {
@@ -95,7 +93,7 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 					dw.RequestFlushFromConsole()
 					go dw.finalizeLogin(charInfo)
 				}
-				continue
+
 			}
 		}
 		dw.pendingLoginMutex.Lock()

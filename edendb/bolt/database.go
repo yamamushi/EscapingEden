@@ -111,6 +111,9 @@ func (db *BoltDB) RemoveRecord(collectionName string, value interface{}) error {
 	return collection.DeleteStruct(value)
 }
 
+// TODO - This doesn't actually reduce the file size it seems, so we need to figure out a DB migration strategy
+// That will let us copy the data to a new file so we can replace it manually and then delete the old file.
+
 func (db *BoltDB) RemoveCollection(collectionName string) error {
 	db.queryMutex.Lock()
 	defer db.queryMutex.Unlock()

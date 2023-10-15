@@ -33,6 +33,15 @@ type GameWindow struct {
 	// Current Map inside the game window (upon a redraw we need to resize the map and redraw it too)
 	visibleMap types.PointMap
 	mapMutex   sync.Mutex
+
+	FrameCounter       int
+	FrameCounterMutext sync.Mutex
+
+	StatusBarMessage string
+	StatusBarMutex   sync.Mutex
+
+	Menus      []*MenuBox
+	MenusMutex sync.Mutex
 }
 
 // GameWindowState is an enum for storing game window state
@@ -88,11 +97,52 @@ func NewGameWindow(x, y, width, height, consoleWidth, consoleHeight int, input, 
 func (gw *GameWindow) UpdateContents() {
 	switch gw.windowState {
 	case GW_DefaultView:
+		//gw.log.Println(logging.LogInfo, "Requesting Window View")
+		gw.SendToConsole(messages.WindowMessage{Type: messages.WM_GameCommand, Data: messages.GameManagerMessage{Type: messages.GameManager_GetCharacterView, Data: messages.GameMessageData{CharacterID: gw.GetCharacterInfoField("id"), Data: messages.GameViewDimensions{Width: gw.Width, Height: gw.Height}}}})
 		gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
+		gw.DrawStatusBar()
+		gw.DrawMenus()
 
 		// At center of window draw an @
-		gw.DrawToVisibleMap(gw.X+gw.Width/2, gw.Y+gw.Height/2, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
+		//gw.DrawToVisibleMap(gw.Width/2, (gw.Height/2)-1, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
 		gw.DrawMap()
+		//xgw.RequestFlushFromConsole()
+	}
+}
+
+func (gw *GameWindow) DrawStatusBar() {
+	gw.StatusBarMutex.Lock()
+	defer gw.StatusBarMutex.Unlock()
+	messageLen := len(gw.StatusBarMessage)
+
+	// Clear the status bar
+	gw.ClearStatusBar()
+
+	//gw.PrintStringToMap(gw.X+gw.Width-messageLen-2, gw.Y+gw.Height-4, gw.StatusBarMessage, gw.Terminal.Bold())
+	gw.PrintStringToStatusBar(gw.Width-messageLen-2, 0, gw.StatusBarMessage, gw.Terminal.Bold())
+}
+
+func (gw *GameWindow) ClearStatusBar() {
+	for i := 0; i < gw.Width; i++ {
+		for j := 0; j < 4; j++ {
+			gw.PrintStringToStatusBar(i, j, " ", "")
+		}
+	}
+}
+
+func (gw *GameWindow) PrintStringToStatusBar(x, y int, input string, escapeCode string) {
+	// For every character in the input string, starting at x, y, print the character to the visible map
+	// If x is greater than the width of the visible map, return
+	if x > gw.Width-1 || x < 0 {
+		return
+	}
+	// If y is greater than the height of the visible map, return
+	if y > gw.Height-4 || y < 0 {
+		return
+	}
+	for i, character := range input {
+		// Using gw.DrawToVisibleMap for each point
+		gw.DrawToVisibleMap(x+i, y+gw.Y+gw.Height-4, string(character), escapeCode)
 	}
 }
 
@@ -105,6 +155,10 @@ func (gw *GameWindow) Listen() {
 			switch message {
 			case messages.GM_CharacterPosition:
 				gw.log.Println(logging.LogInfo, "Game Window received message from console ", receivedMessage.Data.(messages.GameMessage).Data.Data)
+
+			case messages.GM_CharacterView:
+				//gw.log.Println(logging.LogInfo, "Game Window received view from console")
+				gw.drawView(receivedMessage.Data.(messages.GameMessage).Data.Data.(messages.GameCharView))
 
 			}
 		}
@@ -157,12 +211,18 @@ func (gw *GameWindow) SetupVisibleMap() {
 
 	// Make a [][]Point of the size of the window
 	gw.visibleMap = types.NewPointMap(gw.Width, gw.Height)
+
 	// Fill with # for now
 	for i := 0; i < gw.Width; i++ {
 		for j := 0; j < gw.Height; j++ {
-			gw.visibleMap[i][j] = types.Point{X: i, Y: j, Character: "#", EscapeCode: ""}
+			if j < gw.Height-3 {
+				gw.visibleMap[i][j] = types.Point{X: i, Y: j, Character: "#", EscapeCode: ""}
+			} else {
+				gw.visibleMap[i][j] = types.Point{X: i, Y: j, Character: " ", EscapeCode: ""}
+			}
 		}
 	}
+
 }
 
 // UpdateParams is used when handling resize events to update the various window parameters in a safe state

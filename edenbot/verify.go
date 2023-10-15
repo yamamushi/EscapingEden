@@ -10,13 +10,13 @@ import (
 
 func (eb *EdenBot) IsUserInDiscordServer(username string) (*discordgo.User, error) {
 
-	usertag := strings.Split(username, "#")
+	/*usertag := strings.Split(username, "#")
 	if len(usertag) != 2 {
 		eb.Log.Println(logging.LogInfo, "Invalid username: ", username)
 		return nil, errors.New("invalid discord username: " + username)
-	}
+	}*/
 
-	members, err := eb.dg.GuildMembersSearch(eb.Config.Discord.GuildID, usertag[0], 100)
+	members, err := eb.dg.GuildMembersSearch(eb.Config.Discord.GuildID, username, 100)
 	if err != nil {
 		eb.Log.Println(logging.LogError, "Error searching for user: ", err)
 		return nil, errors.New("error searching for user")
@@ -27,7 +27,12 @@ func (eb *EdenBot) IsUserInDiscordServer(username string) (*discordgo.User, erro
 	}
 
 	for _, member := range members {
-		if member.User.Discriminator == usertag[1] {
+		eb.Log.Println(logging.LogInfo, "Checking user: ", member.User.Discriminator)
+		if member.User.Discriminator == username {
+			eb.Log.Println(logging.LogInfo, "User found in server")
+			return member.User, nil
+		}
+		if member.User.Username == username {
 			eb.Log.Println(logging.LogInfo, "User found in server")
 			return member.User, nil
 		}
@@ -91,7 +96,8 @@ func (eb *EdenBot) HandleVerify(s *discordgo.Session, m *discordgo.MessageCreate
 		if err != nil {
 			eb.Log.Println(logging.LogError, "Error adding registered role to user: ", err, m.Author.ID)
 		}
-		eb.NotifyRegistrationChannel(m.Author.ID)
+		// Too noisy right now during testing
+		//eb.NotifyRegistrationChannel(m.Author.ID)
 	}
 }
 

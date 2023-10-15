@@ -3,3 +3,6 @@
 *.db
 *.log
 tmp/
+EscapingEden
+deploy.sh
+*.map

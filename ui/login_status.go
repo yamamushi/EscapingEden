@@ -53,8 +53,20 @@ func (c *Console) LoginCharacter(charInfo messages.CharacterInfo) {
 	c.SetActiveWindowNoThread(c.GetGameWindow())
 	c.UpdateCharacterInfo(charInfo)
 	c.currentCharID = charInfo.ID
-	c.SendMessages <- messages.ConnectionManagerMessage{Data: messages.GameManagerMessage{Data: messages.GameMessageData{CharacterID: charInfo.ID}, Type: messages.GameManager_NotifyLoggedInCharacter}, Type: messages.ConnectManager_Message_GameCommand}
+	c.SendMessages <- messages.ConnectionManagerMessage{Data: messages.GameManagerMessage{Data: messages.GameMessageData{CharacterID: charInfo.ID}, Type: messages.GameManager_NotifyLoggedInCharacter}, Type: messages.ConnectManager_Message_GameCommand, SenderConsoleID: c.ConnectionID}
+	if !c.characterLoggedIn {
+		chatMessage := messages.ChatMessage{}
+		if int(charInfo.FirstLogin) == 1 {
+			chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome " + c.GetCharacterName() + "!"}
+		} else {
+			chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome back " + c.GetCharacterName() + "!"}
+		}
+		c.ChatMessageReceive <- chatMessage
+	}
 	c.characterLoggedIn = true
+	c.ClearPointMap()
+	c.FlushLastSent()
+	//c.forceScreenRefresh = true
 }
 
 // LogoutCharacter logs out the character, sets the characterLoggedIn flag to false
@@ -62,7 +74,7 @@ func (c *Console) LogoutCharacter() {
 	c.characterLoggedInMutex.Lock()
 	defer c.characterLoggedInMutex.Unlock()
 	c.characterLoggedIn = false
-	c.SendMessages <- messages.ConnectionManagerMessage{Data: messages.GameManagerMessage{Data: messages.GameMessageData{CharacterID: c.currentCharID}, Type: messages.GameManager_NotifyLoggedInCharacter}, Type: messages.ConnectManager_Message_GameCommand}
+	c.SendMessages <- messages.ConnectionManagerMessage{Data: messages.GameManagerMessage{Data: messages.GameMessageData{CharacterID: c.currentCharID}, Type: messages.GameManager_NotifyLoggedInCharacter}, Type: messages.ConnectManager_Message_GameCommand, SenderConsoleID: c.ConnectionID}
 	c.UpdateCharacterInfo(messages.CharacterInfo{})
 	c.RemoveWindow(c.GetGameWindow().GetID())
 	c.SetActiveWindowNoThread(c.GetUserDashboard())

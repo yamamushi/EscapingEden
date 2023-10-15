@@ -16,7 +16,7 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 	for {
 		select {
 		case managerMessage := <-gm.ReceiveChannel:
-			gm.Log.Println(logging.LogInfo, "Game Manager received message")
+			//gm.Log.Println(logging.LogInfo, "Game Manager received message")
 			switch managerMessage.Type {
 			case messages.GameManager_GetCharacterPosition: // Non functional
 				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
@@ -38,17 +38,75 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 
 			case messages.GameManager_NotifyLoggedInCharacter:
 				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				if charID == "" {
+					continue
+				}
 				gm.Log.Println(logging.LogInfo, "Game Manager received login notification for ", charID)
-				gm.LoadCharacter(charID)
+				err := gm.LoadCharacter(charID, managerMessage.SenderConsoleID)
+				if err != nil {
+					gm.Log.Println(logging.LogError, "Game Manager failed to load character", err.Error())
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: managerMessage.SenderConsoleID,
+						Data:               messages.GameMessage{Type: messages.GM_FailedLoadCharacter},
+					}
+					gm.SendChannel <- response
+				}
 
 			case messages.GameManager_NotifyLoggedOutCharacter:
 				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				if charID == "" {
+					continue
+				}
 				gm.Log.Println(logging.LogInfo, "Game Manager received logout notification for ", charID)
+				gm.RemoveFromLiveCharacterList(charID)
 
 			case messages.GameManager_NotifyDisconnect:
 				connectionID := managerMessage.Data.(string)
-				gm.Log.Println(logging.LogInfo, "Game Manager received logout notification for ", connectionID)
+				gm.Log.Println(logging.LogInfo, "Game Manager received disconnect notification for ", connectionID)
+				gm.RemoveFromLiveCharacterList(connectionID)
 
+			case messages.GameManager_MoveCharacter:
+				//gm.Log.Println(logging.LogInfo, "Game Manager received move request")
+				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				if charID == "" {
+					continue
+				}
+				//gm.Log.Println(logging.LogInfo, "Game Manager received move request for ", charID)
+				deltax := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharMove).DeltaX
+				deltay := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharMove).DeltaY
+				gm.MovePlayer(charID, deltax, deltay)
+
+			case messages.GameManager_GetCharacterView:
+				//gm.Log.Println(logging.LogInfo, "Game Manager received character view request ")
+
+				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				if charID == "" {
+					continue
+				}
+				width := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameViewDimensions).Width
+				height := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameViewDimensions).Height
+				view, err := gm.GetCharacterView(charID, width, height)
+				if err != nil {
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: managerMessage.SenderConsoleID,
+						Data:               messages.GameMessage{Type: messages.GM_FailedLoadView},
+					}
+					gm.SendChannel <- response
+				} else {
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: managerMessage.SenderConsoleID,
+						Data: messages.GameMessage{Type: messages.GM_CharacterView, Data: messages.GameMessageData{
+							CharacterID: charID,
+							Data:        view,
+						},
+						},
+					}
+					//gm.Log.Println(logging.LogInfo, "GameManager", "Sending view request response")
+					gm.SendChannel <- response
+				}
 			}
 		}
 	}
