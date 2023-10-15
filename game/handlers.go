@@ -42,7 +42,7 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 					continue
 				}
 				gm.Log.Println(logging.LogInfo, "Game Manager received login notification for ", charID)
-				err := gm.LoadCharacter(charID)
+				err := gm.LoadCharacter(charID, managerMessage.SenderConsoleID)
 				if err != nil {
 					gm.Log.Println(logging.LogError, "Game Manager failed to load character", err.Error())
 					response := messages.ConnectionManagerMessage{
@@ -64,6 +64,7 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 			case messages.GameManager_NotifyDisconnect:
 				connectionID := managerMessage.Data.(string)
 				gm.Log.Println(logging.LogInfo, "Game Manager received disconnect notification for ", connectionID)
+				gm.RemoveFromLiveCharacterList(connectionID)
 
 			case messages.GameManager_MoveCharacter:
 				//gm.Log.Println(logging.LogInfo, "Game Manager received move request")

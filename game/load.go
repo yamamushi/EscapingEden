@@ -17,16 +17,13 @@ func (gm *GameManager) LoadWorld() {
 	//
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Creation...")
 
-	/*
-		mapChunk := gm.CreateMapChunk(255, 255, 255, 0, 0, 0, "Test")
+	mapChunk := gm.CreateMapChunk(255, 255, 255, 0, 0, 0, "Test")
 
-		gm.Log.Println(logging.LogInfo, "Testing Map Chunk Saving...")
-		err := gm.SaveMapChunk(mapChunk, "test.map")
-		if err != nil {
-			panic(err)
-		}
-
-	*/
+	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Saving...")
+	err := gm.SaveMapChunk(mapChunk, "test.map")
+	if err != nil {
+		gm.Log.Println(logging.LogError, "Failed to save map chunk:", err.Error())
+	}
 
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Loading...")
 	loaded, err := gm.LoadMapChunk("test.map")
