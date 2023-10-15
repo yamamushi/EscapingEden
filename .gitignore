@@ -5,3 +5,4 @@
 tmp/
 EscapingEden
 deploy.sh
+*.map
