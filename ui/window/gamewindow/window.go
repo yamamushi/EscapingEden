@@ -42,6 +42,7 @@ type GameWindow struct {
 
 	Menus      []*MenuBox
 	MenusMutex sync.Mutex
+	CloseMenu  bool
 }
 
 // GameWindowState is an enum for storing game window state
@@ -102,6 +103,10 @@ func (gw *GameWindow) UpdateContents() {
 		gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
 		gw.DrawStatusBar()
 		gw.DrawMenus()
+		if gw.CloseMenu {
+			gw.RemoveMenuBox(gw.Menus[0])
+			gw.CloseMenu = false
+		}
 
 		// At center of window draw an @
 		//gw.DrawToVisibleMap(gw.Width/2, (gw.Height/2)-1, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())

@@ -27,6 +27,13 @@ func (gw *GameWindow) HandleCommand(input string) {
 	gw.commandMutex.Lock()
 	defer gw.commandMutex.Unlock()
 	gw.log.Println(logging.LogInfo, "GameWindow Command: ", input)
+	gw.MenusMutex.Lock()
+	if len(gw.Menus) > 0 {
+		gw.Menus[0].HandleInput(gw, input)
+		gw.MenusMutex.Unlock()
+		return
+	}
+	gw.MenusMutex.Unlock()
 	//gw.Log.Println(logging.LogInfo, "GameWindow Input: ", strconv.Itoa(int(input[0])))
 	// convert input to an int and send the value to the console
 	if int(input[0]) == 4 {
@@ -89,7 +96,7 @@ func (gw *GameWindow) HandleCommand(input string) {
 			gw.RemoveMenuBox(gw.Menus[0])
 			return
 		} else {
-			gw.BuildMenu(gw.Width-25, gw.Height/2-10, 21, 20, "Build", []struct{ Data interface{} }{{Data: "wall"}, {Data: "stairs"}, {Data: "floor"}, {Data: "door"}})
+			gw.CreateMenu(MenuType_Build)
 		}
 
 	default:
