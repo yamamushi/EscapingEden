@@ -39,6 +39,9 @@ type GameWindow struct {
 
 	StatusBarMessage string
 	StatusBarMutex   sync.Mutex
+
+	Menus      []*MenuBox
+	MenusMutex sync.Mutex
 }
 
 // GameWindowState is an enum for storing game window state
@@ -98,6 +101,7 @@ func (gw *GameWindow) UpdateContents() {
 		gw.SendToConsole(messages.WindowMessage{Type: messages.WM_GameCommand, Data: messages.GameManagerMessage{Type: messages.GameManager_GetCharacterView, Data: messages.GameMessageData{CharacterID: gw.GetCharacterInfoField("id"), Data: messages.GameViewDimensions{Width: gw.Width, Height: gw.Height}}}})
 		gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
 		gw.DrawStatusBar()
+		gw.DrawMenus()
 
 		// At center of window draw an @
 		//gw.DrawToVisibleMap(gw.Width/2, (gw.Height/2)-1, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
