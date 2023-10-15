@@ -96,7 +96,8 @@ func (eb *EdenBot) HandleVerify(s *discordgo.Session, m *discordgo.MessageCreate
 		if err != nil {
 			eb.Log.Println(logging.LogError, "Error adding registered role to user: ", err, m.Author.ID)
 		}
-		eb.NotifyRegistrationChannel(m.Author.ID)
+		// Too noisy right now during testing
+		//eb.NotifyRegistrationChannel(m.Author.ID)
 	}
 }
 
