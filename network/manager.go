@@ -419,6 +419,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				})
 
 			case messages.ConnectManager_Message_UpdateCharacterHistoryResponse:
+
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {

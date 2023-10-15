@@ -4,7 +4,6 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"math"
 )
 
 func (gm *GameManager) GetCharacterView(charID string, width, height int) (messages.GameCharView, error) {
@@ -12,7 +11,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 
 	character, err := gm.GetCharacter(charID)
 	if err != nil {
-		gm.Log.Println(logging.LogInfo, "error getting character", err.Error())
+		//gm.Log.Println(logging.LogInfo, "error getting character", err.Error())
 		return messages.GameCharView{}, err
 	}
 	gm.activeCharactersMutex.Lock()
@@ -31,7 +30,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 		}{X: len(gm.MapChunks[0].TileMap) / 2, Y: len(gm.MapChunks[0].TileMap[0]) / 2, Z: 0}
 		character.Initialized = true
 	}
-	gm.activeCharactersMutex.Unlock()
+	defer gm.activeCharactersMutex.Unlock()
 
 	view := messages.GameCharView{}
 
@@ -54,7 +53,9 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 	radius := 4
 
 	// Now we loop through the plane, do our checks for each point and draw
-	// Loop through the screen
+	// Prepare vars
+	tilemapXLen := len(gm.MapChunks[0].TileMap)
+	tilemapYLen := len(gm.MapChunks[0].TileMap[0])
 	// Loop through the screen
 	for i := 0; i < height; i++ {
 		for j := 0; j < width; j++ {
@@ -63,20 +64,26 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 			mapY := posY - offsetY + i
 
 			// Check if the map coordinate is within bounds
-			if mapX >= 0 && mapX < len(gm.MapChunks[0].TileMap) &&
-				mapY >= 0 && mapY < len(gm.MapChunks[0].TileMap[0]) {
+			if mapX >= 0 && mapX < tilemapXLen &&
+				mapY >= 0 && mapY < tilemapYLen {
 				// If we're at the player position, draw the player
 				if mapX == posX && mapY == posY {
 					//gm.Log.Println(logging.LogInfo, "drawing player at", mapX, mapY, j, i)
 					plane[j][i].Character = charSymbol
 					plane[j][i].EscapeCode = charEscapeCode
 				} else {
-					distance := math.Sqrt(float64((mapX-posX)*(mapX-posX) + (mapY-posY)*(mapY-posY)))
-					if distance <= float64(radius) {
-						if gm.MapChunks[0].TileMap[mapX][mapY][0].Passable {
-							plane[j][i].Character = "."
+					distanceSquared := float64((mapX-posX)*(mapX-posX) + (mapY-posY)*(mapY-posY))
+					if distanceSquared <= float64(radius*radius) {
+						playercheck := gm.GetCharacterAt(mapX, mapY)
+						if playercheck != nil && playercheck.ID != charID {
+							plane[j][i].Character = "@"
+							plane[j][i].EscapeCode = playercheck.FGColor.FG() + playercheck.BGColor.BG()
 						} else {
-							plane[j][i].Character = "#"
+							if gm.MapChunks[0].TileMap[mapX][mapY][0].Passable {
+								plane[j][i].Character = "."
+							} else {
+								plane[j][i].Character = "#"
+							}
 						}
 					}
 				}
