@@ -37,6 +37,8 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 					dw.RequestFlushFromConsole()
 				} else {
 					dw.Log.Println(logging.LogInfo, "Character Created")
+					go dw.ValidateCharacterLogin(data)
+					go dw.HandleReceiveChannel()
 					dw.LoginCharacter(data)
 					dw.RequestFlushFromConsole()
 				}

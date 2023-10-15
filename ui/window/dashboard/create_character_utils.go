@@ -66,7 +66,10 @@ func (dw *DashboardWindow) LogoutCharacter() {
 
 func (dw *DashboardWindow) ValidateCharacterLogin(charInfo messages.CharacterInfo) {
 	// Create a console message with type WMC_RequestCharacterHistoryUpdate
+	dw.Log.Println(logging.LogInfo, "ValidateCharacterLogin")
 	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_RequestCharacterHistoryUpdate, TargetID: dw.GetID(), Data: charInfo}
 	// Send the message to the console so that we can enable the full dashboard control
 	dw.SendToConsole(msg)
+	dw.Log.Println(logging.LogInfo, "ValidateCharacterLogin message sent")
+
 }

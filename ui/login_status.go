@@ -54,6 +54,15 @@ func (c *Console) LoginCharacter(charInfo messages.CharacterInfo) {
 	c.UpdateCharacterInfo(charInfo)
 	c.currentCharID = charInfo.ID
 	c.SendMessages <- messages.ConnectionManagerMessage{Data: messages.GameManagerMessage{Data: messages.GameMessageData{CharacterID: charInfo.ID}, Type: messages.GameManager_NotifyLoggedInCharacter}, Type: messages.ConnectManager_Message_GameCommand}
+	if !c.characterLoggedIn {
+		chatMessage := messages.ChatMessage{}
+		if int(charInfo.FirstLogin) == 1 {
+			chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome " + c.GetCharacterName() + "!"}
+		} else {
+			chatMessage = messages.ChatMessage{Type: messages.Chat_Message_System, Content: "Welcome back " + c.GetCharacterName() + "!"}
+		}
+		c.ChatMessageReceive <- chatMessage
+	}
 	c.characterLoggedIn = true
 	c.ClearPointMap()
 	c.FlushLastSent()
