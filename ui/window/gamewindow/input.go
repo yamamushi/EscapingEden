@@ -84,6 +84,14 @@ func (gw *GameWindow) HandleCommand(input string) {
 		gw.StatusBarMutex.Lock()
 		gw.StatusBarMessage = "There is nothing here to pick up."
 		gw.StatusBarMutex.Unlock()
+	case "t":
+		if len(gw.Menus) > 0 {
+			gw.RemoveMenuBox(gw.Menus[0])
+			return
+		} else {
+			gw.BuildMenu(gw.Width-25, gw.Height/2-10, 21, 20, "Build", []struct{ Data interface{} }{{Data: "wall"}, {Data: "stairs"}, {Data: "floor"}, {Data: "door"}})
+		}
+
 	default:
 		return // Do nothing
 	}
