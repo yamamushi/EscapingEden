@@ -88,7 +88,7 @@ func NewGameWindow(x, y, width, height, consoleWidth, consoleHeight int, input, 
 	gw.ConsoleSend = output
 	gw.windowState = GW_DefaultView
 	gw.log = log
-	gw.log.Println(logging.LogInfo, "Character ID: ", gw.characterID)
+	//gw.log.Println(logging.LogInfo, "Character ID: ", gw.characterID)
 	go gw.Listen()
 	gw.SetupVisibleMap()
 	return gw
@@ -159,8 +159,8 @@ func (gw *GameWindow) Listen() {
 			message := receivedMessage.Data.(messages.GameMessage).Type
 			switch message {
 			case messages.GM_CharacterPosition:
-				gw.log.Println(logging.LogInfo, "Game Window received message from console ", receivedMessage.Data.(messages.GameMessage).Data.Data)
-
+				//gw.log.Println(logging.LogInfo, "Game Window received message from console ", receivedMessage.Data.(messages.GameMessage).Data.Data)
+				continue
 			case messages.GM_CharacterView:
 				//gw.log.Println(logging.LogInfo, "Game Window received view from console")
 				gw.drawView(receivedMessage.Data.(messages.GameMessage).Data.Data.(messages.GameCharView))

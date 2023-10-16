@@ -15,7 +15,7 @@ type MenuBox struct {
 	Options          []MenuBoxOption
 	ResponseCallback interface{}
 	PopupMenu        *MenuBox
-	Data             interface{} // Arbitrary data we can unpack later
+	CallbackData     interface{} // Arbitrary data we can unpack later
 }
 
 type MenuBoxOption struct {

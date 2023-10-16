@@ -19,7 +19,7 @@ func (gw *GameWindow) BuildWall(box *MenuBox) {
 
 func (gw *GameWindow) BuildWallConfirmDirection(box *MenuBox, input string) {
 	gw.StatusBarMutex.Lock()
-	gw.StatusBarMessage = "Building wall with " + box.Data.(string) + " in " + input + " direction"
+	gw.StatusBarMessage = "Building wall with " + box.CallbackData.(string) + " in " + input + " direction"
 	gw.StatusBarMutex.Unlock()
 
 	gw.CloseMenu = true
@@ -35,10 +35,12 @@ func (gw *GameWindow) BuildWallSend(box *MenuBox, input string) {
 		return
 	}
 	gw.StatusBarMutex.Lock()
+	// Right now we don't have a way of parsing the material
+	// So later we'll have to retrieve the material from the inventory
 	gw.StatusBarMessage = "Building wall with " + input + " in which direction?"
 	gw.StatusBarMutex.Unlock()
 	box.ResponseCallback = gw.BuildWallConfirmDirection
-	box.Data = input
+	box.CallbackData = input
 
 	//gw.CloseMenu = true
 }

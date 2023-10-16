@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 )
 
@@ -16,8 +15,10 @@ func (c *Console) CaptureManagerMessages() {
 			switch consoleMessage.Type {
 			case messages.Console_Message_RegistrationResponse:
 				//log.Println("Console received registration response")
-				loginMessage := messages.WindowMessage{Type: messages.WM_RegistrationResponse, Data: consoleMessage.Data}
-				c.LoginWindowMessages <- loginMessage
+				go func() {
+					loginMessage := messages.WindowMessage{Type: messages.WM_RegistrationResponse, Data: consoleMessage.Data}
+					c.LoginWindowMessages <- loginMessage
+				}()
 			case messages.Console_Message_ResetPasswordValidateResponse:
 				//log.Println("Console received reset password validation response")
 				loginMessage := messages.WindowMessage{Type: messages.WM_PasswordResetValidateResponse, Data: consoleMessage.Data}
@@ -40,26 +41,26 @@ func (c *Console) CaptureManagerMessages() {
 
 			case messages.Console_Message_CharacterCreationResponse:
 				//log.Println("Console received character creation response")
-				c.Log.Println(logging.LogInfo, "Console received character request response")
+				//c.Log.Println(logging.LogInfo, "Console received character request response")
 				charCreatorMessage := messages.WindowMessage{
 					Type: messages.WM_RequestCharacterCreationResponse,
 					Data: consoleMessage.Data,
 				}
 				c.UserDashboardMessages <- charCreatorMessage
-				c.Log.Println(logging.LogInfo, "Console sent character request response")
+				//c.Log.Println(logging.LogInfo, "Console sent character request response")
 
 			case messages.Console_Message_CharacterRequestResponse:
-				c.Log.Println(logging.LogInfo, "Console received character request response")
+				//c.Log.Println(logging.LogInfo, "Console received character request response")
 				charRequestResponse := messages.WindowMessage{
 					Type: messages.WM_RequestCharacterResponse,
 					Data: consoleMessage.Data,
 				}
-				c.Log.Println(logging.LogInfo, "Sending character request response to user dashboard")
+				//c.Log.Println(logging.LogInfo, "Sending character request response to user dashboard")
 				c.UserDashboardMessages <- charRequestResponse
-				c.Log.Println(logging.LogInfo, "Response sent to user dashboard")
+				//c.Log.Println(logging.LogInfo, "Response sent to user dashboard")
 
 			case messages.Console_Message_CharacterHistoryAccountUpdateResponse:
-				c.Log.Println(logging.LogInfo, "Console received character history account update response")
+				//c.Log.Println(logging.LogInfo, "Console received character history account update response")
 				charHistoryAccountUpdateResponse := messages.WindowMessage{
 					Type: messages.WM_RequestCharacterHistoryAccountUpdateResponse,
 					Data: consoleMessage.Data,
@@ -67,7 +68,7 @@ func (c *Console) CaptureManagerMessages() {
 				c.UserDashboardMessages <- charHistoryAccountUpdateResponse
 
 			case messages.Console_Message_CharacterHistoryCharacterUpdateResponse:
-				c.Log.Println(logging.LogInfo, "Console received character history character update response")
+				//c.Log.Println(logging.LogInfo, "Console received character history character update response")
 				charHistoryCharacterUpdateResponse := messages.WindowMessage{
 					Type: messages.WM_RequestCharacterHistoryCharacterUpdateResponse,
 					Data: consoleMessage.Data,
@@ -76,11 +77,13 @@ func (c *Console) CaptureManagerMessages() {
 
 			case messages.Console_Message_GameCommandResponse:
 				//c.Log.Println(logging.LogInfo, "Console received game command response")
-				gameCommandResponse := messages.WindowMessage{
-					Type: messages.WM_GameCommandResponse,
-					Data: consoleMessage.Data,
-				}
-				c.GameWindowMessages <- gameCommandResponse
+				go func() {
+					gameCommandResponse := messages.WindowMessage{
+						Type: messages.WM_GameCommandResponse,
+						Data: consoleMessage.Data,
+					}
+					c.GameWindowMessages <- gameCommandResponse
+				}()
 
 			case messages.Console_Message_LogoutUser:
 				//log.Println("Console received logout user request")
@@ -102,7 +105,7 @@ func (c *Console) CaptureManagerMessages() {
 				continue
 			case messages.Console_Message_Broadcast:
 				//log.Println("Broadcast message received from manager")
-				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: "Broadcast: " + consoleMessage.Data.(string)}
+				chatMessage := messages.ChatMessage{Type: messages.Chat_Message_Normal, Content: consoleMessage.Data.(string)}
 				c.ChatMessageReceive <- chatMessage
 				continue
 			case messages.Console_Message_Quit:

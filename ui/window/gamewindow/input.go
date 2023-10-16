@@ -1,7 +1,6 @@
 package gamewindow
 
 import (
-	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
 )
@@ -26,7 +25,7 @@ func (gw *GameWindow) HandleInput(input types.Input) {
 func (gw *GameWindow) HandleCommand(input string) {
 	gw.commandMutex.Lock()
 	defer gw.commandMutex.Unlock()
-	gw.log.Println(logging.LogInfo, "GameWindow Command: ", input)
+	//gw.log.Println(logging.LogInfo, "GameWindow Command: ", input)
 	gw.MenusMutex.Lock()
 	if len(gw.Menus) > 0 {
 		gw.Menus[0].HandleInput(gw, input)
@@ -38,14 +37,14 @@ func (gw *GameWindow) HandleCommand(input string) {
 	// convert input to an int and send the value to the console
 	if int(input[0]) == 4 {
 		// ^D
-		gw.Log.Println(logging.LogInfo, "GameWindow received ^D, handling dig")
+		//gw.Log.Println(logging.LogInfo, "GameWindow received ^D, handling dig")
 		gw.StatusBarMutex.Lock()
 		gw.StatusBarMessage = "Dig in which direction?"
 		gw.StatusBarMutex.Unlock()
 		return
 	} else if int(input[0]) == 2 {
 		// ctrl-b
-		gw.Log.Println(logging.LogInfo, "GameWindow received ^B, handling build")
+		//gw.Log.Println(logging.LogInfo, "GameWindow received ^B, handling build")
 		gw.StatusBarMutex.Lock()
 		gw.StatusBarMessage = "Build in which direction?"
 		gw.StatusBarMutex.Unlock()

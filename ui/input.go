@@ -76,11 +76,12 @@ func (c *Console) HandleInput(rawInput byte) {
 			case 'B':
 				c.InputToActiveWindow(types.Input{Type: types.InputDown})
 			case 'C':
+				//c.Log.Println(logging.LogWarn, "Received Right Arrow")
 				c.InputToActiveWindow(types.Input{Type: types.InputRight})
 			case 'D':
 				c.InputToActiveWindow(types.Input{Type: types.InputLeft})
 			default:
-				c.Log.Println(logging.LogWarn, "Unknown escape sequence: ", c.escapeBuffer)
+				c.Log.Println(logging.LogWarn, "Unknown escape sequence received by Console.HandleInput: ", c.escapeBuffer)
 			}
 			c.escapeBuffer = ""
 			c.escapeSequence = false
@@ -88,6 +89,7 @@ func (c *Console) HandleInput(rawInput byte) {
 		}
 		c.escapeBuffer = ""
 		c.escapeSequence = false
+		return
 	}
 
 	// If we have a backspace, we remove the last character from the input buffer.
@@ -120,5 +122,5 @@ func (c *Console) HandleInput(rawInput byte) {
 	}
 
 	c.InputToActiveWindow(types.Input{Type: types.InputCharacter, Data: string(rawInput)})
-
+	return
 }
