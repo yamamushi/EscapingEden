@@ -150,8 +150,8 @@ func (hw *HelpWindow) LoadPage(page types.HelpPage) {
 }
 
 func (hw *HelpWindow) HandleStateChange() {
-	hw.ResetWindowDrawings()
-	hw.ForceConsoleRefresh()
+	//hw.ResetWindowDrawings() // Unnecessary because hw.ForceConsoleRefresh() calls it
+	//hw.ForceConsoleRefresh()
 }
 
 func (hw *HelpWindow) NumberOfHelpPages() int {

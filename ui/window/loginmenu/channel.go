@@ -1,7 +1,6 @@
 package login
 
 import (
-	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 )
 
@@ -14,7 +13,7 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 				lw.registrationStatusMutex.Lock()
 				defer lw.registrationStatusMutex.Unlock()
 
-				lw.Log.Println(logging.LogInfo, "handleLogin Window received registration response from console")
+				//lw.Log.Println(logging.LogInfo, "handleLogin Window received registration response from console")
 				lw.registrationResponse = windowMessage.Data.(messages.AccountRegistrationResponse)
 
 				lw.registrationErrorMutex.Lock()
@@ -54,7 +53,7 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 				lw.loginSubmitMutex.Lock()
 				defer lw.loginSubmitMutex.Unlock()
 
-				lw.Log.Println(logging.LogInfo, "handleLogin Window received login response from console")
+				//lw.Log.Println(logging.LogInfo, "handleLogin Window received login response from console")
 
 				lw.loginSubmitData.Error = "" // Flush any previous errors
 				lw.loginResponse = windowMessage.Data.(messages.AccountLoginResponse)
@@ -78,7 +77,7 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 			case messages.WM_PasswordResetProcessResponse:
 				success := windowMessage.Data.(bool)
 				if success {
-					lw.Log.Println(logging.LogInfo, "handleLogin Window received password reset success")
+					//lw.Log.Println(logging.LogInfo, "handleLogin Window received password reset success")
 					lw.loginMenuMessage = "Your password has been reset. Please login with your new password."
 					lw.RequestFlushFromConsole()
 					lw.loginProcessForgotPasswordPendingData = messages.AccountProcessForgotPasswordData{}
@@ -87,7 +86,7 @@ func (lw *LoginWindow) HandleReceiveChannel() {
 					lw.loginState = LoginNull
 					lw.windowState = LoginWindowMenu
 				} else {
-					lw.Log.Println(logging.LogInfo, "handleLogin Window received password reset failed")
+					//lw.Log.Println(logging.LogInfo, "handleLogin Window received password reset failed")
 					lw.RequestFlushFromConsole()
 					lw.loginForgotPasswordNewPasswordData.Error = "Password reset failed, please try again."
 				}

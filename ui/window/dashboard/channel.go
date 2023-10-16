@@ -51,7 +51,7 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 					dw.windowState = DashboardMainMenu
 					dw.RequestFlushFromConsole()
 				} else {
-					dw.Log.Println(logging.LogInfo, "Character Found")
+					//dw.Log.Println(logging.LogInfo, "Character Found")
 					// TODO - update pending screen that character was found and a login is being attempted.
 					dw.pendingLoginMessage = "Character found, attempting character timestamp update..."
 					go dw.ValidateCharacterLogin(data)
@@ -89,7 +89,7 @@ func (dw *DashboardWindow) HandleReceiveChannel() {
 					dw.pendingLoginMutex.Lock()
 					dw.characterManagerValidated = true
 					dw.pendingLoginMutex.Unlock()
-					dw.Log.Println(logging.LogInfo, "Character Login Time Updated")
+					//dw.Log.Println(logging.LogInfo, "Character Login Time Updated")
 					dw.RequestFlushFromConsole()
 					go dw.finalizeLogin(charInfo)
 				}

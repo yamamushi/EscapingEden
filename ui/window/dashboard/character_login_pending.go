@@ -1,7 +1,6 @@
 package dashboard
 
 import (
-	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 )
 
@@ -17,9 +16,9 @@ func (dw *DashboardWindow) finalizeLogin(charInfo messages.CharacterInfo) {
 		if dw.characterManagerValidated && dw.accountManagerValidated {
 			dw.stopHandler = true
 			dw.pendingLoginMutex.Unlock()
-			dw.Log.Println(logging.LogInfo, "dw.LoginCharacter(charInfo)")
+			//dw.Log.Println(logging.LogInfo, "dw.LoginCharacter(charInfo)")
 			dw.LoginCharacter(charInfo)
-			dw.Log.Println(logging.LogInfo, "ddw.ValidateCharacterLogin(charInfo)")
+			//dw.Log.Println(logging.LogInfo, "ddw.ValidateCharacterLogin(charInfo)")
 			dw.RequestFlushFromConsole()
 			return
 		}

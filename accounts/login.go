@@ -51,7 +51,7 @@ func (am *AccountManager) handleLogin(username, password string, connectionID st
 		RecipientConsoleID: account.LastConnectionID,
 		Data:               "You have been logged out as your account has logged in from another connection.",
 	}
-	am.Log.Println(logging.LogInfo, "Sending logout request to connection manager:", account.LastConnectionID)
+	am.Log.Println(logging.LogInfo, "Sending logout request to connection manager (terminating other connections for this account):", account.LastConnectionID)
 	am.SendChannel <- logoutExisting
 
 	account.LastConnectionID = connectionID

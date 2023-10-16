@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
@@ -26,7 +27,7 @@ type ActiveCharacter struct {
 type ActiveCharacters []*ActiveCharacter
 
 func (gm *GameManager) LoadCharacter(id string, consoleID string) (err error) {
-	gm.Log.Println(logging.LogInfo, "Loading character:", id)
+	//gm.Log.Println(logging.LogInfo, "Loading character:", id)
 	// First load the character's info from the database
 	character := messages.CharacterInfo{}
 	err = gm.DB.One("Characters", "ID", id, &character)
@@ -44,17 +45,24 @@ func (gm *GameManager) AddToLiveCharacterList(character messages.CharacterInfo, 
 	gm.ActiveCharacters = append(gm.ActiveCharacters, &ActiveCharacter{ID: character.ID, Name: character.Name, Record: &character, ConnectionID: consoleID})
 }
 
+// RemoveFromLiveCharacterList removes a character from the live character list, and broadcasts a message to all connected consoles
 func (gm *GameManager) RemoveFromLiveCharacterList(ID string) {
 	gm.activeCharactersMutex.Lock()
 	defer gm.activeCharactersMutex.Unlock()
 	for i, character := range gm.ActiveCharacters {
-		gm.Log.Println(logging.LogInfo, "Checking character:", character.ConnectionID)
+		//gm.Log.Println(logging.LogInfo, "Checking character:", character.ConnectionID)
 		if character.ID == ID || character.ConnectionID == ID {
+			characterName := character.Name
 			err := gm.DB.UpdateRecord("Characters", character.Record)
 			if err != nil {
 				gm.Log.Println(logging.LogError, "Failed to update character after removing from game manager:", err.Error())
 			}
 			gm.ActiveCharacters = append(gm.ActiveCharacters[:i], gm.ActiveCharacters[i+1:]...)
+			response := messages.ConnectionManagerMessage{
+				Type: messages.ConnectManager_Message_Broadcast,
+				Data: edenutil.EdenTime{}.CurrentTimeString() + " - " + characterName + " left the world.",
+			}
+			gm.SendChannel <- response
 			gm.Log.Println(logging.LogInfo, "Removed character from game manager:", ID)
 		}
 	}
@@ -79,4 +87,15 @@ func (gm *GameManager) GetCharacterAt(X, Y int) (character *messages.CharacterIn
 		}
 	}
 	return nil
+}
+
+func (gm *GameManager) GetCharacterName(characterID string) (name string) {
+	gm.activeCharactersMutex.Lock()
+	defer gm.activeCharactersMutex.Unlock()
+	for i, character := range gm.ActiveCharacters {
+		if character.ID == characterID {
+			return gm.ActiveCharacters[i].Name
+		}
+	}
+	return ""
 }

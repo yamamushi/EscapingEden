@@ -123,6 +123,7 @@ func (cw *ChatWindow) HandleInput(input types.Input) {
 			consoleMessage := messages.WindowMessage{Data: cw.CharacterInfo.Name + ": " + cw.cwInputBuffer, Type: messages.WM_ParseChat}
 			cw.ConsoleSend <- consoleMessage
 			cw.cwInputBuffer = ""
+			cw.RequestFlushFromConsole()
 		}
 		return
 	case types.InputCharacter:

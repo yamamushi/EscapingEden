@@ -72,7 +72,7 @@ func (c *Connection) Handle() {
 	/*
 		We need to setup the session, and to do that we need to do some communication with the client.
 	*/
-	c.Log.Println(logging.LogInfo, "Setting up new Connection for:", c.ID)
+	//c.Log.Println(logging.LogInfo, "Setting up new Connection for:", c.ID)
 
 	//log.Println("Requesting terminal type for:", c.ID)
 	termType, err := RequestTerminalType(c.conn)

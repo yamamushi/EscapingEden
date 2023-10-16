@@ -13,7 +13,7 @@ func (dw *DashboardWindow) handleMenuInput(input types.Input) {
 	if !dw.GetActive() {
 		return
 	}
-	dw.Log.Println(logging.LogInfo, "last character:", dw.UserInfo.LastCharacterID)
+	//dw.Log.Println(logging.LogInfo, "last character:", dw.UserInfo.LastCharacterID)
 
 	switch input.Type {
 	case types.InputCharacter:
