@@ -42,6 +42,7 @@ type GameWindow struct {
 
 	Menus      []*MenuBox
 	MenusMutex sync.Mutex
+	CloseMenu  bool
 }
 
 // GameWindowState is an enum for storing game window state
@@ -87,7 +88,7 @@ func NewGameWindow(x, y, width, height, consoleWidth, consoleHeight int, input, 
 	gw.ConsoleSend = output
 	gw.windowState = GW_DefaultView
 	gw.log = log
-	gw.log.Println(logging.LogInfo, "Character ID: ", gw.characterID)
+	//gw.log.Println(logging.LogInfo, "Character ID: ", gw.characterID)
 	go gw.Listen()
 	gw.SetupVisibleMap()
 	return gw
@@ -102,6 +103,10 @@ func (gw *GameWindow) UpdateContents() {
 		gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
 		gw.DrawStatusBar()
 		gw.DrawMenus()
+		if gw.CloseMenu {
+			gw.RemoveMenuBox(gw.Menus[0])
+			gw.CloseMenu = false
+		}
 
 		// At center of window draw an @
 		//gw.DrawToVisibleMap(gw.Width/2, (gw.Height/2)-1, "@", gw.CharacterInfo.FGColor.FG()+gw.CharacterInfo.BGColor.BG())
@@ -154,8 +159,8 @@ func (gw *GameWindow) Listen() {
 			message := receivedMessage.Data.(messages.GameMessage).Type
 			switch message {
 			case messages.GM_CharacterPosition:
-				gw.log.Println(logging.LogInfo, "Game Window received message from console ", receivedMessage.Data.(messages.GameMessage).Data.Data)
-
+				//gw.log.Println(logging.LogInfo, "Game Window received message from console ", receivedMessage.Data.(messages.GameMessage).Data.Data)
+				continue
 			case messages.GM_CharacterView:
 				//gw.log.Println(logging.LogInfo, "Game Window received view from console")
 				gw.drawView(receivedMessage.Data.(messages.GameMessage).Data.Data.(messages.GameCharView))

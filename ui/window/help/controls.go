@@ -42,6 +42,7 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 		} else if hw.HelpPage != types.HelpPageIndex-1 {
 			hw.HelpPage += 1
 			hw.HandleStateChange()
+			//log.Println("State Changed")
 		}
 		return
 	case types.InputLeft:
@@ -74,6 +75,7 @@ func (hw *HelpWindow) HandleInput(input types.Input) {
 				hw.ConsoleSend <- message
 				//log.Println("Help sent toggle window message to console")
 			}
+			return
 
 		case "h":
 			hw.HelpPage = types.HelpPageMain

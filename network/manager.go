@@ -100,7 +100,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 
 			case messages.ConnectManager_Message_Broadcast:
 				// For every connection, send the message to the Console channel
-				cm.Log.Println(logging.LogInfo, "Broadcast message received on Connection Manager, sending to all connected clients: ", managerMessage.Data)
+				//cm.Log.Println(logging.LogInfo, "Broadcast message received on Connection Manager, sending to all connected clients: ", managerMessage.Data)
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_Broadcast, Data: managerMessage.Data}
@@ -166,7 +166,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				continue
 
 			case messages.ConnectManager_Message_CharacterLoggedInNotify:
-				cm.Log.Println(logging.LogInfo, "Notifying Managers that a character has logged in")
+				//cm.Log.Println(logging.LogInfo, "Notifying Managers that a character has logged in")
 				go func() {
 					amMessage := messages.AccountManagerMessage{
 						Type:            messages.AccountManager_Message_UpdateCharacterHistory,
@@ -185,7 +185,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				continue
 
 			case messages.ConnectManager_Message_RequestCharacterByID:
-				cm.Log.Println(logging.LogInfo, "Requesting character by ID: ", managerMessage.Data)
+				//cm.Log.Println(logging.LogInfo, "Requesting character by ID: ", managerMessage.Data)
 				go func() {
 					cmMessage := messages.CharacterManagerMessage{
 						Type:            messages.CharManager_RequestCharacterByID,
@@ -198,12 +198,12 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 
 			case messages.ConnectManager_Message_CharacterRequestResponse:
 				go func() {
-					cm.Log.Println(logging.LogInfo, "Sending character to client that requested it")
+					//cm.Log.Println(logging.LogInfo, "Sending character to client that requested it")
 					//log.Println(managerMessage.RecipientConsoleID)
 					cm.connectionMap.Range(func(key, value interface{}) bool {
 						if conn, ok := value.(*Connection); ok {
 							if managerMessage.RecipientConsoleID == conn.ID {
-								cm.Log.Println(logging.LogInfo, "Sending character to console: ", conn.ID)
+								//cm.Log.Println(logging.LogInfo, "Sending character to console: ", conn.ID)
 								consoleMessage := messages.ConsoleMessage{
 									Type: messages.Console_Message_CharacterRequestResponse,
 									Data: managerMessage.Data,
@@ -423,7 +423,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
-							cm.Log.Println(logging.LogInfo, "Sending character history update response to console")
+							//cm.Log.Println(logging.LogInfo, "Sending character history update response to console")
 							//cm.Log.Println(logging.LogInfo, "Sending login response to Console that requested login")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_CharacterHistoryCharacterUpdateResponse, Data: managerMessage.Data}
 							conn.SendToConsole(consoleMessage)
@@ -437,7 +437,7 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						if managerMessage.RecipientConsoleID == conn.ID {
-							cm.Log.Println(logging.LogInfo, "Sending account history update response to console")
+							//cm.Log.Println(logging.LogInfo, "Sending account history update response to console")
 							//cm.Log.Println(logging.LogInfo, "Sending login response to Console that requested login")
 							consoleMessage := messages.ConsoleMessage{Type: messages.Console_Message_CharacterHistoryAccountUpdateResponse, Data: managerMessage.Data}
 							conn.SendToConsole(consoleMessage)

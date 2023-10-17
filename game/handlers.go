@@ -1,6 +1,7 @@
 package game
 
 import (
+	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 )
@@ -41,7 +42,7 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 				if charID == "" {
 					continue
 				}
-				gm.Log.Println(logging.LogInfo, "Game Manager received login notification for ", charID)
+				//gm.Log.Println(logging.LogInfo, "Game Manager received login notification for ", charID)
 				err := gm.LoadCharacter(charID, managerMessage.SenderConsoleID)
 				if err != nil {
 					gm.Log.Println(logging.LogError, "Game Manager failed to load character", err.Error())
@@ -52,6 +53,11 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 					}
 					gm.SendChannel <- response
 				}
+				response := messages.ConnectionManagerMessage{
+					Type: messages.ConnectManager_Message_Broadcast,
+					Data: edenutil.EdenTime{}.CurrentTimeString() + " - " + gm.GetCharacterName(charID) + " entered the world.",
+				}
+				gm.SendChannel <- response
 
 			case messages.GameManager_NotifyLoggedOutCharacter:
 				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
@@ -63,7 +69,7 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 
 			case messages.GameManager_NotifyDisconnect:
 				connectionID := managerMessage.Data.(string)
-				gm.Log.Println(logging.LogInfo, "Game Manager received disconnect notification for ", connectionID)
+				//gm.Log.Println(logging.LogInfo, "Game Manager received disconnect notification for ", connectionID)
 				gm.RemoveFromLiveCharacterList(connectionID)
 
 			case messages.GameManager_MoveCharacter:
