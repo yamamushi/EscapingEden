@@ -1,4 +1,4 @@
-package window
+package edenutil
 
 // Border constants
 const (

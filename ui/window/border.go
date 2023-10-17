@@ -1,5 +1,9 @@
 package window
 
+import (
+	"github.com/yamamushi/EscapingEden/edenutil"
+)
+
 // DrawBorder draws the Window's border
 
 // DrawBorder returns the border of a window using code page 437 characters as a string
