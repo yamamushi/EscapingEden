@@ -72,6 +72,34 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 				//gm.Log.Println(logging.LogInfo, "Game Manager received disconnect notification for ", connectionID)
 				gm.RemoveFromLiveCharacterList(connectionID)
 
+			case messages.GameManager_RequestInventory:
+				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				if charID == "" {
+					continue
+				}
+				//gm.Log.Println(logging.LogInfo, "Game Manager received inventory request for ", charID)
+				inventory, err := gm.GetCharacterInventory(charID)
+				if err != nil {
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: managerMessage.SenderConsoleID,
+						Data:               messages.GameMessage{Type: messages.GM_FailedLoadInventory},
+					}
+					gm.SendChannel <- response
+				} else {
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: managerMessage.SenderConsoleID,
+						Data: messages.GameMessage{Type: messages.GM_Inventory, Data: messages.GameMessageData{
+							CharacterID: charID,
+							Data:        inventory,
+						},
+						},
+					}
+					//gm.Log.Println(logging.LogInfo, "GameManager", "Sending inventory request response")
+					gm.SendChannel <- response
+				}
+
 			case messages.GameManager_MoveCharacter:
 				//gm.Log.Println(logging.LogInfo, "Game Manager received move request")
 				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID

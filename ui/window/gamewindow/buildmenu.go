@@ -29,9 +29,10 @@ func (gw *GameWindow) BuildWallSend(box *MenuBox, input string) {
 	if input == "?" {
 		// Now we need to open a popup menu, and set the response callback to the BuildWallSend function
 		// Create a new menu box
-		options := []MenuBoxOption{{Name: "wood", Keybind: "w"}, {Name: "stone", Keybind: "s"}, {Name: "brick", Keybind: "b"}}
-		mb := &MenuBox{X: gw.Width - 25, Y: gw.Height/2 - 10, Width: 21, Height: len(options) + 4, Title: "Materials", Options: options, ResponseCallback: gw.BuildWallConfirmDirection}
-		box.PopupMenu = mb
+		//options := []MenuBoxOption{{Name: "wood", Keybind: "w"}, {Name: "stone", Keybind: "s"}, {Name: "brick", Keybind: "b"}}
+		//mb := &MenuBox{X: gw.Width - 25, Y: gw.Height/2 - 10, Width: 21, Height: len(options) + 4, Title: "Materials", Options: options, ResponseCallback: gw.BuildWallConfirmDirection}
+		//box.PopupMenu = mb
+		gw.RequestInventoryUpdate()
 		return
 	}
 	gw.StatusBarMutex.Lock()

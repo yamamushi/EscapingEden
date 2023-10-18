@@ -15,12 +15,14 @@ const (
 	GM_FailedLoadCharacter
 	GM_FailedLoadView
 	GM_QuitConsole
+	GM_FailedLoadInventory
 
 	// Message to the game manager
 
 	// Response types from the game manager
 	GM_CharacterPosition
 	GM_CharacterView
+	GM_Inventory
 )
 
 type GameMessageCommand int

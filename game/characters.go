@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"github.com/yamamushi/EscapingEden/edenitems"
 	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
@@ -98,4 +99,15 @@ func (gm *GameManager) GetCharacterName(characterID string) (name string) {
 		}
 	}
 	return ""
+}
+
+func (gm *GameManager) GetCharacterInventory(characterID string) ([]edenitems.Item, error) {
+	gm.activeCharactersMutex.Lock()
+	defer gm.activeCharactersMutex.Unlock()
+	for i, character := range gm.ActiveCharacters {
+		if character.ID == characterID {
+			return gm.ActiveCharacters[i].Record.Inventory, nil
+		}
+	}
+	return []edenitems.Item{}, errors.New("character not found")
 }

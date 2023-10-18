@@ -1,6 +1,7 @@
 package gamewindow
 
 import (
+	"github.com/yamamushi/EscapingEden/edenitems"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
@@ -43,6 +44,9 @@ type GameWindow struct {
 	Menus      []*MenuBox
 	MenusMutex sync.Mutex
 	CloseMenu  bool
+
+	Inventory      []*edenitems.Item
+	InventoryMutex sync.Mutex
 }
 
 // GameWindowState is an enum for storing game window state
@@ -164,7 +168,15 @@ func (gw *GameWindow) Listen() {
 			case messages.GM_CharacterView:
 				//gw.log.Println(logging.LogInfo, "Game Window received view from console")
 				gw.drawView(receivedMessage.Data.(messages.GameMessage).Data.Data.(messages.GameCharView))
-
+			case messages.GM_Inventory:
+				//gw.log.Println(logging.LogInfo, "Game Window received inventory from console")
+				inventory := receivedMessage.Data.(messages.GameMessage).Data.Data.([]edenitems.Item)
+				// cast the data to []*edenitems.Item
+				update := []*edenitems.Item{}
+				for _, item := range inventory {
+					update = append(update, &item)
+				}
+				gw.UpdateInventory(update)
 			}
 		}
 	}
