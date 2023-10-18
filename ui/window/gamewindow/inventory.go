@@ -29,42 +29,71 @@ func (gw *GameWindow) UpdateInventoryDisplayType(itemType edenitems.ItemType) {
 func (gw *GameWindow) DisplayInventory() {
 	gw.InventoryMutex.Lock()
 	defer gw.InventoryMutex.Unlock()
+
+	inventoryWindow := InventoryDisplay{Inventory: gw.Inventory, DisplayType: gw.InventoryDisplayType}
+	inventoryWindow.X = gw.Width - 30
+	inventoryWindow.Y = gw.Height/2 - 10
+	inventoryWindow.Width = 27
+	inventoryWindow.Height = len(gw.Inventory) + 4
+
 	if gw.InventoryDisplayType != edenitems.ItemTypeNull {
 		gw.Log.Println(logging.LogInfo, fmt.Sprintf("%ss in Inventory", gw.InventoryDisplayType.String()))
+		inventoryWindow.Title = fmt.Sprintf("%ss", gw.InventoryDisplayType.String())
 	} else {
-		gw.Log.Println(logging.LogInfo, "Inventory")
+		inventoryWindow.Title = "Inventory"
 	}
 
+	gw.AddMenuBox(&inventoryWindow)
+}
+
+type InventoryDisplay struct {
+	MenuBox
+	Inventory   []edenitems.Item
+	DisplayType edenitems.ItemType
+}
+
+func (inv *InventoryDisplay) Draw(gw *GameWindow) {
+	inv.Clear(gw)
+	inv.DrawBorder(gw)
+	inv.DrawTitle(gw)
+	inv.DrawMenuItems(gw)
+	inv.DrawPopupMenu(gw)
+}
+
+func (inv *InventoryDisplay) DrawMenuItems(gw *GameWindow) {
+	gw.Log.Println(logging.LogInfo, "Drawing inventory items")
 	// Create a map to count stackable items by their names
-	stackableCounts := make(map[string]int)
-	weightMap := make(map[string]float64)
-	countMap := make(map[string]string)
-	keyMap := make(map[string]string)
+	stackableCounts := make(map[string]int) // Storing the count for each stackable item
+	weightMap := make(map[string]float64)   // Storing the weight for each item/stack of items
+	countMap := make(map[string]string)     // Storing the output strings for each item/stack of items
+	keyMap := make(map[string]string)       // For organizing our output by hotkey order
 
 	weight := 0.0
 
-	for _, item := range gw.Inventory {
-		if item.Type != gw.InventoryDisplayType && gw.InventoryDisplayType != edenitems.ItemTypeNull {
-			continue
-		}
-		//itemInfo := fmt.Sprintf("%s) %-*s", item.Hotkey, maxNameWidth, item.Name)
-		itemInfo := fmt.Sprintf("%s) %s", item.Hotkey, item.Name)
-		if item.Stackable {
-			// Check if we've encountered this stackable item before
-			if count, ok := stackableCounts[item.Name]; ok {
-				stackableCounts[item.Name]++
-				itemInfo += fmt.Sprintf(" (%d)", count+1)
-			} else {
-				stackableCounts[item.Name] = 1
-			}
-		}
-		// Add the weight to the item info to two decimal places
+	Two things, non display types are still being displayed for some reason
+	This info should only be generated at the window initialization, instead it's happening ever redraw which is bad
 
-		//itemInfo += fmt.Sprintf(" - %.2fkg", item.Weight)
-		weightMap[item.Name] += item.Weight
-		countMap[item.Name] = itemInfo
-		keyMap[item.Hotkey] = item.Name
-		weight += item.Weight
+	for _, item := range inv.Inventory {
+		if item.Type == inv.DisplayType || inv.DisplayType == edenitems.ItemTypeNull {
+			//itemInfo := fmt.Sprintf("%s) %-*s", item.Hotkey, maxNameWidth, item.Name)
+			itemInfo := fmt.Sprintf("%s) %s", item.Hotkey, item.Name)
+			if item.Stackable {
+				// Check if we've encountered this stackable item before
+				if count, ok := stackableCounts[item.Name]; ok {
+					stackableCounts[item.Name]++
+					itemInfo += fmt.Sprintf(" (%d)", count+1)
+				} else {
+					stackableCounts[item.Name] = 1
+				}
+			}
+			// Add the weight to the item info to two decimal places
+
+			//itemInfo += fmt.Sprintf(" - %.2fkg", item.Weight)
+			weightMap[item.Name] += item.Weight
+			countMap[item.Name] = itemInfo
+			keyMap[item.Hotkey] = item.Name
+			weight += item.Weight
+		}
 	}
 
 	// Create a slice to hold the item names for sorting
@@ -86,18 +115,34 @@ func (gw *GameWindow) DisplayInventory() {
 	}
 
 	// Now iterate over the inventory map and print the items to the screen
-	for _, itemName := range itemNames {
+	linecount := 0
+	for index, itemName := range itemNames {
 		itemEntry := countMap[itemName]
 		//weightInfo := fmt.Sprintf("- %.2fkg", weightMap[itemName])
 		itemInfo := fmt.Sprintf("%-*s", maxNameWidth, itemEntry)
 		itemInfo += fmt.Sprintf(" - %.2fkg", weightMap[itemName])
-		gw.Log.Println(logging.LogInfo, itemInfo)
+		//gw.Log.Println(logging.LogInfo, itemInfo)
+		//inventoryContents += itemInfo + "\n"
+		gw.PrintStringToMap(inv.X+2, inv.Y+index+2, itemInfo, "")
+		linecount++
 	}
-	if gw.InventoryDisplayType != edenitems.ItemTypeNull {
-		gw.Log.Println(logging.LogInfo, fmt.Sprintf("%ss Weight: %.2fkg", gw.InventoryDisplayType.String(), weight))
+
+	weightLine := ""
+	if inv.DisplayType != edenitems.ItemTypeNull {
+		//gw.Log.Println(logging.LogInfo, fmt.Sprintf("%ss Weight: %.2fkg", gw.InventoryDisplayType.String(), weight))
+		//inventoryContents += fmt.Sprintf("%ss Weight: %.2fkg", inv.DisplayType.String(), weight)
+		weightLine = fmt.Sprintf("%ss Weight: %.2fkg", inv.DisplayType.String(), weight)
+		gw.PrintStringToMap(inv.X+2, inv.Y+linecount+3, weightLine, "")
 	} else {
-		gw.Log.Println(logging.LogInfo, fmt.Sprintf("Inventory Weight: %.2fkg", weight))
+		//gw.Log.Println(logging.LogInfo, fmt.Sprintf("Inventory Weight: %.2fkg", weight))
+		weightLine = fmt.Sprintf("Weight: %.2fkg", weight)
 	}
+
+	if len(weightLine) > inv.Width-5 {
+		weightLine = weightLine[:inv.Width-5]
+	}
+	gw.PrintStringToMap(inv.X+2, inv.Y+linecount+3, weightLine, "")
+
 	// Reset the inventory display type
-	gw.InventoryDisplayType = edenitems.ItemTypeNull
+	inv.DisplayType = edenitems.ItemTypeNull
 }

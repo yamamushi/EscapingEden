@@ -21,13 +21,21 @@ func (gw *GameWindow) BuildWall(box *MenuBox) {
 
 func (gw *GameWindow) BuildWallConfirmDirection(box *MenuBox, input string) {
 	gw.StatusBarMutex.Lock()
-	gw.StatusBarMessage = "Building wall with " + box.CallbackData.(string) + " in " + input + " direction"
-	gw.StatusBarMutex.Unlock()
+	//gw.StatusBarMessage = "Building wall with " + box.CallbackData.(string) + " in " + input + " direction"
+	defer gw.StatusBarMutex.Unlock()
 
+	// Check vi movement keys
+	if input != "y" || input != "u" || input != "h" || input != "j" || input != "k" || input != "l" || input != "b" || input != "n" {
+
+	}
+
+	// Cleanup
 	gw.CloseMenu = true
 }
 
 func (gw *GameWindow) BuildWallSend(box *MenuBox, input string) {
+	gw.StatusBarMutex.Lock()
+	defer gw.StatusBarMutex.Unlock()
 	if input == "?" {
 		// Now we need to open a popup menu, and set the response callback to the BuildWallSend function
 		// Create a new menu box
@@ -38,13 +46,13 @@ func (gw *GameWindow) BuildWallSend(box *MenuBox, input string) {
 		gw.RequestInventoryDisplay()
 		return
 	}
-	gw.StatusBarMutex.Lock()
+
 	// Right now we don't have a way of parsing the material
 	// So later we'll have to retrieve the material from the inventory
 	gw.StatusBarMessage = "Building wall with " + input + " in which direction?"
-	gw.StatusBarMutex.Unlock()
 	box.ResponseCallback = gw.BuildWallConfirmDirection
 	box.CallbackData = input
+	gw.CloseMenu = true
 
 	//gw.CloseMenu = true
 }

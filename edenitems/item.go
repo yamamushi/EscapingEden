@@ -33,3 +33,11 @@ func GetInventoryWeight(inventory []Item) float64 {
 
 	return 0
 }
+
+func GetInventoryHotkeyMap(inventory []Item) map[string]Item {
+	hotkeyMap := make(map[string]Item)
+	for _, item := range inventory {
+		hotkeyMap[item.Hotkey] = item // this will ensure that the last item with a given hotkey is the one that is used in a stack
+	}
+	return hotkeyMap
+}

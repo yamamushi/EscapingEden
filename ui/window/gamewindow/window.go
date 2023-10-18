@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-// DashboardWindow is a window for users to login as a character, create a new one, manage their settings or log out.
+// GameWindow is a window for users to login as a character, create a new one, manage their settings or log out.
 type GameWindow struct {
 	window.Window
 	windowState GameWindowState
@@ -41,7 +41,7 @@ type GameWindow struct {
 	StatusBarMessage string
 	StatusBarMutex   sync.Mutex
 
-	Menus      []*MenuBox
+	Menus      []MenuBoxType
 	MenusMutex sync.Mutex
 	CloseMenu  bool
 
@@ -109,7 +109,9 @@ func (gw *GameWindow) UpdateContents() {
 		gw.DrawStatusBar()
 		gw.DrawMenus()
 		if gw.CloseMenu {
-			gw.RemoveMenuBox(gw.Menus[0])
+			for _, menu := range gw.Menus {
+				gw.RemoveMenuBox(menu)
+			}
 			gw.CloseMenu = false
 		}
 

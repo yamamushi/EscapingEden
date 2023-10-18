@@ -5,6 +5,16 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 )
 
+type MenuBoxType interface {
+	HandleInput(*GameWindow, string)
+	Draw(*GameWindow)
+	Clear(*GameWindow)
+	DrawTitle(*GameWindow)
+	DrawBorder(*GameWindow)
+	DrawMenuItems(*GameWindow)
+	DrawPopupMenu(*GameWindow)
+}
+
 type MenuBox struct {
 	// The menu box's position
 	X, Y int

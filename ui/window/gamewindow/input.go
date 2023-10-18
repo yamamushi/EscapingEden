@@ -28,7 +28,7 @@ func (gw *GameWindow) HandleCommand(input string) {
 	//gw.log.Println(logging.LogInfo, "GameWindow Command: ", input)
 	gw.MenusMutex.Lock()
 	if len(gw.Menus) > 0 {
-		gw.Menus[0].HandleInput(gw, input)
+		gw.Menus[len(gw.Menus)-1].HandleInput(gw, input)
 		gw.MenusMutex.Unlock()
 		return
 	}

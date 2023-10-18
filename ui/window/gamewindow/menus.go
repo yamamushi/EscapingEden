@@ -17,14 +17,14 @@ func (gw *GameWindow) CreateMenu(menuType GameMenuType) {
 	}
 }
 
-func (gw *GameWindow) AddMenuBox(mb *MenuBox) {
+func (gw *GameWindow) AddMenuBox(mb MenuBoxType) {
 	gw.MenusMutex.Lock()
 	defer gw.MenusMutex.Unlock()
 	gw.Menus = append(gw.Menus, mb)
 }
 
 // not sure if this actually works or not
-func (gw *GameWindow) RemoveMenuBox(mb *MenuBox) {
+func (gw *GameWindow) RemoveMenuBox(mb MenuBoxType) {
 	gw.MenusMutex.Lock()
 	defer gw.MenusMutex.Unlock()
 	for i, menu := range gw.Menus {
