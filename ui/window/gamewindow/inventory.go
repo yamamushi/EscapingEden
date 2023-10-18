@@ -20,10 +20,20 @@ func (gw *GameWindow) UpdateInventory(inventory []edenitems.Item) {
 	//gw.Log.Println(logging.LogInfo, "Inventory updated - ", len(gw.Inventory))
 }
 
+func (gw *GameWindow) UpdateInventoryDisplayType(itemType edenitems.ItemType) {
+	gw.InventoryMutex.Lock()
+	defer gw.InventoryMutex.Unlock()
+	gw.InventoryDisplayType = itemType
+}
+
 func (gw *GameWindow) DisplayInventory() {
 	gw.InventoryMutex.Lock()
 	defer gw.InventoryMutex.Unlock()
-	gw.Log.Println(logging.LogInfo, "Displaying Inventory")
+	if gw.InventoryDisplayType != edenitems.ItemTypeNull {
+		gw.Log.Println(logging.LogInfo, fmt.Sprintf("%ss in Inventory", gw.InventoryDisplayType.String()))
+	} else {
+		gw.Log.Println(logging.LogInfo, "Inventory")
+	}
 
 	// Create a map to count stackable items by their names
 	stackableCounts := make(map[string]int)
@@ -31,7 +41,12 @@ func (gw *GameWindow) DisplayInventory() {
 	countMap := make(map[string]string)
 	keyMap := make(map[string]string)
 
+	weight := 0.0
+
 	for _, item := range gw.Inventory {
+		if item.Type != gw.InventoryDisplayType && gw.InventoryDisplayType != edenitems.ItemTypeNull {
+			continue
+		}
 		//itemInfo := fmt.Sprintf("%s) %-*s", item.Hotkey, maxNameWidth, item.Name)
 		itemInfo := fmt.Sprintf("%s) %s", item.Hotkey, item.Name)
 		if item.Stackable {
@@ -46,9 +61,10 @@ func (gw *GameWindow) DisplayInventory() {
 		// Add the weight to the item info to two decimal places
 
 		//itemInfo += fmt.Sprintf(" - %.2fkg", item.Weight)
-		weightMap[item.Name] = item.Weight
+		weightMap[item.Name] += item.Weight
 		countMap[item.Name] = itemInfo
 		keyMap[item.Hotkey] = item.Name
+		weight += item.Weight
 	}
 
 	// Create a slice to hold the item names for sorting
@@ -77,5 +93,11 @@ func (gw *GameWindow) DisplayInventory() {
 		itemInfo += fmt.Sprintf(" - %.2fkg", weightMap[itemName])
 		gw.Log.Println(logging.LogInfo, itemInfo)
 	}
-	gw.Log.Println(logging.LogInfo, fmt.Sprintf("Weight: %.2fkg", edenitems.GetInventoryWeight(gw.Inventory)))
+	if gw.InventoryDisplayType != edenitems.ItemTypeNull {
+		gw.Log.Println(logging.LogInfo, fmt.Sprintf("%ss Weight: %.2fkg", gw.InventoryDisplayType.String(), weight))
+	} else {
+		gw.Log.Println(logging.LogInfo, fmt.Sprintf("Inventory Weight: %.2fkg", weight))
+	}
+	// Reset the inventory display type
+	gw.InventoryDisplayType = edenitems.ItemTypeNull
 }

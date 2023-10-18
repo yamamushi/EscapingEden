@@ -1,5 +1,7 @@
 package gamewindow
 
+import "github.com/yamamushi/EscapingEden/edenitems"
+
 func (gw *GameWindow) BuildMenu() {
 	// Build our options
 	options := []MenuBoxOption{{Name: "wall", Keybind: "w", Callback: gw.BuildWall}, {Name: "stairs", Keybind: "s"}, {Name: "floor", Keybind: "f"}, {Name: "door", Keybind: "d"}}
@@ -32,6 +34,7 @@ func (gw *GameWindow) BuildWallSend(box *MenuBox, input string) {
 		//options := []MenuBoxOption{{Name: "wood", Keybind: "w"}, {Name: "stone", Keybind: "s"}, {Name: "brick", Keybind: "b"}}
 		//mb := &MenuBox{X: gw.Width - 25, Y: gw.Height/2 - 10, Width: 21, Height: len(options) + 4, Title: "Materials", Options: options, ResponseCallback: gw.BuildWallConfirmDirection}
 		//box.PopupMenu = mb
+		gw.InventoryDisplayType = edenitems.ItemMaterial
 		gw.RequestInventoryDisplay()
 		return
 	}

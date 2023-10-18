@@ -13,10 +13,15 @@ type Item struct {
 type ItemType int
 
 const (
-	ItemUnknown ItemType = iota
+	ItemTypeNull ItemType = iota
 	ItemMaterial
 	ItemTool
 )
+
+// Print item type as a string
+func (itemType ItemType) String() string {
+	return [...]string{"Null", "Material", "Tool"}[itemType]
+}
 
 func GetInventoryWeight(inventory []Item) float64 {
 

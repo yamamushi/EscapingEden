@@ -45,8 +45,9 @@ type GameWindow struct {
 	MenusMutex sync.Mutex
 	CloseMenu  bool
 
-	Inventory      []edenitems.Item
-	InventoryMutex sync.Mutex
+	Inventory            []edenitems.Item
+	InventoryMutex       sync.Mutex
+	InventoryDisplayType edenitems.ItemType
 }
 
 // GameWindowState is an enum for storing game window state
