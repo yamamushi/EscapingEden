@@ -43,11 +43,13 @@ type GameWindow struct {
 
 	Menus      []MenuBoxType
 	MenusMutex sync.Mutex
-	CloseMenu  bool
+	CloseMenus bool
 
-	Inventory            []edenitems.Item
-	InventoryMutex       sync.Mutex
-	InventoryDisplayType edenitems.ItemType
+	Inventory               []edenitems.Item
+	InventoryMutex          sync.Mutex
+	InventoryDisplayType    edenitems.ItemType
+	InventoryCallback       interface{}
+	InventoryCallbackPrompt string
 }
 
 // GameWindowState is an enum for storing game window state
@@ -108,11 +110,15 @@ func (gw *GameWindow) UpdateContents() {
 		gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
 		gw.DrawStatusBar()
 		gw.DrawMenus()
-		if gw.CloseMenu {
+		if gw.CloseMenus {
 			for _, menu := range gw.Menus {
 				gw.RemoveMenuBox(menu)
 			}
-			gw.CloseMenu = false
+			gw.CloseMenus = false
+			gw.InventoryDisplayType = edenitems.ItemTypeNull
+			gw.InventoryCallback = nil
+			gw.InventoryCallbackPrompt = ""
+			gw.SetStatusBarMessage("")
 		}
 
 		// At center of window draw an @
@@ -120,6 +126,12 @@ func (gw *GameWindow) UpdateContents() {
 		gw.DrawMap()
 		//xgw.RequestFlushFromConsole()
 	}
+}
+
+func (gw *GameWindow) SetStatusBarMessage(message string) {
+	gw.StatusBarMutex.Lock()
+	defer gw.StatusBarMutex.Unlock()
+	gw.StatusBarMessage = message
 }
 
 func (gw *GameWindow) DrawStatusBar() {

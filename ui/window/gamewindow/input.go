@@ -17,24 +17,29 @@ func (gw *GameWindow) HandleInput(input types.Input) {
 			gw.SendToConsole(consoleMessage)
 			return
 		case types.InputCharacter:
-			gw.HandleCommand(input.Data)
+			gw.HandleCommand(types.InputCharacter, input.Data)
+		case types.InputEscape:
+			gw.HandleCommand(types.InputEscape, "")
 		}
 	}
 }
 
-func (gw *GameWindow) HandleCommand(input string) {
+func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 	gw.commandMutex.Lock()
 	defer gw.commandMutex.Unlock()
 	//gw.log.Println(logging.LogInfo, "GameWindow Command: ", input)
 	gw.MenusMutex.Lock()
 	if len(gw.Menus) > 0 {
-		gw.Menus[len(gw.Menus)-1].HandleInput(gw, input)
+		gw.Menus[len(gw.Menus)-1].HandleInput(gw, inputType, input) // Handle input for the top menu
 		gw.MenusMutex.Unlock()
 		return
 	}
 	gw.MenusMutex.Unlock()
 	//gw.Log.Println(logging.LogInfo, "GameWindow Input: ", strconv.Itoa(int(input[0])))
 	// convert input to an int and send the value to the console
+	if inputType == types.InputEscape {
+		return // Do nothing
+	}
 	if int(input[0]) == 4 {
 		// ^D
 		//gw.Log.Println(logging.LogInfo, "GameWindow received ^D, handling dig")
@@ -90,6 +95,9 @@ func (gw *GameWindow) HandleCommand(input string) {
 		gw.StatusBarMutex.Lock()
 		gw.StatusBarMessage = "There is nothing here to pick up."
 		gw.StatusBarMutex.Unlock()
+	case "i":
+		gw.RequestInventoryDisplay(nil, "")
+		return
 	case "t":
 		if len(gw.Menus) > 0 {
 			gw.RemoveMenuBox(gw.Menus[0])
