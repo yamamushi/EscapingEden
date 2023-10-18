@@ -45,7 +45,7 @@ type GameWindow struct {
 	MenusMutex sync.Mutex
 	CloseMenu  bool
 
-	Inventory      []*edenitems.Item
+	Inventory      []edenitems.Item
 	InventoryMutex sync.Mutex
 }
 
@@ -172,11 +172,8 @@ func (gw *GameWindow) Listen() {
 				//gw.log.Println(logging.LogInfo, "Game Window received inventory from console")
 				inventory := receivedMessage.Data.(messages.GameMessage).Data.Data.([]edenitems.Item)
 				// cast the data to []*edenitems.Item
-				update := []*edenitems.Item{}
-				for _, item := range inventory {
-					update = append(update, &item)
-				}
-				gw.UpdateInventory(update)
+				gw.UpdateInventory(inventory)
+				gw.DisplayInventory()
 			}
 		}
 	}

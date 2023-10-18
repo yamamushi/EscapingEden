@@ -32,7 +32,7 @@ func (gw *GameWindow) BuildWallSend(box *MenuBox, input string) {
 		//options := []MenuBoxOption{{Name: "wood", Keybind: "w"}, {Name: "stone", Keybind: "s"}, {Name: "brick", Keybind: "b"}}
 		//mb := &MenuBox{X: gw.Width - 25, Y: gw.Height/2 - 10, Width: 21, Height: len(options) + 4, Title: "Materials", Options: options, ResponseCallback: gw.BuildWallConfirmDirection}
 		//box.PopupMenu = mb
-		gw.RequestInventoryUpdate()
+		gw.RequestInventoryDisplay()
 		return
 	}
 	gw.StatusBarMutex.Lock()

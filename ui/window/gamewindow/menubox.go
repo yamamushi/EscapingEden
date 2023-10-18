@@ -1,6 +1,7 @@
 package gamewindow
 
 import (
+	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 )
 
@@ -97,14 +98,14 @@ func (mb *MenuBox) DrawBorder(gw *GameWindow) {
 	for i := 0; i < mb.Width; i++ {
 		// Draw the top of the box
 		if gw.Active {
-			gw.DrawToVisibleMap(mb.X+i, mb.Y, "\u2500", "\033[32m")
+			gw.DrawToVisibleMap(mb.X+i, mb.Y, edenutil.UCHorizontalBorder, "\033[32m")
 			// Draw the bottom of the box
-			gw.DrawToVisibleMap(mb.X+i, mb.Y+mb.Height-1, "\u2500", "\033[32m")
+			gw.DrawToVisibleMap(mb.X+i, mb.Y+mb.Height-1, edenutil.UCHorizontalBorder, "\033[32m")
 
 		} else {
-			gw.DrawToVisibleMap(mb.X+i, mb.Y, "\u2500", "")
+			gw.DrawToVisibleMap(mb.X+i, mb.Y, edenutil.UCHorizontalBorder, "")
 			// Draw the bottom of the box
-			gw.DrawToVisibleMap(mb.X+i, mb.Y+mb.Height-1, "\u2500", "")
+			gw.DrawToVisibleMap(mb.X+i, mb.Y+mb.Height-1, edenutil.UCHorizontalBorder, "")
 		}
 
 	}
@@ -112,26 +113,26 @@ func (mb *MenuBox) DrawBorder(gw *GameWindow) {
 	for i := 0; i < mb.Height; i++ {
 		// Draw the left of the box
 		if gw.Active {
-			gw.DrawToVisibleMap(mb.X, mb.Y+i, "\u2502", "\033[32m")
+			gw.DrawToVisibleMap(mb.X, mb.Y+i, edenutil.UCVerticalBorder, "\033[32m")
 			// Draw the right of the box
-			gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+i, "\u2502", "\033[32m")
+			gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+i, edenutil.UCVerticalBorder, "\033[32m")
 		} else {
-			gw.DrawToVisibleMap(mb.X, mb.Y+i, "\u2502", "")
+			gw.DrawToVisibleMap(mb.X, mb.Y+i, edenutil.UCVerticalBorder, "")
 			// Draw the right of the box
-			gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+i, "\u2502", "")
+			gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+i, edenutil.UCVerticalBorder, "")
 		}
 	}
 	// Draw the corners of the box
 	if gw.Active {
-		gw.DrawToVisibleMap(mb.X, mb.Y, "\u250C", "\033[32m")
-		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y, "\u2510", "\033[32m")
-		gw.DrawToVisibleMap(mb.X, mb.Y+mb.Height-1, "\u2514", "\033[32m")
-		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+mb.Height-1, "\u2518", "\033[32m")
+		gw.DrawToVisibleMap(mb.X, mb.Y, edenutil.UCTopLeftBorder, "\033[32m")
+		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y, edenutil.UCTopRightBorder, "\033[32m")
+		gw.DrawToVisibleMap(mb.X, mb.Y+mb.Height-1, edenutil.UCBottomLeftBorder, "\033[32m")
+		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+mb.Height-1, edenutil.UCBottomRightBorder, "\033[32m")
 	} else {
-		gw.DrawToVisibleMap(mb.X, mb.Y, "\u250C", "")
-		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y, "\u2510", "")
-		gw.DrawToVisibleMap(mb.X, mb.Y+mb.Height-1, "\u2514", "")
-		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+mb.Height-1, "\u2518", "")
+		gw.DrawToVisibleMap(mb.X, mb.Y, edenutil.UCTopLeftBorder, "")
+		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y, edenutil.UCTopRightBorder, "")
+		gw.DrawToVisibleMap(mb.X, mb.Y+mb.Height-1, edenutil.UCBottomLeftBorder, "")
+		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+mb.Height-1, edenutil.UCBottomRightBorder, "")
 	}
 }
 
