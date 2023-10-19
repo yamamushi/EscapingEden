@@ -3,6 +3,7 @@ package login
 import (
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/util"
+	"github.com/yamamushi/EscapingEden/edenutil"
 )
 
 // RegistrationState is an enum for storing registration state
@@ -221,13 +222,13 @@ func (lw *LoginWindow) drawRegistrationFailure() {
 	// We're locking this because we want to parse the error into lw.registrationErrorData
 
 	// Print error in red
-	lw.PrintLnColor(lw.X+2, lw.Y+2, "Something went wrong!: "+lw.registrationResponse.Error.Error(), "\033[31m")
+	lw.PrintLnColor(lw.X+2, lw.Y+2, "Something went wrong!: "+lw.registrationResponse.Error.Error(), SHRed)
 	if lw.registrationResponse.Error == messages.AMError_PendingValidation {
-		lw.PrintLn(lw.X+3, lw.Y+3, "Your pending validation code is: "+lw.registrationCode, "\033[32m")
+		lw.PrintLn(lw.X+3, lw.Y+3, "Your pending validation code is: "+lw.registrationCode, SHGreen)
 	}
 
 	if lw.registrationErrorData.errorRequest != "" {
-		lw.PrintLnColor(lw.X+2, lw.Y+4, "Please report this issue as something more serious may be wrong", "\033[31m")
+		lw.PrintLnColor(lw.X+2, lw.Y+4, "Please report this issue as something more serious may be wrong", SHRed)
 	}
 
 	lw.PrintLn(lw.X+2, lw.Y+lw.Height-2, "Please select <Back> to be taken back to the registration details screen.", "")
@@ -243,9 +244,9 @@ func (lw *LoginWindow) drawRegistrationFailure() {
 }
 
 func (lw *LoginWindow) drawRegistrationSuccess() {
-	lw.PrintLnColor(lw.X+2, lw.Y+2, "Registration successful!", "\033[32m")
-	lw.PrintLnColor(lw.X+2, lw.Y+3, "Please check your discord messages to validate your account before logging in.", "\033[32m")
-	lw.PrintLnColor(lw.X+3, lw.Y+4, "Your registration code is: "+lw.registrationCode, "\033[32m")
+	lw.PrintLnColor(lw.X+2, lw.Y+2, "Registration successful!", SHGreen)
+	lw.PrintLnColor(lw.X+2, lw.Y+3, "Please check your discord messages to validate your account before logging in.", SHGreen)
+	lw.PrintLnColor(lw.X+3, lw.Y+4, "Your registration code is: "+lw.registrationCode, SHGreen)
 
 	lw.PrintLn(lw.X+2, lw.Y+6, "We look forward to seeing you soon in Eden!", "")
 

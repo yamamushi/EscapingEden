@@ -2,6 +2,7 @@ package window
 
 import (
 	"github.com/yamamushi/EscapingEden/ui/types"
+	"github.com/yamamushi/EscapingEden/edenutil"
 )
 
 // Draw returns a string of the Window's contents
@@ -68,15 +69,15 @@ func (w *Window) DrawContents(winX int, winY int) {
 		// Draw our arrows last
 		if len(lines)-maxHeight+contentStartPos-1 > 0 {
 			// draw an up arrow in grey
-			w.PrintChar(winX+visibleLength, winY+1+w.StartY, "\u2191", "\033[37m")
+			w.PrintChar(winX+visibleLength, winY+1+w.StartY, "\u2191", SHWhite)
 		}
 		if len(lines)-maxHeight+contentStartPos-1 < len(lines)-maxHeight-1 {
 			if w.ScrollBufferHasNew {
 				// Draw down arrow in red if there is new content
-				w.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2193", "\033[31m")
+				w.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2193", SHRed)
 			} else {
 				// Draw down arrow in grey if there is no new content
-				w.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2193", "\033[37m")
+				w.PrintChar(winX+visibleLength, winY+visibleHeight+1, "\u2193", SHWhite)
 			}
 		}
 	} else {

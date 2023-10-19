@@ -13,7 +13,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 	// Move cursor to top left corner of window
 	// Draw top left corner
 	if w.Active {
-		w.PrintChar(winX, winY, UCTopLeftBorder, "\033[32m")
+		w.PrintChar(winX, winY, UCTopLeftBorder, SHGreen)
 
 	} else {
 		w.PrintChar(winX, winY, UCTopLeftBorder, w.Terminal.Bold())
@@ -23,14 +23,14 @@ func (w *Window) DrawBorder(winX int, winY int) {
 	for i := 1; i < w.Height+1; i++ {
 		// Inserts a vertical line
 		if w.Active {
-			w.PrintChar(winX, winY+i, UCVerticalBorder, "\033[32m")
+			w.PrintChar(winX, winY+i, UCVerticalBorder, SHGreen)
 		} else {
 			w.PrintChar(winX, winY+i, UCVerticalBorder, w.Terminal.Bold())
 		}
 	}
 	// Draw bottom left corner
 	if w.Active {
-		w.PrintChar(winX, winY+w.Height+1, UCBottomLeftBorder, "\033[32m")
+		w.PrintChar(winX, winY+w.Height+1, UCBottomLeftBorder, SHGreen)
 	} else {
 		w.PrintChar(winX, winY+w.Height+1, UCBottomLeftBorder, w.Terminal.Bold())
 	}
@@ -39,7 +39,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 	for i := 1; i < w.Width; i++ {
 		// Inserts a horizontal line
 		if w.Active {
-			w.PrintCharColor(winX+i, winY, UCHorizontalBorder, "\033[32m")
+			w.PrintCharColor(winX+i, winY, UCHorizontalBorder, SHGreen)
 		} else {
 			w.PrintCharColor(winX+i, winY, UCHorizontalBorder, w.Terminal.Bold())
 		}
@@ -47,7 +47,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 
 	// Draw top right corner
 	if w.Active {
-		w.PrintChar(winX+w.Width, winY, UCTopRightBorder, "\033[32m")
+		w.PrintChar(winX+w.Width, winY, UCTopRightBorder, SHGreen)
 	} else {
 		w.PrintChar(winX+w.Width, winY, UCTopRightBorder, w.Terminal.Bold())
 	}
@@ -56,7 +56,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 	for i := 1; i < w.Height+1; i++ {
 		// Inserts a vertical line
 		if w.Active {
-			w.PrintChar(winX+w.Width, winY+i, UCVerticalBorder, "\033[32m")
+			w.PrintChar(winX+w.Width, winY+i, UCVerticalBorder, SHGreen)
 		} else {
 			w.PrintChar(winX+w.Width, winY+i, UCVerticalBorder, w.Terminal.Bold())
 		}
@@ -64,7 +64,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 
 	// Draw bottom right corner
 	if w.Active {
-		w.PrintChar(winX+w.Width, winY+w.Height+1, UCBottomRightBorder, "\033[32m")
+		w.PrintChar(winX+w.Width, winY+w.Height+1, UCBottomRightBorder, SHGreen)
 	} else {
 		w.PrintChar(winX+w.Width, winY+w.Height+1, UCBottomRightBorder, w.Terminal.Bold())
 	}
@@ -73,7 +73,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 	for i := 1; i < w.Width; i++ {
 		// Inserts a horizontal line
 		if w.Active {
-			w.PrintCharColor(winX+i, winY+w.Height+1, UCHorizontalBorder, "\033[32m")
+			w.PrintCharColor(winX+i, winY+w.Height+1, UCHorizontalBorder, SHGreen)
 		} else {
 			w.PrintCharColor(winX+i, winY+w.Height+1, UCHorizontalBorder, w.Terminal.Bold())
 		}
