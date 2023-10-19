@@ -1,6 +1,9 @@
 package gamewindow
 
-import "github.com/yamamushi/EscapingEden/edenitems"
+import (
+	"github.com/yamamushi/EscapingEden/edenitems"
+	"log"
+)
 
 func (gw *GameWindow) BuildMenu() {
 	// Build our options
@@ -14,18 +17,28 @@ func (gw *GameWindow) BuildMenu() {
 func (gw *GameWindow) BuildWall(box *MenuBox) {
 	gw.StatusBarMutex.Lock()
 	gw.StatusBarMutex.Unlock()
-	box.CallbackStatusBarMessage = "Build with what?"
+	box.SetCallbackStatusBarMessage("Build with what?")
 	box.ResponseCallback = gw.BuildWallSend
+	gw.RequestInventoryUpdate(nil, "")
+	gw.DisplayInventoryPostReceive = false
+	gw.LockPendingInventory()
 }
 
-func (gw *GameWindow) BuildWallConfirmDirection(input string) {
+func (gw *GameWindow) BuildWallConfirmDirection(box *MenuBox, input string) {
 	gw.StatusBarMutex.Lock()
 	//gw.StatusBarMessage = "Building wall with " + box.CallbackData.(string) + " in " + input + " direction"
 	defer gw.StatusBarMutex.Unlock()
+	log.Println("BuildWallConfirmDirection received input: ", input)
+
+	item := gw.ItemForHotkey(box.CallbackData.(string))
 
 	// Check vi movement keys
 	if input != "y" || input != "u" || input != "h" || input != "j" || input != "k" || input != "l" || input != "b" || input != "n" {
-
+		box.SetCallbackStatusBarMessage("Building wall with " + item.Name + " in " + input + " direction")
+		gw.StatusBarMessage = "Building wall with " + item.Name + " in " + input + " direction"
+	} else {
+		box.SetCallbackStatusBarMessage("Invalid direction selected.")
+		gw.StatusBarMessage = "Invalid direction selected."
 	}
 
 	// Cleanup
@@ -35,19 +48,39 @@ func (gw *GameWindow) BuildWallConfirmDirection(input string) {
 func (gw *GameWindow) BuildWallSend(box *MenuBox, input string) {
 	gw.StatusBarMutex.Lock()
 	defer gw.StatusBarMutex.Unlock()
+	log.Println("BuildWallSend received input: ", input)
 	if input == "?" {
 		gw.InventoryDisplayType = edenitems.ItemMaterial
-		gw.RequestInventoryDisplay(gw.BuildWallConfirmDirection, "Build with what?")
+		gw.RequestInventoryUpdate(gw.BuildWallSend, "Build with what?")
+		gw.DisplayInventoryAfterReceive(true)
 		return
 	}
 
 	// Right now we don't have a way of parsing the material
 	// So later we'll have to retrieve the material from the inventory
-	box.CallbackStatusBarMessage = "Building wall with " + input + " in which direction?"
+	item := gw.ItemForHotkey(input)
+	if item == nil {
+		log.Println("BuildWallSend received nil item")
+		gw.StatusBarMessage = "You don't have that item."
+		gw.MenusMutex.Lock()
+		defer gw.MenusMutex.Unlock()
+		gw.CloseMenus = true
+		return
+	}
+	if item.Type != edenitems.ItemMaterial {
+		log.Println("BuildWallSend received non-material item")
+		gw.StatusBarMessage = "That item is not a material suitable for building."
+		gw.MenusMutex.Lock()
+		defer gw.MenusMutex.Unlock()
+		gw.CloseMenus = true
+		return
+	}
+	log.Println("BuildWallSend received item: ", item)
+
+	box.SetCallbackStatusBarMessage("Building wall with " + item.Name + " in which direction?")
 	box.ResponseCallback = gw.BuildWallConfirmDirection
 	box.CallbackData = input
-
-	//gw.CloseMenus = true
+	box.ToggleHotkeyCheck(false)
 }
 
 // Need an inventory menu, all it should do is load the inventory and display it, if an item is selected it should

@@ -45,11 +45,16 @@ type GameWindow struct {
 	MenusMutex sync.Mutex
 	CloseMenus bool
 
-	Inventory               []edenitems.Item
-	InventoryMutex          sync.Mutex
-	InventoryDisplayType    edenitems.ItemType
-	InventoryCallback       interface{}
-	InventoryCallbackPrompt string
+	Inventory []edenitems.Item
+	Hotkeys   map[string]edenitems.Item
+
+	InventoryMutex              sync.Mutex
+	PendingInventoryMutex       sync.Mutex
+	PendingInventory            bool
+	InventoryDisplayType        edenitems.ItemType
+	MenuCallback                interface{}
+	InventoryCallbackPrompt     string
+	DisplayInventoryPostReceive bool
 }
 
 // GameWindowState is an enum for storing game window state
@@ -116,9 +121,9 @@ func (gw *GameWindow) UpdateContents() {
 			}
 			gw.CloseMenus = false
 			gw.InventoryDisplayType = edenitems.ItemTypeNull
-			gw.InventoryCallback = nil
+			gw.MenuCallback = nil
 			gw.InventoryCallbackPrompt = ""
-			gw.SetStatusBarMessage("")
+			//gw.SetStatusBarMessage("")
 		}
 
 		// At center of window draw an @
@@ -167,30 +172,6 @@ func (gw *GameWindow) PrintStringToStatusBar(x, y int, input string, escapeCode 
 	for i, character := range input {
 		// Using gw.DrawToVisibleMap for each point
 		gw.DrawToVisibleMap(x+i, y+gw.Y+gw.Height-4, string(character), escapeCode)
-	}
-}
-
-// Listen listens for any messages on cw.ReceiveMessages Chan and handles them
-func (gw *GameWindow) Listen() {
-	for {
-		select {
-		case receivedMessage := <-gw.ConsoleReceive:
-			message := receivedMessage.Data.(messages.GameMessage).Type
-			switch message {
-			case messages.GM_CharacterPosition:
-				//gw.log.Println(logging.LogInfo, "Game Window received message from console ", receivedMessage.Data.(messages.GameMessage).Data.Data)
-				continue
-			case messages.GM_CharacterView:
-				//gw.log.Println(logging.LogInfo, "Game Window received view from console")
-				gw.drawView(receivedMessage.Data.(messages.GameMessage).Data.Data.(messages.GameCharView))
-			case messages.GM_Inventory:
-				//gw.log.Println(logging.LogInfo, "Game Window received inventory from console")
-				inventory := receivedMessage.Data.(messages.GameMessage).Data.Data.([]edenitems.Item)
-				// cast the data to []*edenitems.Item
-				gw.UpdateInventory(inventory)
-				gw.DisplayInventory()
-			}
-		}
 	}
 }
 
@@ -257,4 +238,23 @@ func (gw *GameWindow) SetupVisibleMap() {
 // UpdateParams is used when handling resize events to update the various window parameters in a safe state
 func (gw *GameWindow) PostUpdateParams() {
 	gw.SetupVisibleMap()
+}
+
+func (gw *GameWindow) UpdateMenuCallback(callback interface{}) {
+	gw.MenusMutex.Lock()
+	defer gw.MenusMutex.Unlock()
+	gw.MenuCallback = callback
+}
+
+func (gw *GameWindow) LockPendingInventory() {
+	gw.PendingInventoryMutex.Lock()
+	gw.PendingInventory = true
+}
+
+func (gw *GameWindow) UnlockPendingInventory() {
+	//gw.PendingInventoryMutex.Lock()
+	if gw.PendingInventory {
+		gw.PendingInventoryMutex.Unlock()
+		gw.PendingInventory = false
+	}
 }

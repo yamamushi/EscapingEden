@@ -50,9 +50,12 @@ func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 	} else if int(input[0]) == 2 {
 		// ctrl-b
 		//gw.Log.Println(logging.LogInfo, "GameWindow received ^B, handling build")
-		gw.StatusBarMutex.Lock()
-		gw.StatusBarMessage = "Build in which direction?"
-		gw.StatusBarMutex.Unlock()
+		if len(gw.Menus) > 0 {
+			gw.RemoveMenuBox(gw.Menus[0])
+			return
+		} else {
+			gw.CreateMenu(MenuType_Build)
+		}
 		return
 	}
 	gw.StatusBarMutex.Lock()
@@ -96,16 +99,9 @@ func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 		gw.StatusBarMessage = "There is nothing here to pick up."
 		gw.StatusBarMutex.Unlock()
 	case "i":
-		gw.RequestInventoryDisplay(nil, "")
+		gw.RequestInventoryUpdate(nil, "")
+		gw.DisplayInventoryAfterReceive(true)
 		return
-	case "t":
-		if len(gw.Menus) > 0 {
-			gw.RemoveMenuBox(gw.Menus[0])
-			return
-		} else {
-			gw.CreateMenu(MenuType_Build)
-		}
-
 	default:
 		return // Do nothing
 	}

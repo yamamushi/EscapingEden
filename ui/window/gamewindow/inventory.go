@@ -6,15 +6,56 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
+	"log"
 	"sort"
 )
 
-func (gw *GameWindow) RequestInventoryDisplay(callback interface{}, callbackPrompt string) {
+func (gw *GameWindow) ItemForHotkey(hotkey string) *edenitems.Item {
+	gw.InventoryMutex.Lock()
+	defer gw.InventoryMutex.Unlock()
+	for _, item := range gw.Inventory {
+		if item.Hotkey == hotkey {
+			return &item
+		}
+	}
+	return nil // Return nil if we don't find an item
+}
+
+func (gw *GameWindow) IsInventoryOpen() bool {
+	gw.InventoryMutex.Lock()
+	defer gw.InventoryMutex.Unlock()
+	for _, window := range gw.Menus {
+		if window.GetType() == MenuTypeInventory {
+			return true
+		}
+	}
+	return false
+}
+
+func (gw *GameWindow) CloseInventory() {
+	for _, menu := range gw.Menus {
+		if menu.GetType() == MenuTypeInventory {
+			gw.RemoveMenuBox(menu)
+			gw.InventoryDisplayType = edenitems.ItemTypeNull
+			gw.MenuCallback = nil
+			gw.InventoryCallbackPrompt = ""
+			gw.SetStatusBarMessage("")
+		}
+	}
+}
+
+func (gw *GameWindow) DisplayInventoryAfterReceive(toggle bool) {
+	gw.InventoryMutex.Lock()
+	defer gw.InventoryMutex.Unlock()
+	gw.DisplayInventoryPostReceive = toggle
+}
+
+func (gw *GameWindow) RequestInventoryUpdate(callback interface{}, callbackPrompt string) {
 	inventoryRequest := messages.WindowMessage{Data: messages.GameManagerMessage{Data: messages.GameMessageData{CharacterID: gw.GetCharacterInfoField("id")}, Type: messages.GameManager_RequestInventory}, Type: messages.WM_GameCommand}
 	gw.SendToConsole(inventoryRequest)
 	gw.InventoryMutex.Lock()
 	defer gw.InventoryMutex.Unlock()
-	gw.InventoryCallback = callback
+	gw.MenuCallback = callback
 	gw.InventoryCallbackPrompt = callbackPrompt
 }
 
@@ -35,14 +76,17 @@ func (gw *GameWindow) DisplayInventory() {
 	gw.InventoryMutex.Lock()
 	defer gw.InventoryMutex.Unlock()
 
+	gw.DisplayInventoryPostReceive = false
+
 	inventoryWindow := InventoryDisplay{Inventory: gw.Inventory,
-		DisplayType:    gw.InventoryDisplayType,
-		Callback:       gw.InventoryCallback,
-		CallbackPrompt: gw.InventoryCallbackPrompt}
+		DisplayType: gw.InventoryDisplayType, GW: gw}
+	inventoryWindow.ResponseCallback = gw.MenuCallback
+	inventoryWindow.CallbackStatusBarMessage = gw.InventoryCallbackPrompt
 	inventoryWindow.X = gw.Width - 30
 	inventoryWindow.Y = gw.Height/2 - 10
-	inventoryWindow.Width = 29
-	inventoryWindow.Height = len(gw.Inventory) + 4
+	inventoryWindow.Type = MenuTypeInventory
+	//inventoryWindow.Width = 29
+	//inventoryWindow.Height = len(gw.Inventory) + 4
 
 	//gw.Log.Println(logging.LogInfo, "Inventory Display Type: ", gw.InventoryDisplayType)
 	//gw.Log.Println(logging.LogInfo, "Inventory Display Internal: ", inventoryWindow.DisplayType)
@@ -59,17 +103,35 @@ func (gw *GameWindow) DisplayInventory() {
 	gw.AddMenuBox(&inventoryWindow)
 }
 
+func (gw *GameWindow) BuildHotKeys() {
+	gw.InventoryMutex.Lock()
+	defer gw.InventoryMutex.Unlock()
+	for _, item := range gw.Inventory {
+		if item.Type == gw.InventoryDisplayType || gw.InventoryDisplayType == edenitems.ItemTypeNull {
+			gw.Hotkeys[item.Hotkey] = item
+		}
+	}
+}
+
 type InventoryDisplay struct {
 	MenuBox
-	Inventory      []edenitems.Item
-	DisplayType    edenitems.ItemType
-	Content        []string
-	Hotkeys        map[string]string
-	Callback       interface{}
-	CallbackPrompt string
+	Inventory   []edenitems.Item
+	DisplayType edenitems.ItemType
+	Content     []string
+	Hotkeys     map[string]edenitems.Item
+	GW          *GameWindow
+}
+
+func (inv *InventoryDisplay) GetType() MenuType {
+	return MenuTypeInventory
+}
+
+func (inv *InventoryDisplay) UpdateCallbackFunction() {
+	inv.ResponseCallback = inv.GW.MenuCallback
 }
 
 func (inv *InventoryDisplay) HandleInput(gw *GameWindow, inputType types.InputType, input string) {
+	//inv.UpdateCallbackFunction()
 	// Handle input for the menu box
 	switch inputType {
 	case types.InputEscape:
@@ -77,14 +139,43 @@ func (inv *InventoryDisplay) HandleInput(gw *GameWindow, inputType types.InputTy
 		gw.CloseMenus = true
 		return
 	case types.InputCharacter:
-		if inv.Callback != nil {
-			switch inv.Callback.(type) {
-			case func(string):
-				inv.Callback.(func(string))(input)
+		inv.HandleCharInput(input)
+	}
+}
+
+func (inv *InventoryDisplay) HandleCharInput(input string) {
+	// Check if the input is a hotkey in inv.Hotkeys
+	if inv.CheckHotkeys {
+		if hotkeyItem, ok := inv.Hotkeys[input]; ok {
+			log.Println("Hotkey item: ", hotkeyItem)
+			if inv.ResponseCallback != nil {
+				//inv.CallbackData = hotkeyItem.Name
+				switch inv.ResponseCallback.(type) {
+				case func(*MenuBox, string):
+					inv.ResponseCallback.(func(box *MenuBox, item string))(&inv.MenuBox, input)
+					log.Println("Callback is func(*MenuBox, string)")
+				case func(string):
+					inv.ResponseCallback.(func(string))(input)
+					log.Println("Callback is func(string)")
+				}
+				return
 			}
-			return
+
+		} else {
+			inv.SetCallbackStatusBarMessage("Invalid item selected, please select an item from the list")
+			//inv.GW.CloseMenus = true
+		}
+	} else {
+		switch inv.ResponseCallback.(type) {
+		case func(*MenuBox, string):
+			inv.ResponseCallback.(func(box *MenuBox, item string))(&inv.MenuBox, input)
+			log.Println("Callback is func(*MenuBox, string)")
+		case func(string):
+			inv.ResponseCallback.(func(string))(input)
+			log.Println("Callback is func(string)")
 		}
 	}
+
 }
 
 func (inv *InventoryDisplay) Draw(gw *GameWindow) {
@@ -93,13 +184,16 @@ func (inv *InventoryDisplay) Draw(gw *GameWindow) {
 	inv.DrawBorder(gw)
 	inv.DrawTitle(gw)
 	inv.DrawPopupMenu(gw)
+	inv.StatusBarMessageMutex.Lock()
+	defer inv.StatusBarMessageMutex.Unlock()
+	gw.SetStatusBarMessage(inv.CallbackStatusBarMessage)
 }
 
 func (inv *InventoryDisplay) PrepareContent() {
 	stackableCounts := make(map[string]int) // Storing the count for each stackable item
 	weightMap := make(map[string]float64)   // Storing the weight for each item/stack of items
 	countMap := make(map[string]string)     // Storing the output strings for each item/stack of items
-	keyMap := make(map[string]string)       // For organizing our output by hotkey order
+	inv.Hotkeys = make(map[string]edenitems.Item)
 
 	weight := 0.0
 	//gw.Log.Println(logging.LogInfo, "Inventory Display Type: ", inv.DisplayType)
@@ -122,15 +216,15 @@ func (inv *InventoryDisplay) PrepareContent() {
 			//itemInfo += fmt.Sprintf(" - %.2fkg", item.Weight)
 			weightMap[item.Name] += item.Weight
 			countMap[item.Name] = itemInfo
-			keyMap[item.Hotkey] = item.Name
+			inv.Hotkeys[item.Hotkey] = item
 			weight += item.Weight
 		}
 	}
 
 	// Create a slice to hold the item names for sorting
-	itemNames := make([]string, 0, len(keyMap))
-	for _, itemName := range keyMap {
-		itemNames = append(itemNames, itemName)
+	itemNames := make([]string, 0, len(inv.Hotkeys))
+	for _, item := range inv.Hotkeys {
+		itemNames = append(itemNames, item.Name)
 	}
 	// Define a custom sorting function for item names
 	sort.Slice(itemNames, func(i, j int) bool {
@@ -195,5 +289,4 @@ func (inv *InventoryDisplay) DrawMenuItems(gw *GameWindow) {
 	for index, content := range inv.Content {
 		inv.PrintToMenu(gw, 2, index+2, content, "")
 	}
-	gw.SetStatusBarMessage(inv.CallbackPrompt)
 }

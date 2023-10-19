@@ -4,6 +4,15 @@ import (
 	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/ui/types"
+	"log"
+	"sync"
+)
+
+type MenuType int
+
+const (
+	MenuTypeNull MenuType = iota
+	MenuTypeInventory
 )
 
 type MenuBoxType interface {
@@ -16,9 +25,14 @@ type MenuBoxType interface {
 	DrawPopupMenu(*GameWindow)
 	PrintToMenu(*GameWindow, int, int, string, string)
 	CloseMenus(*GameWindow)
+	SetCallbackStatusBarMessage(string)
+	GetCallbackDataString() string
+	GetType() MenuType
+	ToggleHotkeyCheck(bool)
 }
 
 type MenuBox struct {
+	Type MenuType
 	// The menu box's position
 	X, Y int
 	// The menu box's width and height
@@ -30,7 +44,9 @@ type MenuBox struct {
 	ResponseCallback         interface{}
 	PopupMenu                *MenuBox
 	CallbackData             interface{} // Arbitrary data we can unpack later
+	StatusBarMessageMutex    sync.Mutex
 	CallbackStatusBarMessage string
+	CheckHotkeys             bool
 }
 
 type MenuBoxOption struct {
@@ -47,6 +63,10 @@ func (mb *MenuBox) CloseMenus(gw *GameWindow) {
 	gw.CloseMenus = true
 }
 
+func (mb *MenuBox) ToggleHotkeyCheck(toggle bool) {
+	mb.CheckHotkeys = toggle
+}
+
 func (mb *MenuBox) HandleInput(gw *GameWindow, inputType types.InputType, input string) {
 	gw.Log.Println(logging.LogInfo, "Menubox received input: ", input)
 	// Handle input for the menu box
@@ -56,13 +76,14 @@ func (mb *MenuBox) HandleInput(gw *GameWindow, inputType types.InputType, input 
 		return
 	}
 	if mb.ResponseCallback != nil {
-		gw.Log.Println(logging.LogInfo, "Menubox called response callback ")
-
+		gw.Log.Println(logging.LogInfo, "Menubox has response callback")
 		switch mb.ResponseCallback.(type) {
 		case func(*MenuBox, string):
 			mb.ResponseCallback.(func(*MenuBox, string))(mb, input)
+			gw.Log.Println(logging.LogInfo, "Menubox called response callback ")
+
 		default:
-			gw.Log.Println(logging.LogInfo, "Menubox called response callback and failed")
+			gw.Log.Println(logging.LogInfo, "Menubox could not find callback")
 		}
 		return
 	}
@@ -96,7 +117,16 @@ func (mb *MenuBox) Draw(gw *GameWindow) {
 	mb.DrawBorder(gw)
 	mb.DrawTitle(gw)
 	mb.DrawPopupMenu(gw)
+	mb.StatusBarMessageMutex.Lock()
+	defer mb.StatusBarMessageMutex.Unlock()
 	gw.SetStatusBarMessage(mb.CallbackStatusBarMessage)
+}
+
+func (mb *MenuBox) SetCallbackStatusBarMessage(input string) {
+	mb.StatusBarMessageMutex.Lock()
+	defer mb.StatusBarMessageMutex.Unlock()
+	log.Println("Setting callback status bar message to: ", input)
+	mb.CallbackStatusBarMessage = input
 }
 
 func (mb *MenuBox) Clear(gw *GameWindow) {
@@ -189,4 +219,12 @@ func (mb *MenuBox) PrintToMenu(gw *GameWindow, x, y int, input string, escapeCod
 	for i, character := range input {
 		gw.DrawToVisibleMap(mb.X+x+i, mb.Y+y, string(character), escapeCode)
 	}
+}
+
+func (mb *MenuBox) GetCallbackDataString() string {
+	return mb.CallbackData.(string)
+}
+
+func (mb *MenuBox) GetType() MenuType {
+	return mb.Type
 }
