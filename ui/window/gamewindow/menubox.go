@@ -4,7 +4,6 @@ import (
 	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"log"
 	"sync"
 )
 
@@ -125,7 +124,7 @@ func (mb *MenuBox) Draw(gw *GameWindow) {
 func (mb *MenuBox) SetCallbackStatusBarMessage(input string) {
 	mb.StatusBarMessageMutex.Lock()
 	defer mb.StatusBarMessageMutex.Unlock()
-	log.Println("Setting callback status bar message to: ", input)
+	//log.Println("Setting callback status bar message to: ", input)
 	mb.CallbackStatusBarMessage = input
 }
 

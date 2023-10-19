@@ -16,7 +16,7 @@ func (gw *GameWindow) BuildMenu() {
 
 func (gw *GameWindow) BuildWall(box *MenuBox) {
 	gw.StatusBarMutex.Lock()
-	gw.StatusBarMutex.Unlock()
+	defer gw.StatusBarMutex.Unlock()
 	box.SetCallbackStatusBarMessage("Build with what?")
 	box.ResponseCallback = gw.BuildWallSend
 	gw.RequestInventoryUpdate(nil, "")
@@ -28,7 +28,7 @@ func (gw *GameWindow) BuildWallConfirmDirection(box *MenuBox, input string) {
 	gw.StatusBarMutex.Lock()
 	//gw.StatusBarMessage = "Building wall with " + box.CallbackData.(string) + " in " + input + " direction"
 	defer gw.StatusBarMutex.Unlock()
-	log.Println("BuildWallConfirmDirection received input: ", input)
+	//log.Println("BuildWallConfirmDirection received input: ", input)
 
 	item := gw.ItemForHotkey(box.CallbackData.(string))
 
@@ -61,21 +61,21 @@ func (gw *GameWindow) BuildWallSend(box *MenuBox, input string) {
 	item := gw.ItemForHotkey(input)
 	if item == nil {
 		log.Println("BuildWallSend received nil item")
-		gw.StatusBarMessage = "You don't have that item."
-		gw.MenusMutex.Lock()
-		defer gw.MenusMutex.Unlock()
-		gw.CloseMenus = true
+		box.SetCallbackStatusBarMessage("You don't have that item.")
+		//gw.MenusMutex.Lock()
+		//defer gw.MenusMutex.Unlock()
+		//gw.CloseMenus = true
 		return
 	}
 	if item.Type != edenitems.ItemMaterial {
-		log.Println("BuildWallSend received non-material item")
-		gw.StatusBarMessage = "That item is not a material suitable for building."
-		gw.MenusMutex.Lock()
-		defer gw.MenusMutex.Unlock()
-		gw.CloseMenus = true
+		//log.Println("BuildWallSend received non-material item")
+		box.SetCallbackStatusBarMessage("That item is not a material suitable for building.")
+		//gw.MenusMutex.Lock()
+		//defer gw.MenusMutex.Unlock()
+		//gw.CloseMenus = true
 		return
 	}
-	log.Println("BuildWallSend received item: ", item)
+	//log.Println("BuildWallSend received item: ", item)
 
 	box.SetCallbackStatusBarMessage("Building wall with " + item.Name + " in which direction?")
 	box.ResponseCallback = gw.BuildWallConfirmDirection

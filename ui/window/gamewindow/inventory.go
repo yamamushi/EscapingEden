@@ -153,26 +153,23 @@ func (inv *InventoryDisplay) HandleCharInput(input string) {
 				switch inv.ResponseCallback.(type) {
 				case func(*MenuBox, string):
 					inv.ResponseCallback.(func(box *MenuBox, item string))(&inv.MenuBox, input)
-					log.Println("Callback is func(*MenuBox, string)")
 				case func(string):
 					inv.ResponseCallback.(func(string))(input)
-					log.Println("Callback is func(string)")
 				}
 				return
 			}
 
 		} else {
 			inv.SetCallbackStatusBarMessage("Invalid item selected, please select an item from the list")
+			return
 			//inv.GW.CloseMenus = true
 		}
 	} else {
 		switch inv.ResponseCallback.(type) {
 		case func(*MenuBox, string):
 			inv.ResponseCallback.(func(box *MenuBox, item string))(&inv.MenuBox, input)
-			log.Println("Callback is func(*MenuBox, string)")
 		case func(string):
 			inv.ResponseCallback.(func(string))(input)
-			log.Println("Callback is func(string)")
 		}
 	}
 
