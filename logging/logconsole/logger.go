@@ -26,7 +26,7 @@ func (cl *ConsoleLogger) Println(level logging.LogLevel, message string, v ...in
 	case logging.LogDebug:
 		colorCode = SHWhite
 	case logging.LogInfo:
-		colorCode = SHPurple
+		colorCode = SHCyan
 	case logging.LogWarn:
 		colorCode = SHYellow
 	case logging.LogError:

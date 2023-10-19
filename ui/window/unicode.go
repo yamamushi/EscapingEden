@@ -2,12 +2,16 @@ package window
 
 // Border constants
 const (
-	UCTopLeftBorder     = "\u250c"
-	UCVerticalBorder    = "\u2502"
-	UCBottomLeftBorder  = "\u2514"
-	UCHorizontalBorder  = "\u2500"
-	UCTopRightBorder    = "\u2510"
-	UCBottomRightBorder = "\u2518"
+	UCTopLeftBorder           = "\u250c" 
+	UCVerticalBorder          = "\u2502"
+	// (Different I suppose.)
+	UCVerticalGameBorder      = "\u251C"
+	// (Also different?)
+	UCVerticalHelpFieldBorder = "\u2524"
+	UCBottomLeftBorder        = "\u2514"
+	UCHorizontalBorder        = "\u2500"
+	UCTopRightBorder          = "\u2510"
+	UCBottomRightBorder       = "\u2518"
 
 	// Color constants
 	SHBlack  = "\033[30m"

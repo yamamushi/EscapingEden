@@ -85,7 +85,7 @@ func (hw *HelpWindow) DrawBorder(winX int, winY int) {
 		hw.PrintChar(winX, winY+hw.Height-hw.ScrollBufferLimit+1, UCVerticalGameBorder, SHGreen)
 
 		// Right Side
-		hw.PrintChar(winX+hw.Width, winY+2, "\u2524", SHGreen)
+		hw.PrintChar(winX+hw.Width, winY+2, UCVerticalHelpFieldBorder, SHGreen)
 		hw.PrintChar(winX+hw.Width, winY+hw.Height-hw.ScrollBufferLimit+1, "\u2524", SHGreen)
 
 		// Top Border
