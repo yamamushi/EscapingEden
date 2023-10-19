@@ -2,6 +2,7 @@ package popupbox
 
 import (
 	"github.com/yamamushi/EscapingEden/ui/util"
+	"github.com/yamamushi/EscapingEden/edenutil"
 )
 
 // DrawBorder returns the border of a window using code page 437 characters as a string
@@ -11,69 +12,69 @@ func (pb *PopupBox) DrawBorder(winX int, winY int) {
 	// Move cursor to top left corner of window
 	// Draw top left corner
 	if pb.Active {
-		pb.PrintChar(winX, winY, "\u250c", "\033[32m")
+		pb.PrintChar(winX, winY, UCTopLeftBorder, SHGreen)
 
 	} else {
-		pb.PrintChar(winX, winY, "\u250c", "")
+		pb.PrintChar(winX, winY, UCTopLeftBorder, "")
 	}
 
 	// Draw left border
 	for i := 1; i < pb.Height+1; i++ {
 		// Inserts a vertical line
 		if pb.Active {
-			pb.PrintChar(winX, winY+i, "\u2502", "\033[32m")
+			pb.PrintChar(winX, winY+i, UCVerticalBorder, SHGreen)
 		} else {
-			pb.PrintChar(winX, winY+i, "\u2502", "")
+			pb.PrintChar(winX, winY+i, UCVerticalBorder, "")
 		}
 	}
 	// Draw bottom left corner
 	if pb.Active {
-		pb.PrintChar(winX, winY+pb.Height+1, "\u2514", "\033[32m")
+		pb.PrintChar(winX, winY+pb.Height+1, UCBottomLeftBorder, SHGreen)
 	} else {
-		pb.PrintChar(winX, winY+pb.Height+1, "\u2514", "")
+		pb.PrintChar(winX, winY+pb.Height+1, UCBottomLeftBorder, "")
 	}
 
 	// Draw top border
 	for i := 1; i < pb.Width; i++ {
 		// Inserts a horizontal line
 		if pb.Active {
-			pb.PrintChar(winX+i, winY, "\u2500", "\033[32m")
+			pb.PrintChar(winX+i, winY, UCHorizontalBorder, SHGreen)
 		} else {
-			pb.PrintChar(winX+i, winY, "\u2500", "")
+			pb.PrintChar(winX+i, winY, UCHorizontalBorder, "")
 		}
 	}
 
 	// Draw top right corner
 	if pb.Active {
-		pb.PrintChar(winX+pb.Width, winY, "\u2510", "\033[32m")
+		pb.PrintChar(winX+pb.Width, winY, UCTopRightBorder, SHGreen)
 	} else {
-		pb.PrintChar(winX+pb.Width, winY, "\u2510", "")
+		pb.PrintChar(winX+pb.Width, winY, UCTopRightBorder, "")
 	}
 
 	// Draw right border
 	for i := 1; i < pb.Height+1; i++ {
 		// Inserts a vertical line
 		if pb.Active {
-			pb.PrintChar(winX+pb.Width, winY+i, "\u2502", "\033[32m")
+			pb.PrintChar(winX+pb.Width, winY+i, UCVerticalBorder, SHGreen)
 		} else {
-			pb.PrintChar(winX+pb.Width, winY+i, "\u2502", "")
+			pb.PrintChar(winX+pb.Width, winY+i, UCVerticalBorder, "")
 		}
 	}
 
 	// Draw bottom right corner
 	if pb.Active {
-		pb.PrintChar(winX+pb.Width, winY+pb.Height+1, "\u2518", "\033[32m")
+		pb.PrintChar(winX+pb.Width, winY+pb.Height+1, UCBottomRightBorder, SHGreen)
 	} else {
-		pb.PrintChar(winX+pb.Width, winY+pb.Height+1, "\u2518", "")
+		pb.PrintChar(winX+pb.Width, winY+pb.Height+1, UCBottomRightBorder, "")
 	}
 
 	// Draw bottom border
 	for i := 1; i < pb.Width; i++ {
 		// Inserts a horizontal line
 		if pb.Active {
-			pb.PrintChar(winX+i, winY+pb.Height+1, "\u2500", "\033[32m")
+			pb.PrintChar(winX+i, winY+pb.Height+1, UCHorizontalBorder, SHGreen)
 		} else {
-			pb.PrintChar(winX+i, winY+pb.Height+1, "\u2500", "")
+			pb.PrintChar(winX+i, winY+pb.Height+1, UCHorizontalBorder, "")
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"os"
 	"time"
+	"github.com/yamamushi/EscapingEden/edenutil"
 )
 
 type ConsoleLogger struct {
@@ -23,15 +24,15 @@ func (cl *ConsoleLogger) Println(level logging.LogLevel, message string, v ...in
 	var colorCode string
 	switch level {
 	case logging.LogDebug:
-		colorCode = "\033[37m"
+		colorCode = SHWhite
 	case logging.LogInfo:
-		colorCode = "\033[36m"
+		colorCode = SHPurple
 	case logging.LogWarn:
-		colorCode = "\033[33m"
+		colorCode = SHYellow
 	case logging.LogError:
-		colorCode = "\033[31m"
+		colorCode = SHRed
 	case logging.LogFatal:
-		colorCode = "\033[35m"
+		colorCode = SHPurple
 	}
 
 	if v == nil {
