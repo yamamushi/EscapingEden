@@ -50,7 +50,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 
 	offsetX := width / 2
 	offsetY := height / 2
-	radius := 4
+	radius := 6
 
 	// Now we loop through the plane, do our checks for each point and draw
 	// Prepare vars
@@ -82,7 +82,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 							if gm.MapChunks[0].TileMap[mapX][mapY][0].Passable {
 								plane[j][i].Character = "."
 							} else {
-								plane[j][i].Character = "#"
+								plane[j][i].Character = "\u2588"
 							}
 						}
 					}

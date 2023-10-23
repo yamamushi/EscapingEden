@@ -64,7 +64,7 @@ func (gm *GameManager) RemoveFromLiveCharacterList(ID string) {
 				Data: edenutil.EdenTime{}.CurrentTimeString() + " - " + characterName + " left the world.",
 			}
 			gm.SendChannel <- response
-			gm.Log.Println(logging.LogInfo, "Removed character from game manager:", ID)
+			//gm.Log.Println(logging.LogInfo, "Removed character from game manager:", ID)
 		}
 	}
 }
