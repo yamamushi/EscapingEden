@@ -115,7 +115,7 @@ func (gw *GameWindow) UpdateContents() {
 	case GW_DefaultView:
 		//gw.log.Println(logging.LogInfo, "Requesting Window View")
 		gw.SendToConsole(messages.WindowMessage{Type: messages.WM_GameCommand, Data: messages.GameManagerMessage{Type: messages.GameManager_GetCharacterView, Data: messages.GameMessageData{CharacterID: gw.GetCharacterInfoField("id"), Data: messages.GameViewDimensions{Width: gw.Width, Height: gw.Height}}}})
-		gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
+		//gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
 		gw.DrawStatusBar()
 		gw.DrawMenus()
 		if gw.CloseMenus {

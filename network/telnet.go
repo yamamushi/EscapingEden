@@ -29,9 +29,17 @@ const Escape = byte('\033')
 // Telnet Options
 const (
 	ECHO     = byte(1)
+	SUPPRESS = byte(3)
+	STATUS   = byte(5)
 	TTYPE    = byte(24)
 	NAWS     = byte(31)
+	SPEED    = byte(32)
+	RFLOW    = byte(33)
 	LINEMODE = byte(34)
+	XDISPLOC = byte(35)
+	AUTH     = byte(37)
+	ENCRYPT  = byte(38)
+	NEWENV   = byte(39)
 	EOR      = byte(239)
 )
 
@@ -48,8 +56,9 @@ func RequestTerminalType(conn net.Conn) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if b[0] != IAC && b[0] != SE && b[0] != WILL && b[0] != WONT && b[0] != TTYPE &&
-			b[0] != DO && b[0] != DONT && b[0] != SB && b[0] != NAWS && b[0] != 0 {
+		if b[0] != IAC && b[0] != SE && b[0] != WILL && b[0] != WONT && b[0] != TTYPE && b[0] != RFLOW && b[0] != LINEMODE &&
+			b[0] != DO && b[0] != DONT && b[0] != SB && b[0] != NAWS && b[0] != SUPPRESS && b[0] != STATUS &&
+			b[0] != ENCRYPT && b[0] != SPEED && b[0] != AUTH && b[0] != NEWENV && b[0] != XDISPLOC && b[0] != 0 {
 			buf = append(buf[:], b[0])
 		}
 
@@ -73,11 +82,15 @@ func RequestTerminalSize(conn net.Conn) (height, width int, err error) {
 			//log.Println(err)
 			return 0, 0, err
 		}
-		buf = append(buf[:], b[0])
+		//log.Println(b)
+		if b[0] != IAC && b[0] != WILL && b[0] != NAWS && b[0] != SB && b[0] != 0 {
+			buf = append(buf[:], b[0])
+		}
 		if b[0] == SE {
-			if len(buf) == 12 {
-				height = int(buf[9])
-				width = int(buf[7])
+			//log.Println("buf: ", buf)
+			if len(buf) == 3 {
+				height = int(buf[1])
+				width = int(buf[0])
 			} else {
 				return 0, 0, errors.New("client sent invalid terminal size response")
 			}

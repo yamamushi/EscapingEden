@@ -312,7 +312,10 @@ func (c *Connection) ResizeCleanupComplete() {
 }
 
 func (c *Connection) SendToConsole(message messages.ConsoleMessage) {
+	//log.Println("Sending message to console: ", message)
 	go func() {
-		c.Console.ReceiveMessages <- message
+		if c.Console != nil {
+			c.Console.ReceiveMessages <- message
+		}
 	}()
 }
