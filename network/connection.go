@@ -106,6 +106,9 @@ func (c *Connection) Handle() {
 	if err != nil {
 		c.Log.Println(logging.LogWarn, "Terminal Size Request Error:", c.ID, " Message: ", err, " Closing connection")
 		c.manager.HandleDisconnect(c)
+		// This is one of the FEW places we use \033c
+		c.Write([]byte("\033cSomething went wrong, please notify a developer about this issue.\r\n"))
+		c.Close()
 		return
 	}
 
@@ -114,6 +117,8 @@ func (c *Connection) Handle() {
 	if err != nil {
 		c.Log.Println(logging.LogWarn, "LineMode Enable Error:", c.ID, " Message: ", err, " Closing connection")
 		c.manager.HandleDisconnect(c)
+		c.Write([]byte("\033cSomething went wrong, please notify a developer about this issue.\r\n"))
+		c.Close()
 		return
 	}
 
@@ -122,6 +127,8 @@ func (c *Connection) Handle() {
 	if err != nil {
 		c.Log.Println(logging.LogWarn, "Disable Echo Error:", c.ID, " Message: ", err, " Closing connection")
 		c.manager.HandleDisconnect(c)
+		c.Write([]byte("\033cSomething went wrong, please notify a developer about this issue.\r\n"))
+		c.Close()
 		return
 	}
 
@@ -130,12 +137,16 @@ func (c *Connection) Handle() {
 	if err != nil {
 		c.Log.Println(logging.LogWarn, "Flush Error:", c.ID, " Message: ", err, " Closing connection")
 		c.manager.HandleDisconnect(c)
+		c.Write([]byte("\033cSomething went wrong, please notify a developer about this issue.\r\n"))
+		c.Close()
 		return
 	}
 	_, err = c.conn.Write([]byte(terminal.HideCursor()))
 	if err != nil {
 		c.Log.Println(logging.LogWarn, "Hide Cursor Error:", c.ID, " Message: ", err, " Closing connection")
 		c.manager.HandleDisconnect(c)
+		c.Write([]byte("\033cSomething went wrong, please notify a developer about this issue.\r\n"))
+		c.Close()
 		return
 	}
 

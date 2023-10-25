@@ -45,8 +45,8 @@ const (
 
 // RequestTerminalType sends the terminal type request
 func RequestTerminalType(conn net.Conn) (string, error) {
-	conn.Write([]byte{IAC, DO, 24})
-	conn.Write([]byte{IAC, SB, 24, 1, IAC, SE})
+	conn.Write([]byte{IAC, DO, TTYPE})
+	conn.Write([]byte{IAC, SB, TTYPE, ECHO, IAC, SE})
 
 	var buf []byte
 	// Read until SE is read
@@ -70,34 +70,59 @@ func RequestTerminalType(conn net.Conn) (string, error) {
 
 // RequestTerminalSize requests the terminal size
 func RequestTerminalSize(conn net.Conn) (height, width int, err error) {
-	conn.Write([]byte{IAC, DO, 31})
-	conn.Write([]byte{IAC, SB, 31, 1, IAC, SE})
+	conn.Write([]byte{IAC, DO, NAWS})
+	conn.Write([]byte{IAC, SB, NAWS, ECHO, IAC, SE})
 
 	var buf []byte
-	// Read until SE is read
-	for {
-		b := make([]byte, 1)
+	b := make([]byte, 1)
+	_, err = conn.Read(b)
+	if err != nil {
+		return 0, 0, err
+	}
+	if b[0] == IAC {
 		_, err := conn.Read(b)
 		if err != nil {
-			//log.Println(err)
 			return 0, 0, err
 		}
-		//log.Println(b)
-		if b[0] != IAC && b[0] != WILL && b[0] != NAWS && b[0] != SB && b[0] != 0 {
-			buf = append(buf[:], b[0])
-		}
-		if b[0] == SE {
-			//log.Println("buf: ", buf)
-			if len(buf) == 3 {
-				height = int(buf[1])
-				width = int(buf[0])
+		if b[0] == WILL {
+			_, err := conn.Read(b)
+			if err != nil {
+				return 0, 0, err
+			}
+			if b[0] == NAWS {
+				// Now we read the next 8 bytes, which should be a telnet subnegotiation for NAWS
+				// We only care about the 4th and 6th bytes which are width and height respectively
+				_, err := conn.Read(b)
+				if err != nil {
+					return 0, 0, err
+				}
+				i := 0
+				for i < 8 {
+					_, err := conn.Read(b)
+					if err != nil {
+						return 0, 0, err
+					}
+					buf = append(buf[:], b[0])
+					i += 1
+				}
+				// If our last byte is SE, then we have a valid response, otherwise the client send us a bad response
+				if buf[7] == SE {
+					height = int(buf[5])
+					width = int(buf[3])
+					return height, width, nil
+				} else {
+					return 0, 0, errors.New("client sent invalid terminal size response")
+				}
 			} else {
 				return 0, 0, errors.New("client sent invalid terminal size response")
+
 			}
-			break
+		} else {
+			return 0, 0, errors.New("client sent invalid terminal size response")
 		}
+	} else {
+		return 0, 0, errors.New("client sent invalid terminal size response")
 	}
-	return height, width, nil
 }
 
 // DisableEcho disables echo
