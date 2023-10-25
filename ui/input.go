@@ -52,11 +52,6 @@ func (c *Console) HandleInput(rawInput byte) {
 		return
 	}
 
-	if rawInput == 27 {
-		c.InputToActiveWindow(types.Input{Type: types.InputEscape})
-		return
-	}
-
 	//c.Log.Println(logging.LogWarn, "Debugging escape sequence: ", strconv.Itoa(int(rawInput)))
 
 	// Captures things like the arrow keys.
@@ -92,6 +87,9 @@ func (c *Console) HandleInput(rawInput byte) {
 			c.escapeSequence = false
 			return
 		}
+		/*else if rawInput == 'O' {
+			c.InputToActiveWindow(types.Input{Type: types.InputEscape})
+		}*/
 		c.escapeBuffer = ""
 		c.escapeSequence = false
 		return

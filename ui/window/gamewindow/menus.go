@@ -7,12 +7,15 @@ const (
 	MenuType_Default GameMenuType = iota
 	MenuType_Inventory
 	MenuType_Build
+	MenuType_Dig
 )
 
 func (gw *GameWindow) CreateMenu(menuType GameMenuType) {
 	switch menuType {
 	case MenuType_Build:
 		gw.BuildMenu()
+	case MenuType_Dig:
+		gw.DigMenu()
 
 	}
 }

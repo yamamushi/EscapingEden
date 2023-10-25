@@ -29,6 +29,17 @@ func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 	defer gw.commandMutex.Unlock()
 	//gw.log.Println(logging.LogInfo, "GameWindow Command: ", input)
 	gw.MenusMutex.Lock()
+	if int(input[0]) == 3 {
+		for _, menu := range gw.Menus {
+			menu.SetCallbackStatusBarMessage("")
+		}
+		gw.CloseMenus = true
+		gw.MenusMutex.Unlock()
+		//gw.Log.Println(logging.LogInfo, "GameWindow received ^C, closing menus")
+		gw.SetStatusBarMessage("")
+		gw.RequestFlushFromConsole()
+		return
+	}
 	if len(gw.Menus) > 0 {
 		gw.Menus[len(gw.Menus)-1].HandleInput(gw, inputType, input) // Handle input for the top menu
 		gw.MenusMutex.Unlock()
@@ -43,9 +54,12 @@ func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 	if int(input[0]) == 4 {
 		// ^D
 		//gw.Log.Println(logging.LogInfo, "GameWindow received ^D, handling dig")
-		gw.StatusBarMutex.Lock()
-		gw.StatusBarMessage = "Dig in which direction?"
-		gw.StatusBarMutex.Unlock()
+		if len(gw.Menus) > 0 {
+			gw.RemoveMenuBox(gw.Menus[0])
+			return
+		} else {
+			gw.CreateMenu(MenuType_Dig)
+		}
 		return
 	} else if int(input[0]) == 2 {
 		// ctrl-b
@@ -97,6 +111,14 @@ func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 	case ",":
 		gw.StatusBarMutex.Lock()
 		gw.StatusBarMessage = "There is nothing here to pick up."
+		gw.StatusBarMutex.Unlock()
+	case "W": // Wear
+		gw.StatusBarMutex.Lock()
+		gw.StatusBarMessage = "What do you want to wear?"
+		gw.StatusBarMutex.Unlock()
+	case "w": // Wield
+		gw.StatusBarMutex.Lock()
+		gw.StatusBarMessage = "What do you want to wield?"
 		gw.StatusBarMutex.Unlock()
 	case "i":
 		gw.RequestInventoryUpdate(nil, "")

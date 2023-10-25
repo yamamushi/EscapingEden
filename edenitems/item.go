@@ -8,6 +8,7 @@ type Item struct {
 	Type        ItemType
 	Stackable   bool
 	Hotkey      string
+	Attributes  map[string]bool
 }
 
 type ItemType int

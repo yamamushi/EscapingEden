@@ -103,6 +103,9 @@ func NewGameWindow(x, y, width, height, consoleWidth, consoleHeight int, input, 
 	//gw.log.Println(logging.LogInfo, "Character ID: ", gw.characterID)
 	go gw.Listen()
 	gw.SetupVisibleMap()
+	gw.RequestInventoryUpdate(nil, "")
+	gw.DisplayInventoryAfterReceive(false)
+	gw.LockPendingInventory()
 	return gw
 }
 

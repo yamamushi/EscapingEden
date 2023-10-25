@@ -120,7 +120,9 @@ func (gm *GameManager) GetCharacterInventory(characterID string) ([]edenitems.It
 					inventory = append(inventory, stone)
 				}
 				pickid := edenutil.GenerateID()
-				pickaxe := edenitems.Item{ID: pickid, Name: "Pickaxe", Description: "A pickaxe that looks like it should be suitable for digging through stone", Type: edenitems.ItemTool, Weight: 5, Stackable: false}
+				pickaxeAttributes := make(map[string]bool)
+				pickaxeAttributes["digging"] = true
+				pickaxe := edenitems.Item{ID: pickid, Name: "Pickaxe", Description: "A pickaxe that looks like it should be suitable for digging through stone", Type: edenitems.ItemTool, Weight: 5, Stackable: false, Attributes: pickaxeAttributes}
 				inventory = append(inventory, pickaxe)
 				gm.AssignItemHotkeys(inventory)
 				gm.ActiveCharacters[i].Record.Inventory = inventory
