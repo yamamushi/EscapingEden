@@ -69,7 +69,7 @@ func (mb *MenuBox) ToggleHotkeyCheck(toggle bool) {
 }
 
 func (mb *MenuBox) HandleInput(gw *GameWindow, inputType types.InputType, input string) {
-	gw.Log.Println(logging.LogInfo, "Menubox received input: ", input)
+	//gw.Log.Println(logging.LogInfo, "Menubox received input: ", input)
 	// Handle input for the menu box
 	// First check if the input is a keybind
 	if inputType == types.InputEscape {
@@ -77,11 +77,11 @@ func (mb *MenuBox) HandleInput(gw *GameWindow, inputType types.InputType, input 
 		return
 	}
 	if mb.ResponseCallback != nil {
-		gw.Log.Println(logging.LogInfo, "Menubox has response callback")
+		//gw.Log.Println(logging.LogInfo, "Menubox has response callback")
 		switch mb.ResponseCallback.(type) {
 		case func(*MenuBox, string):
 			mb.ResponseCallback.(func(*MenuBox, string))(mb, input)
-			gw.Log.Println(logging.LogInfo, "Menubox called response callback ")
+			//gw.Log.Println(logging.LogInfo, "Menubox called response callback ")
 
 		default:
 			gw.Log.Println(logging.LogInfo, "Menubox could not find callback")
@@ -90,7 +90,7 @@ func (mb *MenuBox) HandleInput(gw *GameWindow, inputType types.InputType, input 
 	}
 	for _, option := range mb.Options {
 		if input == option.Keybind {
-			gw.Log.Println(logging.LogInfo, "Menubox received input for ", option.Name)
+			//gw.Log.Println(logging.LogInfo, "Menubox received input for ", option.Name)
 			// If it is, call the callback
 			switch option.Callback.(type) {
 			case func(box *MenuBox):

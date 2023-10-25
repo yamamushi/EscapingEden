@@ -27,6 +27,12 @@ func (gw *GameWindow) Listen() {
 				if gw.DisplayInventoryPostReceive {
 					gw.DisplayInventory()
 				}
+			case messages.GM_FailedDig:
+				//gw.Log.Println(logging.LogInfo, "Game Window received failed dig message from console")
+				if len(gw.Menus) > 0 {
+					gw.Menus[0].SetCallbackStatusBarMessage("You can't dig there.")
+				}
+				gw.SetStatusBarMessage("You can't dig there.")
 			}
 		}
 	}

@@ -38,6 +38,7 @@ const (
 	GameManager_GetCharacterView
 	GameManager_MoveCharacter
 	GameManager_RequestInventory
+	GameManager_DigCommand
 )
 
 type GameManagerMessage struct {

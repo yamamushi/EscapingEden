@@ -8,6 +8,7 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"math/rand"
 	"os"
+	"sync"
 )
 
 func (gm *GameManager) LoadWorld() {
@@ -69,6 +70,7 @@ type MapChunk struct {
 	}
 	// The chunk's data
 	TileMap [][][]Tile
+	Mutex   sync.Mutex
 }
 
 type Tile struct {

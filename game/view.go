@@ -20,6 +20,10 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 	charSymbol := "@"
 	charEscapeCode := character.FGColor.FG() + character.BGColor.BG()
 
+	// Lock the map
+	gm.MapChunks[0].Mutex.Lock()
+	defer gm.MapChunks[0].Mutex.Unlock()
+
 	// If character is not initialized, we need to load it into the map
 	if !character.Initialized {
 		gm.Log.Println(logging.LogInfo, "character not initialized, loading into map")

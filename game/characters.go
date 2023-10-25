@@ -112,17 +112,29 @@ func (gm *GameManager) GetCharacterInventory(characterID string) ([]edenitems.It
 				for j := 0; j < 10; j++ {
 					id := edenutil.GenerateID()
 					wood := edenitems.Item{ID: id, Name: "Wood", Description: "A piece of wood.", Type: edenitems.ItemMaterial, Weight: 1, Stackable: true}
+					err := gm.DB.AddRecord("Items", &wood)
+					if err != nil {
+						gm.Log.Println(logging.LogError, "Failed to add item to DB:", err.Error())
+					}
 					inventory = append(inventory, wood)
 				}
 				for j := 0; j < 10; j++ {
 					id := edenutil.GenerateID()
 					stone := edenitems.Item{ID: id, Name: "Stone", Description: "A piece of stone.", Type: edenitems.ItemMaterial, Weight: 1, Stackable: true}
+					err := gm.DB.AddRecord("Items", &stone)
+					if err != nil {
+						gm.Log.Println(logging.LogError, "Failed to add item to DB:", err.Error())
+					}
 					inventory = append(inventory, stone)
 				}
 				pickid := edenutil.GenerateID()
 				pickaxeAttributes := make(map[string]bool)
 				pickaxeAttributes["digging"] = true
 				pickaxe := edenitems.Item{ID: pickid, Name: "Pickaxe", Description: "A pickaxe that looks like it should be suitable for digging through stone", Type: edenitems.ItemTool, Weight: 5, Stackable: false, Attributes: pickaxeAttributes}
+				err := gm.DB.AddRecord("Items", &pickaxe)
+				if err != nil {
+					gm.Log.Println(logging.LogError, "Failed to add item to DB:", err.Error())
+				}
 				inventory = append(inventory, pickaxe)
 				gm.AssignItemHotkeys(inventory)
 				gm.ActiveCharacters[i].Record.Inventory = inventory
