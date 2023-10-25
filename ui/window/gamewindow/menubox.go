@@ -1,9 +1,11 @@
 package gamewindow
 
 import (
+	"fmt"
 	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/ui/types"
+	"log"
 	"sync"
 )
 
@@ -96,7 +98,11 @@ func (mb *MenuBox) HandleInput(gw *GameWindow, inputType types.InputType, input 
 			case func():
 				option.Callback.(func())()
 			case func(string):
+				option.Callback.(func(string))(input)
+			case func(*MenuBox, string):
 				option.Callback.(func(*MenuBox, string))(mb, input)
+			default:
+				log.Println(fmt.Sprintf("Unhandled type of callback %T", option.Callback))
 			}
 		} else if int(input[0]) == option.ControlKey {
 			// If it is, call the callback
