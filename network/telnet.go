@@ -84,7 +84,7 @@ func RequestTerminalSize(conn net.Conn) (height, width int, err error) {
 		if err != nil {
 			return 0, 0, err
 		}
-		if b[0] == WILL {
+		if b[0] == WILL || b[0] == SB {
 			_, err := conn.Read(b)
 			if err != nil {
 				return 0, 0, err
@@ -96,32 +96,26 @@ func RequestTerminalSize(conn net.Conn) (height, width int, err error) {
 				if err != nil {
 					return 0, 0, err
 				}
-				i := 0
-				for i < 8 {
+				for b[0] != SE {
 					_, err := conn.Read(b)
 					if err != nil {
 						return 0, 0, err
 					}
 					buf = append(buf[:], b[0])
-					i += 1
 				}
 				// If our last byte is SE, then we have a valid response, otherwise the client send us a bad response
-				if buf[7] == SE {
-					height = int(buf[5])
-					width = int(buf[3])
-					return height, width, nil
-				} else {
-					return 0, 0, errors.New("client sent invalid terminal size response")
-				}
-			} else {
-				return 0, 0, errors.New("client sent invalid terminal size response")
+				height = int(buf[len(buf)-3])
+				width = int(buf[len(buf)-5])
+				return height, width, nil
 
+			} else {
+				return 0, 0, errors.New("client sent invalid terminal size response at expected SB or NAWS")
 			}
 		} else {
-			return 0, 0, errors.New("client sent invalid terminal size response")
+			return 0, 0, errors.New("client sent invalid terminal size response at expected WILL")
 		}
 	} else {
-		return 0, 0, errors.New("client sent invalid terminal size response")
+		return 0, 0, errors.New("client sent invalid terminal size response at expected IAC")
 	}
 }
 
