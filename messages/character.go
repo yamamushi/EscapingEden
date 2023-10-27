@@ -15,9 +15,10 @@ type CharacterInfo struct {
 	InventoryID string `storm:"unique"`
 	Initialized bool
 	Position    struct {
-		X int
-		Y int
-		Z int
+		MapChunkID string
+		X          int
+		Y          int
+		Z          int
 	}
 	LastLoginTime time.Time
 	FirstLogin    int // 0 = false, 1 = true

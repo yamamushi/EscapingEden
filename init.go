@@ -109,9 +109,9 @@ func InitAccountManager(receiver chan messages.AccountManagerMessage, sender cha
 }
 
 // InitGameManager initializes the game manager
-func InitGameManager(input chan messages.GameManagerMessage, output chan messages.ConnectionManagerMessage, dbConn edendb.DatabaseType, log logging.LoggerType) (*game.GameManager, error) {
+func InitGameManager(input chan messages.GameManagerMessage, output chan messages.ConnectionManagerMessage, dbConn edendb.DatabaseType, log logging.LoggerType, conf *edenconfig.Config) (*game.GameManager, error) {
 	log.Println(logging.LogInfo, "Starting Game Manager...")
-	gameManager := game.NewGameManager(input, output, dbConn, log)
+	gameManager := game.NewGameManager(input, output, dbConn, log, conf)
 
 	startNotify := make(chan bool)
 	err := gameManager.Start(startNotify)

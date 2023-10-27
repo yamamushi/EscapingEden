@@ -29,3 +29,6 @@ guild_id  = "main guild id goes here"
 admin_ids = ["00000000001", "00000000002", "00000000003"]
 registration_channel_id = "channel id for registration updates goes here"
 registered_role_id = "role id for registered users goes here"
+
+[worldgen]
+dimensions = "x,x,x" # comma separated integers representing the dimensions of the world

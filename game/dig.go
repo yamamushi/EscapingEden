@@ -15,8 +15,8 @@ func (gm *GameManager) HandleDigRequest(itemID string, charID string, deltaX, de
 
 	//gm.Log.Println("Digging with", item.Name, "in", deltaX, deltaY, "direction")
 	// Lock the map
-	gm.MapChunks[0].Mutex.Lock()
-	defer gm.MapChunks[0].Mutex.Unlock()
+	//gm.MapChunks[0].Mutex.Lock()
+	//defer gm.MapChunks[0].Mutex.Unlock()
 	// Get the character's position
 	character, err := gm.GetCharacter(charID)
 	if err != nil {

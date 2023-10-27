@@ -12,10 +12,11 @@ func (gm *GameManager) MovePlayer(charID string, deltax, deltay int) {
 		gm.Log.Println(logging.LogInfo, "error getting character", err.Error())
 		return
 	}
+	// NEEDS MAP TRANSFER LOGIC
 	if (character.Position.X+deltax) < 0 || (character.Position.X+deltax) > len(gm.MapChunks[0].TileMap)-1 {
 		return
 	}
-	if (character.Position.Y+deltay) < 0 || (character.Position.Y+deltay) > len(gm.MapChunks[0].TileMap[0]) {
+	if (character.Position.Y+deltay) < 0 || (character.Position.Y+deltay) > len(gm.MapChunks[0].TileMap[0])-1 {
 		return
 	}
 	if gm.MapChunks[0].TileMap[character.Position.X+deltax][character.Position.Y+deltay][0].Passable {

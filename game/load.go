@@ -8,7 +8,6 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"math/rand"
 	"os"
-	"sync"
 )
 
 func (gm *GameManager) LoadWorld() {
@@ -21,13 +20,13 @@ func (gm *GameManager) LoadWorld() {
 	mapChunk := gm.CreateMapChunk(255, 255, 255, 0, 0, 0, "Test")
 
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Saving...")
-	err := gm.SaveMapChunk(mapChunk, "test.map")
+	err := gm.SaveMapChunk(mapChunk, "0-0-0.map")
 	if err != nil {
 		gm.Log.Println(logging.LogError, "Failed to save map chunk:", err.Error())
 	}
 
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Loading...")
-	loaded, err := gm.LoadMapChunk("test.map")
+	loaded, err := gm.LoadMapChunk("0-0-0.map")
 	if err != nil {
 		panic(err) // We'll refactor all of this later, we're just implementing stuff quickly for now.
 	}
@@ -70,7 +69,7 @@ type MapChunk struct {
 	}
 	// The chunk's data
 	TileMap [][][]Tile
-	Mutex   sync.Mutex
+	//Mutex   sync.Mutex
 }
 
 type Tile struct {

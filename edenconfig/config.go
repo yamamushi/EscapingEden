@@ -7,10 +7,11 @@ import (
 
 // Config is the main configuration struct
 type Config struct {
-	Logger  loggingConfig `toml:"logging"`
-	Server  serverConfig  `toml:"server"`
-	DB      dbConfig      `toml:"database"`
-	Discord discordConfig `toml:"discord"`
+	Logger  loggingConfig  `toml:"logging"`
+	Server  serverConfig   `toml:"server"`
+	DB      dbConfig       `toml:"database"`
+	Discord discordConfig  `toml:"discord"`
+	World   worldgenConfig `toml:"worldgen"`
 }
 
 type loggingConfig struct {
@@ -43,6 +44,10 @@ type discordConfig struct {
 	AdminIDs              []string `toml:"admin_ids"`
 	RegistrationChannelID string   `toml:"registration_channel_id"`
 	RegisteredRoleID      string   `toml:"registered_role_id"`
+}
+
+type worldgenConfig struct {
+	Dimensions string `toml:"dimensions"`
 }
 
 // ReadConfig function
