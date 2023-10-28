@@ -7,7 +7,6 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"log"
 	"sync"
 )
 
@@ -102,7 +101,6 @@ func (gm *GameManager) GetCharacter(characterID string) (character *messages.Cha
 func (gm *GameManager) GetCharacterAt(chunk *MapChunk, X, Y int) (character *messages.CharacterInfo) {
 	for i, character := range gm.ActiveCharacters {
 		if character.Record.Position.X == X && character.Record.Position.Y == Y && character.Record.CurrentMapID == chunk.ID {
-			log.Println("Found character at", X, Y)
 			return gm.ActiveCharacters[i].Record
 		}
 	}
