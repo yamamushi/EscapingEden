@@ -5,6 +5,7 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
+	"log"
 )
 
 func (gm *GameManager) GetCharacterView(charID string, width, height int) (messages.GameCharView, error) {
@@ -18,6 +19,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 	gm.activeCharactersMutex.Lock()
 	posX := character.Position.X
 	posY := character.Position.Y
+	log.Println("posX", posX, "posY", posY)
 	charSymbol := "@"
 	charEscapeCode := character.FGColor.FG() + character.BGColor.BG()
 	// dimensions, these are static right now, but we'll get these from the config later
@@ -36,6 +38,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 			Z          int
 		}{X: len(gm.MapChunks[0].TileMap) / 2, Y: len(gm.MapChunks[0].TileMap[0]) / 2, Z: 0, MapChunkID: gm.MapChunks[0].ID}
 		character.Initialized = true
+		character.CurrentMapID = gm.MapChunks[0].ID
 	}
 	defer gm.activeCharactersMutex.Unlock()
 
@@ -47,6 +50,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 		plane[i] = make([]types.Point, height)
 	}
 
+	currentMap := gm.GetMapChunkByID(character.CurrentMapID)
 	// plane[i][j] is the window drawing we're sending to the client
 	// We want to center the view around the player's position, posX and posY
 	// So we need to offset the current MapChunk starting draw position by the player's position so that
@@ -61,8 +65,8 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 
 	// Now we loop through the plane, do our checks for each point and draw
 	// Prepare vars
-	tilemapXLen := len(gm.MapChunks[0].TileMap)
-	tilemapYLen := len(gm.MapChunks[0].TileMap[0])
+	tilemapXLen := len(currentMap.TileMap)
+	tilemapYLen := len(currentMap.TileMap[0])
 	// Loop through the screen
 	for i := 0; i < height; i++ {
 		for j := 0; j < width; j++ {
@@ -81,12 +85,12 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 				} else {
 					distanceSquared := float64((mapX-posX)*(mapX-posX) + (mapY-posY)*(mapY-posY))
 					if distanceSquared <= float64(radius*radius) {
-						playercheck := gm.GetCharacterAt(mapX, mapY)
+						playercheck := gm.GetCharacterAt(currentMap, mapX, mapY)
 						if playercheck != nil && playercheck.ID != charID {
 							plane[j][i].Character = "@"
 							plane[j][i].EscapeCode = playercheck.FGColor.FG() + playercheck.BGColor.BG()
 						} else {
-							if gm.MapChunks[0].TileMap[mapX][mapY][0].Passable {
+							if currentMap.TileMap[mapX][mapY][0].Passable {
 								plane[j][i].Character = "."
 							} else {
 								plane[j][i].Character = "\u2588"
@@ -109,7 +113,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 				if mapY > tilemapYLen-1 {
 					deltaY = 1
 				}
-				deltaMapChunk := gm.GetMapChunkFrom(&gm.MapChunks[0], deltaX, deltaY, 0)
+				deltaMapChunk := gm.GetMapChunkFrom(currentMap, deltaX, deltaY, 0)
 				if deltaMapChunk != nil {
 					deltaMapLenX := len(deltaMapChunk.TileMap)
 					deltaMapLenY := len(deltaMapChunk.TileMap[0])
@@ -127,10 +131,16 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 
 					// NEEDS RADIUS CHECK
 					// NEEDS SIDELOADING PLAYERS
-					if deltaMapChunk.TileMap[mapX][mapY][0].Passable {
-						plane[j][i].Character = "."
+					playercheck := gm.GetCharacterAt(currentMap, mapX, mapY)
+					if playercheck != nil && playercheck.ID != charID {
+						plane[j][i].Character = "@"
+						plane[j][i].EscapeCode = playercheck.FGColor.FG() + playercheck.BGColor.BG()
 					} else {
-						plane[j][i].Character = "\u2588"
+						if currentMap.TileMap[mapX][mapY][0].Passable {
+							plane[j][i].Character = "."
+						} else {
+							plane[j][i].Character = "\u2588"
+						}
 					}
 				}
 

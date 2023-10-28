@@ -25,7 +25,8 @@ type CharacterInfo struct {
 	Error         string
 
 	// The character's inventory
-	Inventory []edenitems.Item
+	Inventory    []edenitems.Item
+	CurrentMapID string
 }
 
 type PlayerViewHistoryCoordinate struct {

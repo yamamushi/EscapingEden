@@ -7,6 +7,7 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
+	"log"
 	"sync"
 )
 
@@ -69,6 +70,23 @@ func (gm *GameManager) RemoveFromLiveCharacterList(ID string) {
 	}
 }
 
+func (gm *GameManager) MovePlayerToMap(characterID string, currentMapID string) error {
+	character, err := gm.GetCharacter(characterID)
+	if err != nil {
+		gm.Log.Println(logging.LogError, "Failed to get character:", err.Error())
+		return err
+	}
+
+	character.CurrentMapID = currentMapID
+	err = gm.DB.UpdateRecord("Characters", character)
+	if err != nil {
+		gm.Log.Println(logging.LogError, "Failed to update character after moving to new mapchunk", err.Error())
+		return err
+	}
+	gm.Log.Println(logging.LogInfo, "Map Transfer", character.CurrentMapID)
+	return nil
+}
+
 func (gm *GameManager) GetCharacter(characterID string) (character *messages.CharacterInfo, err error) {
 	gm.activeCharactersMutex.Lock()
 	defer gm.activeCharactersMutex.Unlock()
@@ -81,9 +99,10 @@ func (gm *GameManager) GetCharacter(characterID string) (character *messages.Cha
 }
 
 // Note this does not lock the mutex, it is assumed that the caller has already locked it!
-func (gm *GameManager) GetCharacterAt(X, Y int) (character *messages.CharacterInfo) {
+func (gm *GameManager) GetCharacterAt(chunk *MapChunk, X, Y int) (character *messages.CharacterInfo) {
 	for i, character := range gm.ActiveCharacters {
-		if character.Record.Position.X == X && character.Record.Position.Y == Y {
+		if character.Record.Position.X == X && character.Record.Position.Y == Y && character.Record.CurrentMapID == chunk.ID {
+			log.Println("Found character at", X, Y)
 			return gm.ActiveCharacters[i].Record
 		}
 	}

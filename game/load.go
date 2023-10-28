@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"encoding/gob"
 	"errors"
+	"github.com/google/uuid"
 	"github.com/yamamushi/EscapingEden/logging"
 	"math/rand"
 	"os"
@@ -17,7 +18,8 @@ func (gm *GameManager) LoadWorld() {
 	//
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Creation...")
 
-	mapChunk := gm.CreateMapChunk(255, 255, 255, 0, 0, 0, "Test")
+	mapChunkID := uuid.New().String()
+	mapChunk := gm.CreateMapChunk(255, 255, 255, 0, 0, 0, mapChunkID)
 
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Saving...")
 	err := gm.SaveMapChunk(mapChunk, "0-0-0.map")
