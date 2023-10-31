@@ -49,6 +49,7 @@ func (gm *GameManager) LoadWorld() {
 		gm.DrawRect(x1, y1, x2, y2)
 
 	}
+	gm.DrawRect(0, 0, 200, 200)
 
 	/*
 		gm.Log.Println(logging.LogInfo, "Checking Map Chunk Sizes...")

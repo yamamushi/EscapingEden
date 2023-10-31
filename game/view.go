@@ -80,6 +80,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 					//gm.Log.Println(logging.LogInfo, "drawing player at", mapX, mapY, j, i)
 					plane[j][i].Character = charSymbol
 					plane[j][i].EscapeCode = charEscapeCode
+
 				} else {
 					distanceSquared := float64((mapX-posX)*(mapX-posX) + (mapY-posY)*(mapY-posY))
 					if distanceSquared <= float64(radius*radius) {
