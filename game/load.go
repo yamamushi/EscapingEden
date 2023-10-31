@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"encoding/gob"
 	"errors"
+	"github.com/google/uuid"
 	"github.com/yamamushi/EscapingEden/logging"
 	"math/rand"
 	"os"
@@ -17,16 +18,17 @@ func (gm *GameManager) LoadWorld() {
 	//
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Creation...")
 
-	mapChunk := gm.CreateMapChunk(255, 255, 255, 0, 0, 0, "Test")
+	mapChunkID := uuid.New().String()
+	mapChunk := gm.CreateMapChunk(255, 255, 255, 0, 0, 0, mapChunkID)
 
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Saving...")
-	err := gm.SaveMapChunk(mapChunk, "test.map")
+	err := gm.SaveMapChunk(mapChunk, "0-0-0.map")
 	if err != nil {
 		gm.Log.Println(logging.LogError, "Failed to save map chunk:", err.Error())
 	}
 
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Loading...")
-	loaded, err := gm.LoadMapChunk("test.map")
+	loaded, err := gm.LoadMapChunk("0-0-0.map")
 	if err != nil {
 		panic(err) // We'll refactor all of this later, we're just implementing stuff quickly for now.
 	}
@@ -47,6 +49,7 @@ func (gm *GameManager) LoadWorld() {
 		gm.DrawRect(x1, y1, x2, y2)
 
 	}
+	gm.DrawRect(0, 0, 200, 200)
 
 	/*
 		gm.Log.Println(logging.LogInfo, "Checking Map Chunk Sizes...")
@@ -69,6 +72,7 @@ type MapChunk struct {
 	}
 	// The chunk's data
 	TileMap [][][]Tile
+	//Mutex   sync.Mutex
 }
 
 type Tile struct {

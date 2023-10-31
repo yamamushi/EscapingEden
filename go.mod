@@ -1,6 +1,6 @@
 module github.com/yamamushi/EscapingEden
 
-go 1.17
+go 1.21
 
 require (
 	github.com/BurntSushi/toml v0.4.1

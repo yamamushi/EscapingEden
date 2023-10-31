@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
@@ -19,16 +20,23 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 	posY := character.Position.Y
 	charSymbol := "@"
 	charEscapeCode := character.FGColor.FG() + character.BGColor.BG()
+	// dimensions, these are static right now, but we'll get these from the config later
+
+	// Lock the map
+	//gm.MapChunks[0].Mutex.Lock()
+	//defer gm.MapChunks[0].Mutex.Unlock()
 
 	// If character is not initialized, we need to load it into the map
 	if !character.Initialized {
 		gm.Log.Println(logging.LogInfo, "character not initialized, loading into map")
 		character.Position = struct {
-			X int
-			Y int
-			Z int
-		}{X: len(gm.MapChunks[0].TileMap) / 2, Y: len(gm.MapChunks[0].TileMap[0]) / 2, Z: 0}
+			MapChunkID string
+			X          int
+			Y          int
+			Z          int
+		}{X: len(gm.MapChunks[0].TileMap) / 2, Y: len(gm.MapChunks[0].TileMap[0]) / 2, Z: 0, MapChunkID: gm.MapChunks[0].ID}
 		character.Initialized = true
+		character.CurrentMapID = gm.MapChunks[0].ID
 	}
 	defer gm.activeCharactersMutex.Unlock()
 
@@ -40,6 +48,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 		plane[i] = make([]types.Point, height)
 	}
 
+	currentMap := gm.GetMapChunkByID(character.CurrentMapID)
 	// plane[i][j] is the window drawing we're sending to the client
 	// We want to center the view around the player's position, posX and posY
 	// So we need to offset the current MapChunk starting draw position by the player's position so that
@@ -50,12 +59,12 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 
 	offsetX := width / 2
 	offsetY := height / 2
-	radius := 4
+	radius := 8
 
 	// Now we loop through the plane, do our checks for each point and draw
 	// Prepare vars
-	tilemapXLen := len(gm.MapChunks[0].TileMap)
-	tilemapYLen := len(gm.MapChunks[0].TileMap[0])
+	tilemapXLen := len(currentMap.TileMap)
+	tilemapYLen := len(currentMap.TileMap[0])
 	// Loop through the screen
 	for i := 0; i < height; i++ {
 		for j := 0; j < width; j++ {
@@ -71,24 +80,79 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 					//gm.Log.Println(logging.LogInfo, "drawing player at", mapX, mapY, j, i)
 					plane[j][i].Character = charSymbol
 					plane[j][i].EscapeCode = charEscapeCode
+
 				} else {
 					distanceSquared := float64((mapX-posX)*(mapX-posX) + (mapY-posY)*(mapY-posY))
 					if distanceSquared <= float64(radius*radius) {
-						playercheck := gm.GetCharacterAt(mapX, mapY)
+						playercheck := gm.GetCharacterAt(currentMap, mapX, mapY)
 						if playercheck != nil && playercheck.ID != charID {
 							plane[j][i].Character = "@"
 							plane[j][i].EscapeCode = playercheck.FGColor.FG() + playercheck.BGColor.BG()
 						} else {
-							if gm.MapChunks[0].TileMap[mapX][mapY][0].Passable {
+							if currentMap.TileMap[mapX][mapY][0].Passable {
 								plane[j][i].Character = "."
 							} else {
-								plane[j][i].Character = "#"
+								plane[j][i].Character = "\u2588"
 							}
 						}
 					}
 				}
 			} else {
-				plane[j][i].Character = "#" // Draw out of bounds as walls for simplicity
+				deltaX := 0
+				deltaY := 0
+				if mapX < 0 {
+					deltaX = -1
+				}
+				if mapX > tilemapXLen-1 {
+					deltaX = 1
+				}
+				if mapY < 0 {
+					deltaY = -1
+				}
+				if mapY > tilemapYLen-1 {
+					deltaY = 1
+				}
+				deltaMapChunk := gm.GetMapChunkFrom(currentMap, deltaX, deltaY, 0)
+				if deltaMapChunk != nil {
+					deltaMapLenX := len(deltaMapChunk.TileMap)
+					deltaMapLenY := len(deltaMapChunk.TileMap[0])
+					//log.Println("mapX, mapY", mapX, mapY)
+					originalMapX := mapX
+					originalMapY := mapY
+
+					if mapX < 0 {
+						mapX += deltaMapLenX
+					}
+					if mapY < 0 {
+						mapY += deltaMapLenY
+					}
+
+					if mapX > deltaMapLenX-1 {
+						mapX -= deltaMapLenX
+					}
+					if mapY > deltaMapLenY-1 {
+						mapY -= deltaMapLenY
+					}
+
+					//log.Println("mapX, mapY", mapX, mapY)
+					//log.Println("deltas", deltaX, deltaY)
+
+					// Needs testing to verify player loading is working as intended
+					distanceSquared := float64((originalMapX-posX)*(originalMapX-posX) + (originalMapY-posY)*(originalMapY-posY))
+					if distanceSquared <= float64(radius*radius) {
+						playercheck := gm.GetCharacterAt(deltaMapChunk, mapX, mapY)
+						if playercheck != nil && playercheck.ID != charID {
+							plane[j][i].Character = "@"
+							plane[j][i].EscapeCode = playercheck.FGColor.FG() + playercheck.BGColor.BG()
+						} else {
+							if deltaMapChunk.TileMap[mapX][mapY][0].Passable {
+								plane[j][i].Character = "."
+							} else {
+								plane[j][i].Character = "\u2588"
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -110,4 +174,50 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 	view.View = plane
 	return view, nil
 
+}
+
+// GetMapChunkFrom returns a map chunk from a source map chunk and a delta
+func (gm *GameManager) GetMapChunkFrom(source *MapChunk, deltaX, deltaY, deltaZ int) *MapChunk {
+	//gm.Log.Println(logging.LogInfo, "Getting map chunk at", x, y)
+	worldLat := 1
+	worldLon := 1
+	worldHeight := 1
+	x, y, z := 0, 0, 0
+
+	if deltaX+source.GlobalPosition.X < 0 {
+		x = 0
+	} else if deltaX+source.GlobalPosition.X > worldLat-1 {
+		x = worldLat - 1
+	} else {
+		x = deltaX + source.GlobalPosition.X
+	}
+	if deltaY+source.GlobalPosition.Y < 0 {
+		y = 0
+	} else if deltaY+source.GlobalPosition.Y > worldLon-1 {
+		y = worldLon - 1
+	} else {
+		y = deltaY + source.GlobalPosition.Y
+	}
+	if deltaZ+source.GlobalPosition.Z < 0 {
+		z = 0
+	} else if deltaZ+source.GlobalPosition.Z > worldHeight-1 {
+		z = worldHeight - 1
+	} else {
+		z = deltaZ + source.GlobalPosition.Z
+	}
+	mapChunk, err := gm.MapChunkByPos(x, y, z)
+	if err != nil {
+		return nil
+	}
+
+	return mapChunk
+}
+
+func (gm *GameManager) MapChunkByPos(x, y, z int) (*MapChunk, error) {
+	for _, mapChunk := range gm.MapChunks {
+		if mapChunk.GlobalPosition.X == x && mapChunk.GlobalPosition.Y == y && mapChunk.GlobalPosition.Z == z {
+			return &mapChunk, nil
+		}
+	}
+	return nil, fmt.Errorf("map chunk not found at %d, %d, %d", x, y, z)
 }

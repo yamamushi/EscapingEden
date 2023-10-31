@@ -2,6 +2,7 @@ package game
 
 import (
 	"github.com/google/uuid"
+	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
@@ -21,10 +22,11 @@ type GameManager struct {
 
 	// Temporary will remove in a refactor of the map generation
 	MapChunks []MapChunk
+	Config    *edenconfig.Config
 }
 
-func NewGameManager(receiveChannel chan messages.GameManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType) *GameManager {
-	manager := &GameManager{ReceiveChannel: receiveChannel, SendChannel: sendChannel, DB: db, Log: log}
+func NewGameManager(receiveChannel chan messages.GameManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType, conf *edenconfig.Config) *GameManager {
+	manager := &GameManager{ReceiveChannel: receiveChannel, SendChannel: sendChannel, DB: db, Log: log, Config: conf}
 	manager.Init()
 	return manager
 }

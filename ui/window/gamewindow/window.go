@@ -1,6 +1,7 @@
 package gamewindow
 
 import (
+	"github.com/yamamushi/EscapingEden/edenitems"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
@@ -10,7 +11,7 @@ import (
 	"sync"
 )
 
-// DashboardWindow is a window for users to login as a character, create a new one, manage their settings or log out.
+// GameWindow is a window for users to login as a character, create a new one, manage their settings or log out.
 type GameWindow struct {
 	window.Window
 	windowState GameWindowState
@@ -40,9 +41,20 @@ type GameWindow struct {
 	StatusBarMessage string
 	StatusBarMutex   sync.Mutex
 
-	Menus      []*MenuBox
+	Menus      []MenuBoxType
 	MenusMutex sync.Mutex
-	CloseMenu  bool
+	CloseMenus bool
+
+	Inventory []edenitems.Item
+	Hotkeys   map[string]edenitems.Item
+
+	InventoryMutex              sync.Mutex
+	PendingInventoryMutex       sync.Mutex
+	PendingInventory            bool
+	InventoryDisplayType        edenitems.ItemType
+	MenuCallback                interface{}
+	InventoryCallbackPrompt     string
+	DisplayInventoryPostReceive bool
 }
 
 // GameWindowState is an enum for storing game window state
@@ -91,6 +103,9 @@ func NewGameWindow(x, y, width, height, consoleWidth, consoleHeight int, input, 
 	//gw.log.Println(logging.LogInfo, "Character ID: ", gw.characterID)
 	go gw.Listen()
 	gw.SetupVisibleMap()
+	gw.RequestInventoryUpdate(nil, "")
+	gw.DisplayInventoryAfterReceive(false)
+	gw.LockPendingInventory()
 	return gw
 }
 
@@ -100,12 +115,18 @@ func (gw *GameWindow) UpdateContents() {
 	case GW_DefaultView:
 		//gw.log.Println(logging.LogInfo, "Requesting Window View")
 		gw.SendToConsole(messages.WindowMessage{Type: messages.WM_GameCommand, Data: messages.GameManagerMessage{Type: messages.GameManager_GetCharacterView, Data: messages.GameMessageData{CharacterID: gw.GetCharacterInfoField("id"), Data: messages.GameViewDimensions{Width: gw.Width, Height: gw.Height}}}})
-		gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
+		//gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
 		gw.DrawStatusBar()
 		gw.DrawMenus()
-		if gw.CloseMenu {
-			gw.RemoveMenuBox(gw.Menus[0])
-			gw.CloseMenu = false
+		if gw.CloseMenus {
+			for _, menu := range gw.Menus {
+				gw.RemoveMenuBox(menu)
+			}
+			gw.CloseMenus = false
+			gw.InventoryDisplayType = edenitems.ItemTypeNull
+			gw.MenuCallback = nil
+			gw.InventoryCallbackPrompt = ""
+			//gw.SetStatusBarMessage("")
 		}
 
 		// At center of window draw an @
@@ -113,6 +134,12 @@ func (gw *GameWindow) UpdateContents() {
 		gw.DrawMap()
 		//xgw.RequestFlushFromConsole()
 	}
+}
+
+func (gw *GameWindow) SetStatusBarMessage(message string) {
+	gw.StatusBarMutex.Lock()
+	defer gw.StatusBarMutex.Unlock()
+	gw.StatusBarMessage = message
 }
 
 func (gw *GameWindow) DrawStatusBar() {
@@ -148,25 +175,6 @@ func (gw *GameWindow) PrintStringToStatusBar(x, y int, input string, escapeCode 
 	for i, character := range input {
 		// Using gw.DrawToVisibleMap for each point
 		gw.DrawToVisibleMap(x+i, y+gw.Y+gw.Height-4, string(character), escapeCode)
-	}
-}
-
-// Listen listens for any messages on cw.ReceiveMessages Chan and handles them
-func (gw *GameWindow) Listen() {
-	for {
-		select {
-		case receivedMessage := <-gw.ConsoleReceive:
-			message := receivedMessage.Data.(messages.GameMessage).Type
-			switch message {
-			case messages.GM_CharacterPosition:
-				//gw.log.Println(logging.LogInfo, "Game Window received message from console ", receivedMessage.Data.(messages.GameMessage).Data.Data)
-				continue
-			case messages.GM_CharacterView:
-				//gw.log.Println(logging.LogInfo, "Game Window received view from console")
-				gw.drawView(receivedMessage.Data.(messages.GameMessage).Data.Data.(messages.GameCharView))
-
-			}
-		}
 	}
 }
 
@@ -233,4 +241,23 @@ func (gw *GameWindow) SetupVisibleMap() {
 // UpdateParams is used when handling resize events to update the various window parameters in a safe state
 func (gw *GameWindow) PostUpdateParams() {
 	gw.SetupVisibleMap()
+}
+
+func (gw *GameWindow) UpdateMenuCallback(callback interface{}) {
+	gw.MenusMutex.Lock()
+	defer gw.MenusMutex.Unlock()
+	gw.MenuCallback = callback
+}
+
+func (gw *GameWindow) LockPendingInventory() {
+	gw.PendingInventoryMutex.Lock()
+	gw.PendingInventory = true
+}
+
+func (gw *GameWindow) UnlockPendingInventory() {
+	//gw.PendingInventoryMutex.Lock()
+	if gw.PendingInventory {
+		gw.PendingInventoryMutex.Unlock()
+		gw.PendingInventory = false
+	}
 }

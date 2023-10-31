@@ -93,7 +93,7 @@ func main() {
 	}
 
 	gameManagerReceiver := make(chan messages.GameManagerMessage)
-	_, err = InitGameManager(gameManagerReceiver, connectionManagerReceive, dbConn, log)
+	_, err = InitGameManager(gameManagerReceiver, connectionManagerReceive, dbConn, log, &conf)
 	if err != nil {
 		log.Println(logging.LogFatal, "Error initializing game manager: ", err)
 	}

@@ -87,6 +87,9 @@ func (c *Console) HandleInput(rawInput byte) {
 			c.escapeSequence = false
 			return
 		}
+		/*else if rawInput == 'O' {
+			c.InputToActiveWindow(types.Input{Type: types.InputEscape})
+		}*/
 		c.escapeBuffer = ""
 		c.escapeSequence = false
 		return

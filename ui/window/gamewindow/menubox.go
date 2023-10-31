@@ -1,10 +1,39 @@
 package gamewindow
 
 import (
+	"fmt"
+	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
+	"github.com/yamamushi/EscapingEden/ui/types"
+	"log"
+	"sync"
 )
 
+type MenuType int
+
+const (
+	MenuTypeNull MenuType = iota
+	MenuTypeInventory
+)
+
+type MenuBoxType interface {
+	HandleInput(*GameWindow, types.InputType, string)
+	Draw(*GameWindow)
+	Clear(*GameWindow)
+	DrawTitle(*GameWindow)
+	DrawBorder(*GameWindow)
+	DrawMenuItems(*GameWindow)
+	DrawPopupMenu(*GameWindow)
+	PrintToMenu(*GameWindow, int, int, string, string)
+	CloseMenus(*GameWindow)
+	SetCallbackStatusBarMessage(string)
+	GetCallbackDataString() string
+	GetType() MenuType
+	ToggleHotkeyCheck(bool)
+}
+
 type MenuBox struct {
+	Type MenuType
 	// The menu box's position
 	X, Y int
 	// The menu box's width and height
@@ -12,10 +41,13 @@ type MenuBox struct {
 	// The menu box's title
 	Title string
 	// The menu box's options
-	Options          []MenuBoxOption
-	ResponseCallback interface{}
-	PopupMenu        *MenuBox
-	CallbackData     interface{} // Arbitrary data we can unpack later
+	Options                  []MenuBoxOption
+	ResponseCallback         interface{}
+	PopupMenu                *MenuBox
+	CallbackData             interface{} // Arbitrary data we can unpack later
+	StatusBarMessageMutex    sync.Mutex
+	CallbackStatusBarMessage string
+	CheckHotkeys             bool
 }
 
 type MenuBoxOption struct {
@@ -28,24 +60,37 @@ type MenuBoxOption struct {
 	Order      int
 }
 
-func (mb *MenuBox) HandleInput(gw *GameWindow, input string) {
-	gw.Log.Println(logging.LogInfo, "Menubox received input: ", input)
+func (mb *MenuBox) CloseMenus(gw *GameWindow) {
+	gw.CloseMenus = true
+}
+
+func (mb *MenuBox) ToggleHotkeyCheck(toggle bool) {
+	mb.CheckHotkeys = toggle
+}
+
+func (mb *MenuBox) HandleInput(gw *GameWindow, inputType types.InputType, input string) {
+	//gw.Log.Println(logging.LogInfo, "Menubox received input: ", input)
 	// Handle input for the menu box
 	// First check if the input is a keybind
+	if inputType == types.InputEscape {
+		mb.CloseMenus(gw)
+		return
+	}
 	if mb.ResponseCallback != nil {
-		gw.Log.Println(logging.LogInfo, "Menubox called response callback ")
-
+		//gw.Log.Println(logging.LogInfo, "Menubox has response callback")
 		switch mb.ResponseCallback.(type) {
 		case func(*MenuBox, string):
 			mb.ResponseCallback.(func(*MenuBox, string))(mb, input)
+			//gw.Log.Println(logging.LogInfo, "Menubox called response callback ")
+
 		default:
-			gw.Log.Println(logging.LogInfo, "Menubox called response callback and failed")
+			gw.Log.Println(logging.LogInfo, "Menubox could not find callback")
 		}
 		return
 	}
 	for _, option := range mb.Options {
 		if input == option.Keybind {
-			gw.Log.Println(logging.LogInfo, "Menubox received input for ", option.Name)
+			//gw.Log.Println(logging.LogInfo, "Menubox received input for ", option.Name)
 			// If it is, call the callback
 			switch option.Callback.(type) {
 			case func(box *MenuBox):
@@ -53,7 +98,11 @@ func (mb *MenuBox) HandleInput(gw *GameWindow, input string) {
 			case func():
 				option.Callback.(func())()
 			case func(string):
+				option.Callback.(func(string))(input)
+			case func(*MenuBox, string):
 				option.Callback.(func(*MenuBox, string))(mb, input)
+			default:
+				log.Println(fmt.Sprintf("Unhandled type of callback %T", option.Callback))
 			}
 		} else if int(input[0]) == option.ControlKey {
 			// If it is, call the callback
@@ -69,10 +118,20 @@ func (mb *MenuBox) HandleInput(gw *GameWindow, input string) {
 
 func (mb *MenuBox) Draw(gw *GameWindow) {
 	mb.Clear(gw)
+	mb.DrawMenuItems(gw)
 	mb.DrawBorder(gw)
 	mb.DrawTitle(gw)
-	mb.DrawMenuItems(gw)
 	mb.DrawPopupMenu(gw)
+	mb.StatusBarMessageMutex.Lock()
+	defer mb.StatusBarMessageMutex.Unlock()
+	gw.SetStatusBarMessage(mb.CallbackStatusBarMessage)
+}
+
+func (mb *MenuBox) SetCallbackStatusBarMessage(input string) {
+	mb.StatusBarMessageMutex.Lock()
+	defer mb.StatusBarMessageMutex.Unlock()
+	//log.Println("Setting callback status bar message to: ", input)
+	mb.CallbackStatusBarMessage = input
 }
 
 func (mb *MenuBox) Clear(gw *GameWindow) {
@@ -97,14 +156,14 @@ func (mb *MenuBox) DrawBorder(gw *GameWindow) {
 	for i := 0; i < mb.Width; i++ {
 		// Draw the top of the box
 		if gw.Active {
-			gw.DrawToVisibleMap(mb.X+i, mb.Y, "\u2500", "\033[32m")
+			gw.DrawToVisibleMap(mb.X+i, mb.Y, edenutil.UCHorizontalBorder, "\033[32m")
 			// Draw the bottom of the box
-			gw.DrawToVisibleMap(mb.X+i, mb.Y+mb.Height-1, "\u2500", "\033[32m")
+			gw.DrawToVisibleMap(mb.X+i, mb.Y+mb.Height-1, edenutil.UCHorizontalBorder, "\033[32m")
 
 		} else {
-			gw.DrawToVisibleMap(mb.X+i, mb.Y, "\u2500", "")
+			gw.DrawToVisibleMap(mb.X+i, mb.Y, edenutil.UCHorizontalBorder, "")
 			// Draw the bottom of the box
-			gw.DrawToVisibleMap(mb.X+i, mb.Y+mb.Height-1, "\u2500", "")
+			gw.DrawToVisibleMap(mb.X+i, mb.Y+mb.Height-1, edenutil.UCHorizontalBorder, "")
 		}
 
 	}
@@ -112,26 +171,26 @@ func (mb *MenuBox) DrawBorder(gw *GameWindow) {
 	for i := 0; i < mb.Height; i++ {
 		// Draw the left of the box
 		if gw.Active {
-			gw.DrawToVisibleMap(mb.X, mb.Y+i, "\u2502", "\033[32m")
+			gw.DrawToVisibleMap(mb.X, mb.Y+i, edenutil.UCVerticalBorder, "\033[32m")
 			// Draw the right of the box
-			gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+i, "\u2502", "\033[32m")
+			gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+i, edenutil.UCVerticalBorder, "\033[32m")
 		} else {
-			gw.DrawToVisibleMap(mb.X, mb.Y+i, "\u2502", "")
+			gw.DrawToVisibleMap(mb.X, mb.Y+i, edenutil.UCVerticalBorder, "")
 			// Draw the right of the box
-			gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+i, "\u2502", "")
+			gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+i, edenutil.UCVerticalBorder, "")
 		}
 	}
 	// Draw the corners of the box
 	if gw.Active {
-		gw.DrawToVisibleMap(mb.X, mb.Y, "\u250C", "\033[32m")
-		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y, "\u2510", "\033[32m")
-		gw.DrawToVisibleMap(mb.X, mb.Y+mb.Height-1, "\u2514", "\033[32m")
-		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+mb.Height-1, "\u2518", "\033[32m")
+		gw.DrawToVisibleMap(mb.X, mb.Y, edenutil.UCTopLeftBorder, "\033[32m")
+		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y, edenutil.UCTopRightBorder, "\033[32m")
+		gw.DrawToVisibleMap(mb.X, mb.Y+mb.Height-1, edenutil.UCBottomLeftBorder, "\033[32m")
+		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+mb.Height-1, edenutil.UCBottomRightBorder, "\033[32m")
 	} else {
-		gw.DrawToVisibleMap(mb.X, mb.Y, "\u250C", "")
-		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y, "\u2510", "")
-		gw.DrawToVisibleMap(mb.X, mb.Y+mb.Height-1, "\u2514", "")
-		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+mb.Height-1, "\u2518", "")
+		gw.DrawToVisibleMap(mb.X, mb.Y, edenutil.UCTopLeftBorder, "")
+		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y, edenutil.UCTopRightBorder, "")
+		gw.DrawToVisibleMap(mb.X, mb.Y+mb.Height-1, edenutil.UCBottomLeftBorder, "")
+		gw.DrawToVisibleMap(mb.X+mb.Width-1, mb.Y+mb.Height-1, edenutil.UCBottomRightBorder, "")
 	}
 }
 
@@ -142,9 +201,9 @@ func (mb *MenuBox) DrawMenuItems(gw *GameWindow) {
 			continue
 		}
 		// Draw the keybind
-		gw.PrintStringToMap(mb.X+2, mb.Y+i+2, option.Keybind+")", "")
+		mb.PrintToMenu(gw, 2, i+2, option.Keybind+")", "")
 		// Draw the name
-		gw.PrintStringToMap(mb.X+5, mb.Y+i+2, option.Name, "")
+		mb.PrintToMenu(gw, 5, i+2, option.Name, "")
 	}
 }
 
@@ -153,4 +212,24 @@ func (mb *MenuBox) DrawPopupMenu(gw *GameWindow) {
 	if mb.PopupMenu != nil {
 		mb.PopupMenu.Draw(gw)
 	}
+}
+
+func (mb *MenuBox) PrintToMenu(gw *GameWindow, x, y int, input string, escapeCode string) {
+	if x > mb.Width-1 || x < 0 {
+		return
+	}
+	if y > mb.Height-1 || y < 0 {
+		return
+	}
+	for i, character := range input {
+		gw.DrawToVisibleMap(mb.X+x+i, mb.Y+y, string(character), escapeCode)
+	}
+}
+
+func (mb *MenuBox) GetCallbackDataString() string {
+	return mb.CallbackData.(string)
+}
+
+func (mb *MenuBox) GetType() MenuType {
+	return mb.Type
 }

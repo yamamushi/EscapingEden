@@ -1,6 +1,7 @@
 package messages
 
 import (
+	"github.com/yamamushi/EscapingEden/edenitems"
 	"github.com/yamamushi/EscapingEden/ui/util"
 	"time"
 )
@@ -14,13 +15,18 @@ type CharacterInfo struct {
 	InventoryID string `storm:"unique"`
 	Initialized bool
 	Position    struct {
-		X int
-		Y int
-		Z int
+		MapChunkID string
+		X          int
+		Y          int
+		Z          int
 	}
 	LastLoginTime time.Time
 	FirstLogin    int // 0 = false, 1 = true
 	Error         string
+
+	// The character's inventory
+	Inventory    []edenitems.Item
+	CurrentMapID string
 }
 
 type PlayerViewHistoryCoordinate struct {

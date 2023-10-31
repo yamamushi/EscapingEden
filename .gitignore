@@ -6,3 +6,4 @@ tmp/
 EscapingEden
 deploy.sh
 *.map
+update-assets.sh

@@ -8,6 +8,7 @@ const (
 	GMError_NameAlreadyExists
 	GMError_HistoryUpdatePermissionError
 	GMError_InvalidName
+	GMError_FailedLoadInventory
 )
 
 func (GMe GMErrorType) Error() string {
@@ -36,6 +37,8 @@ const (
 	GameManager_GetCharacterPosition
 	GameManager_GetCharacterView
 	GameManager_MoveCharacter
+	GameManager_RequestInventory
+	GameManager_DigCommand
 )
 
 type GameManagerMessage struct {
@@ -43,4 +46,5 @@ type GameManagerMessage struct {
 	SenderConsoleID    string                 `json:"sender_id"`
 	RecipientConsoleID string                 `json:"recipient_id"`
 	Data               interface{}            `json:"data"`
+	Error              GMErrorType            `json:"error"`
 }

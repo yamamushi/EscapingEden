@@ -29,16 +29,24 @@ const Escape = byte('\033')
 // Telnet Options
 const (
 	ECHO     = byte(1)
+	SUPPRESS = byte(3)
+	STATUS   = byte(5)
 	TTYPE    = byte(24)
 	NAWS     = byte(31)
+	SPEED    = byte(32)
+	RFLOW    = byte(33)
 	LINEMODE = byte(34)
+	XDISPLOC = byte(35)
+	AUTH     = byte(37)
+	ENCRYPT  = byte(38)
+	NEWENV   = byte(39)
 	EOR      = byte(239)
 )
 
 // RequestTerminalType sends the terminal type request
 func RequestTerminalType(conn net.Conn) (string, error) {
-	conn.Write([]byte{IAC, DO, 24})
-	conn.Write([]byte{IAC, SB, 24, 1, IAC, SE})
+	conn.Write([]byte{IAC, DO, TTYPE})
+	conn.Write([]byte{IAC, SB, TTYPE, ECHO, IAC, SE})
 
 	var buf []byte
 	// Read until SE is read
@@ -48,8 +56,9 @@ func RequestTerminalType(conn net.Conn) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if b[0] != IAC && b[0] != SE && b[0] != WILL && b[0] != WONT && b[0] != TTYPE &&
-			b[0] != DO && b[0] != DONT && b[0] != SB && b[0] != NAWS && b[0] != 0 {
+		if b[0] != IAC && b[0] != SE && b[0] != WILL && b[0] != WONT && b[0] != TTYPE && b[0] != RFLOW && b[0] != LINEMODE &&
+			b[0] != DO && b[0] != DONT && b[0] != SB && b[0] != NAWS && b[0] != SUPPRESS && b[0] != STATUS &&
+			b[0] != ENCRYPT && b[0] != SPEED && b[0] != AUTH && b[0] != NEWENV && b[0] != XDISPLOC && b[0] != 0 {
 			buf = append(buf[:], b[0])
 		}
 
@@ -61,30 +70,53 @@ func RequestTerminalType(conn net.Conn) (string, error) {
 
 // RequestTerminalSize requests the terminal size
 func RequestTerminalSize(conn net.Conn) (height, width int, err error) {
-	conn.Write([]byte{IAC, DO, 31})
-	conn.Write([]byte{IAC, SB, 31, 1, IAC, SE})
+	conn.Write([]byte{IAC, DO, NAWS})
+	conn.Write([]byte{IAC, SB, NAWS, ECHO, IAC, SE})
 
 	var buf []byte
-	// Read until SE is read
-	for {
-		b := make([]byte, 1)
+	b := make([]byte, 1)
+	_, err = conn.Read(b)
+	if err != nil {
+		return 0, 0, err
+	}
+	if b[0] == IAC {
 		_, err := conn.Read(b)
 		if err != nil {
-			//log.Println(err)
 			return 0, 0, err
 		}
-		buf = append(buf[:], b[0])
-		if b[0] == SE {
-			if len(buf) == 12 {
-				height = int(buf[9])
-				width = int(buf[7])
-			} else {
-				return 0, 0, errors.New("client sent invalid terminal size response")
+		if b[0] == WILL || b[0] == SB {
+			_, err := conn.Read(b)
+			if err != nil {
+				return 0, 0, err
 			}
-			break
+			if b[0] == NAWS {
+				// Now we read the next 8 bytes, which should be a telnet subnegotiation for NAWS
+				// We only care about the 4th and 6th bytes which are width and height respectively
+				_, err := conn.Read(b)
+				if err != nil {
+					return 0, 0, err
+				}
+				for b[0] != SE {
+					_, err := conn.Read(b)
+					if err != nil {
+						return 0, 0, err
+					}
+					buf = append(buf[:], b[0])
+				}
+				// If our last byte is SE, then we have a valid response, otherwise the client send us a bad response
+				height = int(buf[len(buf)-3])
+				width = int(buf[len(buf)-5])
+				return height, width, nil
+
+			} else {
+				return 0, 0, errors.New("client sent invalid terminal size response at expected SB or NAWS")
+			}
+		} else {
+			return 0, 0, errors.New("client sent invalid terminal size response at expected WILL")
 		}
+	} else {
+		return 0, 0, errors.New("client sent invalid terminal size response at expected IAC")
 	}
-	return height, width, nil
 }
 
 // DisableEcho disables echo

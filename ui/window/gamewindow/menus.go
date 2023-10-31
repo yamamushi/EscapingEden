@@ -7,24 +7,27 @@ const (
 	MenuType_Default GameMenuType = iota
 	MenuType_Inventory
 	MenuType_Build
+	MenuType_Dig
 )
 
 func (gw *GameWindow) CreateMenu(menuType GameMenuType) {
 	switch menuType {
 	case MenuType_Build:
 		gw.BuildMenu()
+	case MenuType_Dig:
+		gw.DigMenu()
 
 	}
 }
 
-func (gw *GameWindow) AddMenuBox(mb *MenuBox) {
+func (gw *GameWindow) AddMenuBox(mb MenuBoxType) {
 	gw.MenusMutex.Lock()
 	defer gw.MenusMutex.Unlock()
 	gw.Menus = append(gw.Menus, mb)
 }
 
 // not sure if this actually works or not
-func (gw *GameWindow) RemoveMenuBox(mb *MenuBox) {
+func (gw *GameWindow) RemoveMenuBox(mb MenuBoxType) {
 	gw.MenusMutex.Lock()
 	defer gw.MenusMutex.Unlock()
 	for i, menu := range gw.Menus {
