@@ -5,7 +5,6 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"log"
 )
 
 func (gm *GameManager) GetCharacterView(charID string, width, height int) (messages.GameCharView, error) {
@@ -19,7 +18,6 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 	gm.activeCharactersMutex.Lock()
 	posX := character.Position.X
 	posY := character.Position.Y
-	log.Println("posX", posX, "posY", posY)
 	charSymbol := "@"
 	charEscapeCode := character.FGColor.FG() + character.BGColor.BG()
 	// dimensions, these are static right now, but we'll get these from the config later
@@ -61,7 +59,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 
 	offsetX := width / 2
 	offsetY := height / 2
-	radius := 6
+	radius := 8
 
 	// Now we loop through the plane, do our checks for each point and draw
 	// Prepare vars
@@ -117,10 +115,9 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 				if deltaMapChunk != nil {
 					deltaMapLenX := len(deltaMapChunk.TileMap)
 					deltaMapLenY := len(deltaMapChunk.TileMap[0])
-
-					// Adjust mapX and mapY based on deltaX and deltaY
-					mapX = (mapX - deltaX*deltaMapLenX) % deltaMapLenX
-					mapY = (mapY - deltaY*deltaMapLenY) % deltaMapLenY
+					//log.Println("mapX, mapY", mapX, mapY)
+					originalMapX := mapX
+					originalMapY := mapY
 
 					if mapX < 0 {
 						mapX += deltaMapLenX
@@ -129,22 +126,32 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 						mapY += deltaMapLenY
 					}
 
-					// NEEDS RADIUS CHECK
-					// NEEDS SIDELOADING PLAYERS
-					playercheck := gm.GetCharacterAt(currentMap, mapX, mapY)
-					if playercheck != nil && playercheck.ID != charID {
-						plane[j][i].Character = "@"
-						plane[j][i].EscapeCode = playercheck.FGColor.FG() + playercheck.BGColor.BG()
-					} else {
-						if currentMap.TileMap[mapX][mapY][0].Passable {
-							plane[j][i].Character = "."
+					if mapX > deltaMapLenX-1 {
+						mapX -= deltaMapLenX
+					}
+					if mapY > deltaMapLenY-1 {
+						mapY -= deltaMapLenY
+					}
+
+					//log.Println("mapX, mapY", mapX, mapY)
+					//log.Println("deltas", deltaX, deltaY)
+
+					// Needs testing to verify player loading is working as intended
+					distanceSquared := float64((originalMapX-posX)*(originalMapX-posX) + (originalMapY-posY)*(originalMapY-posY))
+					if distanceSquared <= float64(radius*radius) {
+						playercheck := gm.GetCharacterAt(deltaMapChunk, mapX, mapY)
+						if playercheck != nil && playercheck.ID != charID {
+							plane[j][i].Character = "@"
+							plane[j][i].EscapeCode = playercheck.FGColor.FG() + playercheck.BGColor.BG()
 						} else {
-							plane[j][i].Character = "\u2588"
+							if deltaMapChunk.TileMap[mapX][mapY][0].Passable {
+								plane[j][i].Character = "."
+							} else {
+								plane[j][i].Character = "\u2588"
+							}
 						}
 					}
 				}
-
-				//plane[j][i].Character = "#" // Draw out of bounds as walls for simplicity
 			}
 		}
 	}
