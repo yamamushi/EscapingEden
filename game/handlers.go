@@ -178,7 +178,7 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 					response := messages.ConnectionManagerMessage{
 						Type:               messages.ConnectManager_Message_GameCommandResponse,
 						RecipientConsoleID: managerMessage.SenderConsoleID,
-						Data:               messages.GameMessage{Type: messages.GM_FailedDig},
+						Data:               messages.GameMessage{Type: messages.GM_FailedBuildWall},
 					}
 					gm.SendChannel <- response
 				}

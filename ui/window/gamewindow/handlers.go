@@ -33,6 +33,13 @@ func (gw *GameWindow) Listen() {
 					gw.Menus[0].SetCallbackStatusBarMessage("You can't dig there.")
 				}
 				gw.SetStatusBarMessage("You can't dig there.")
+
+			case messages.GM_FailedBuildWall:
+				//gw.Log.Println(logging.LogInfo, "Game Window received failed build wall message from console")
+				if len(gw.Menus) > 0 {
+					gw.Menus[0].SetCallbackStatusBarMessage("You can't build there.")
+				}
+				gw.SetStatusBarMessage("You can't build there.")
 			}
 		}
 	}

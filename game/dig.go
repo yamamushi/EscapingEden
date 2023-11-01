@@ -29,5 +29,7 @@ func (gm *GameManager) HandleDigRequest(itemID string, charID string, deltaX, de
 		return errors.New("tile is already floor")
 	}
 	tile.TileType = "floor"
+	gm.FixWallAlignment(charID, character.Position.X+deltaX, character.Position.Y+deltaY, 0, true)
+
 	return nil
 }

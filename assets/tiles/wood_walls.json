@@ -1,0 +1,131 @@
+[
+  {
+    "TileType": "wood_wall_vertical",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2551",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_horizontal",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2550",
+    "FG": 130,
+    "BG": 0
+
+  },
+  {
+    "TileType": "wood_wall_top_left",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2554",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_top_right",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2557",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_bottom_left",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u255A",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_bottom_right",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u255D",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u25A2",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_vertical_north",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2568",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_vertical_south",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2565",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_horizontal_east",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u255E",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_horizontal_west",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2561",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_north_east_south",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2560",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_north_west_south",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2563",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_south_east_west",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2566",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_north_east_west",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2569",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_north_east_south_west",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u256C",
+    "FG": 130,
+    "BG": 0
+  }
+]

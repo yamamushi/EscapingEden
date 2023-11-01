@@ -19,6 +19,7 @@ const (
 	GM_QuitConsole
 	GM_FailedLoadInventory
 	GM_FailedDig
+	GM_FailedBuildWall
 
 	// Message to the game manager
 
