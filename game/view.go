@@ -89,13 +89,9 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 							plane[j][i].Character = "@"
 							plane[j][i].EscapeCode = playercheck.FGColor.FG() + playercheck.BGColor.BG()
 						} else {
-							if currentMap.TileMap[mapX][mapY][0].TileType == "floor" {
-								plane[j][i].Character = "."
-								plane[j][i].EscapeCode = "\033[38;5;130m"
-							} else {
-								plane[j][i].Character = "\u2588"
-								plane[j][i].EscapeCode = "\033[38;5;240m"
-							}
+							tileInfo := gm.GetTileInfo(&currentMap.TileMap[mapX][mapY][0])
+							plane[j][i].Character = tileInfo.Character
+							plane[j][i].EscapeCode = tileInfo.EscapeCode()
 						}
 					}
 				}
@@ -147,13 +143,9 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 							plane[j][i].Character = "@"
 							plane[j][i].EscapeCode = playercheck.FGColor.FG() + playercheck.BGColor.BG()
 						} else {
-							if deltaMapChunk.TileMap[mapX][mapY][0].TileType == "floor" {
-								plane[j][i].Character = "."
-								plane[j][i].EscapeCode = "\033[38;5;130m"
-							} else {
-								plane[j][i].Character = "\u2588"
-								plane[j][i].EscapeCode = "\033[38;5;240m"
-							}
+							tileInfo := gm.GetTileInfo(&deltaMapChunk.TileMap[mapX][mapY][0])
+							plane[j][i].Character = tileInfo.Character
+							plane[j][i].EscapeCode = tileInfo.EscapeCode()
 						}
 					}
 				}

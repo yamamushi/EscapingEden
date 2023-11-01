@@ -1,6 +1,9 @@
 package game
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
 
 type World struct {
 	// World is a struct for storing world data, because it has the potential to grow quite large
@@ -32,4 +35,14 @@ type TileInfo struct {
 	TileType     string
 	Passable     bool
 	BlocksVision bool
+	Character    string
+	FG           int
+	BG           int
+}
+
+func (ti *TileInfo) EscapeCode() string {
+	fg := strconv.Itoa(ti.FG)
+	bg := strconv.Itoa(ti.BG)
+
+	return "\033[38;5;" + fg + "m" + "\033[48;5;" + bg + "m"
 }

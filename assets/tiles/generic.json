@@ -1,0 +1,18 @@
+[
+  {
+    "TileType": "wall",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2588",
+    "FG": 240,
+    "BG": 0
+  },
+  {
+    "TileType": "floor",
+    "Passable": true,
+    "BlocksVision": false,
+    "Character": ".",
+    "FG": 130,
+    "BG": 0
+  }
+]

@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/gob"
+	"encoding/json"
 	"errors"
+	"github.com/yamamushi/EscapingEden/logging"
 	"os"
 )
 
@@ -61,10 +63,10 @@ func (gm *GameManager) CreateMapChunk(x, y, z int, gX, gY, gZ int, ID string) Ma
 		for j := range tiles[i] {
 			tiles[i][j] = make([]Tile, z)
 			for k := range tiles[i][j] {
-				// Initialize each point if needed.
+				// Initialize each point as a floor tile
 				tiles[i][j][k] = Tile{
 					TileType: "floor",
-				} // Example initialization.
+				}
 			}
 		}
 	}
@@ -80,22 +82,69 @@ func (gm *GameManager) CreateMapChunk(x, y, z int, gX, gY, gZ int, ID string) Ma
 	}
 }
 
-func (gm *GameManager) GetTileType(tile *Tile) TileInfo {
+func (gm *GameManager) GetTileInfo(tile *Tile) TileInfo {
 	return gm.TileTypes[tile.TileType]
 }
 
 func (gm *GameManager) LoadTileTypes() {
 	gm.TileTypes = make(map[string]TileInfo)
+	gm.LoadTileTypesFromAssets("./assets/tiles")
+}
 
-	gm.TileTypes["floor"] = TileInfo{
-		TileType:     "floor",
-		Passable:     true,
-		BlocksVision: false,
+func (gm *GameManager) LoadTileTypesFromAssets(directoryPath string) {
+	// Check that tiles directory exists in assets/ and is not empty
+	// If it is, panic and exit
+	// If it isn't, load all the tiles into the map
+
+	_, err := os.Stat(directoryPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			gm.Log.Println(logging.LogError, "Directory does not exist\n", directoryPath)
+		} else {
+			gm.Log.Println(logging.LogError, "Error checking directory: %v\n", err)
+		}
+		os.Exit(1)
 	}
 
-	gm.TileTypes["wall"] = TileInfo{
-		TileType:     "wall",
-		Passable:     false,
-		BlocksVision: true,
+	files, err := os.ReadDir(directoryPath)
+	if err != nil {
+		gm.Log.Println(logging.LogError, "Error reading directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(files) == 0 {
+		gm.Log.Println(logging.LogError, "Directory is empty\n", directoryPath)
+		os.Exit(1)
+	}
+
+	// Load all the tiles into the map, they are TileInfo json files
+	// We will use the TileInfo.TileType as the key
+	// We will use the TileInfo as the value
+
+	for _, file := range files {
+		// Load the file
+		// Decode the file into a TileInfo struct
+		// Add the TileInfo to the map
+		if file.IsDir() {
+			gm.LoadTileTypesFromAssets(directoryPath + "/" + file.Name())
+		} else {
+			content, err := os.ReadFile(directoryPath + "/" + file.Name())
+			if err != nil {
+				gm.Log.Println(logging.LogError, "Error reading file while loading tile types: \n", err)
+				os.Exit(1)
+			}
+
+			var tileInfo []TileInfo
+			err = json.Unmarshal(content, &tileInfo)
+			if err != nil {
+				gm.Log.Println(logging.LogError, "Error unmarshalling tile info: \n", err)
+				os.Exit(1)
+			}
+
+			for _, tileType := range tileInfo {
+				gm.TileTypes[tileType.TileType] = tileType
+			}
+
+		}
 	}
 }

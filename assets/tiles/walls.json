@@ -1,0 +1,116 @@
+[
+
+{
+  "TileType": "stone_wall_vertical",
+  "Passable": false,
+  "BlocksVision": true,
+  "Character": "\u2551",
+  "FG": 240,
+  "BG": 0
+},
+{
+  "TileType": "stone_wall_horizontal",
+  "Passable": false,
+  "BlocksVision": true,
+  "Character": "\u2550",
+  "FG": 240,
+  "BG": 0
+},
+{
+  "TileType": "stone_wall_top_left",
+  "Passable": false,
+  "BlocksVision": true,
+  "Character": "\u2554",
+  "FG": 240,
+  "BG": 0
+},
+{
+  "TileType": "stone_wall_top_right",
+  "Passable": false,
+  "BlocksVision": true,
+  "Character": "\u2557",
+  "FG": 240,
+  "BG": 0
+},
+{
+  "TileType": "stone_wall_bottom_left",
+  "Passable": false,
+  "BlocksVision": true,
+  "Character": "\u255A",
+  "FG": 240,
+  "BG": 0
+},
+{
+  "TileType": "stone_wall_bottom_right",
+  "Passable": false,
+  "BlocksVision": true,
+  "Character": "\u255D",
+  "FG": 240,
+  "BG": 0
+},
+  {
+    "TileType": "stone_wall",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u25A1",
+    "FG": 240,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_vertical",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2551",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_horizontal",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2550",
+    "FG": 130,
+    "BG": 0
+
+  },
+  {
+    "TileType": "wood_wall_top_left",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2554",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_top_right",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u2557",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_bottom_left",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u255A",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall_bottom_right",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u255D",
+    "FG": 130,
+    "BG": 0
+  },
+  {
+    "TileType": "wood_wall",
+    "Passable": false,
+    "BlocksVision": true,
+    "Character": "\u25A2",
+    "FG": 130,
+    "BG": 0
+  }
+]
