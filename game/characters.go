@@ -2,7 +2,7 @@ package game
 
 import (
 	"errors"
-	"github.com/yamamushi/EscapingEden/edenitems"
+	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
@@ -82,7 +82,7 @@ func (gm *GameManager) MovePlayerToMap(characterID string, currentMapID string) 
 		gm.Log.Println(logging.LogError, "Failed to update character after moving to new mapchunk", err.Error())
 		return err
 	}
-	gm.Log.Println(logging.LogInfo, "Map Transfer", character.CurrentMapID)
+	//gm.Log.Println(logging.LogInfo, "Map Transfer", character.CurrentMapID)
 	return nil
 }
 
@@ -118,17 +118,17 @@ func (gm *GameManager) GetCharacterName(characterID string) (name string) {
 	return ""
 }
 
-func (gm *GameManager) GetCharacterInventory(characterID string) ([]edenitems.Item, error) {
+func (gm *GameManager) GetCharacterInventory(characterID string) ([]edentypes.Item, error) {
 	gm.activeCharactersMutex.Lock()
 	defer gm.activeCharactersMutex.Unlock()
 	for i, character := range gm.ActiveCharacters {
 		if character.ID == characterID {
 			if len(gm.ActiveCharacters[i].Record.Inventory) == 0 {
 				// Add some default items to the inventory
-				inventory := []edenitems.Item{}
+				inventory := []edentypes.Item{}
 				for j := 0; j < 10; j++ {
 					id := edenutil.GenerateID()
-					wood := edenitems.Item{ID: id, Name: "Wood", Description: "A piece of wood.", Type: edenitems.ItemMaterial, Weight: 1, Stackable: true}
+					wood := edentypes.Item{ID: id, Name: "Wood", Description: "A piece of wood.", Type: edentypes.ItemMaterial, Weight: 1, Stackable: true}
 					err := gm.DB.AddRecord("Items", &wood)
 					if err != nil {
 						gm.Log.Println(logging.LogError, "Failed to add item to DB:", err.Error())
@@ -137,7 +137,7 @@ func (gm *GameManager) GetCharacterInventory(characterID string) ([]edenitems.It
 				}
 				for j := 0; j < 10; j++ {
 					id := edenutil.GenerateID()
-					stone := edenitems.Item{ID: id, Name: "Stone", Description: "A piece of stone.", Type: edenitems.ItemMaterial, Weight: 1, Stackable: true}
+					stone := edentypes.Item{ID: id, Name: "Stone", Description: "A piece of stone.", Type: edentypes.ItemMaterial, Weight: 1, Stackable: true}
 					err := gm.DB.AddRecord("Items", &stone)
 					if err != nil {
 						gm.Log.Println(logging.LogError, "Failed to add item to DB:", err.Error())
@@ -147,7 +147,7 @@ func (gm *GameManager) GetCharacterInventory(characterID string) ([]edenitems.It
 				pickid := edenutil.GenerateID()
 				pickaxeAttributes := make(map[string]bool)
 				pickaxeAttributes["digging"] = true
-				pickaxe := edenitems.Item{ID: pickid, Name: "Pickaxe", Description: "A pickaxe that looks like it should be suitable for digging through stone", Type: edenitems.ItemTool, Weight: 5, Stackable: false, Attributes: pickaxeAttributes}
+				pickaxe := edentypes.Item{ID: pickid, Name: "Pickaxe", Description: "A pickaxe that looks like it should be suitable for digging through stone", Type: edentypes.ItemTool, Weight: 5, Stackable: false, Attributes: pickaxeAttributes}
 				err := gm.DB.AddRecord("Items", &pickaxe)
 				if err != nil {
 					gm.Log.Println(logging.LogError, "Failed to add item to DB:", err.Error())
@@ -159,7 +159,7 @@ func (gm *GameManager) GetCharacterInventory(characterID string) ([]edenitems.It
 			return gm.ActiveCharacters[i].Record.Inventory, nil
 		}
 	}
-	return []edenitems.Item{}, errors.New("character not found")
+	return []edentypes.Item{}, errors.New("character not found")
 }
 
 func (gm *GameManager) RemoveFromCharacterInventory(characterID string, itemID string) error {
@@ -179,7 +179,7 @@ func (gm *GameManager) RemoveFromCharacterInventory(characterID string, itemID s
 }
 
 // AssignItemHotkeys is not thread safe, it is assumed that the caller has already locked the mutex!
-func (gm *GameManager) AssignItemHotkeys(inventory []edenitems.Item) {
+func (gm *GameManager) AssignItemHotkeys(inventory []edentypes.Item) {
 	// Assign hotkeys to items in the inventory, starting with lowercase a, and going up to z, then A to Z, then 0 to 9
 	// Stackable items should be assigned the same hotkey
 	// Non-stackable items should be assigned the next available hotkey
@@ -223,7 +223,7 @@ func (gm *GameManager) AssignItemHotkeys(inventory []edenitems.Item) {
 	}
 }
 
-func (gm *GameManager) AddToCharacterInventory(characterID string, item edenitems.Item) error {
+func (gm *GameManager) AddToCharacterInventory(characterID string, item edentypes.Item) error {
 	gm.activeCharactersMutex.Lock()
 	defer gm.activeCharactersMutex.Unlock()
 	for i, character := range gm.ActiveCharacters {

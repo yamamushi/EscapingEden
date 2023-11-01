@@ -39,6 +39,7 @@ const (
 	GameManager_MoveCharacter
 	GameManager_RequestInventory
 	GameManager_DigCommand
+	GameManager_BuildWallCommand
 )
 
 type GameManagerMessage struct {

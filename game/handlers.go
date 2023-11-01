@@ -162,6 +162,27 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 					gm.SendChannel <- response
 				}
 
+			case messages.GameManager_BuildWallCommand:
+				//gm.Log.Println(logging.LogInfo, "Game Manager received dig request")
+				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				if charID == "" {
+					continue
+				}
+				deltaX := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharBuildWall).DeltaX
+				deltaY := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharBuildWall).DeltaY
+				itemID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharBuildWall).ItemID
+				toolID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharBuildWall).ToolID
+				err := gm.HandleBuildWallRequest(itemID, toolID, charID, deltaX, deltaY)
+				if err != nil {
+					//gm.Log.Println(logging.LogError, "Game Manager failed to dig", err.Error())
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: managerMessage.SenderConsoleID,
+						Data:               messages.GameMessage{Type: messages.GM_FailedDig},
+					}
+					gm.SendChannel <- response
+				}
+
 			}
 		}
 	}

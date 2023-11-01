@@ -2,7 +2,7 @@ package gamewindow
 
 import (
 	"fmt"
-	"github.com/yamamushi/EscapingEden/edenitems"
+	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
@@ -10,7 +10,7 @@ import (
 	"sort"
 )
 
-func (gw *GameWindow) ItemForHotkey(hotkey string) *edenitems.Item {
+func (gw *GameWindow) ItemForHotkey(hotkey string) *edentypes.Item {
 	gw.InventoryMutex.Lock()
 	defer gw.InventoryMutex.Unlock()
 	for _, item := range gw.Inventory {
@@ -36,7 +36,7 @@ func (gw *GameWindow) CloseInventory() {
 	for _, menu := range gw.Menus {
 		if menu.GetType() == MenuTypeInventory {
 			gw.RemoveMenuBox(menu)
-			gw.InventoryDisplayType = edenitems.ItemTypeNull
+			gw.InventoryDisplayType = edentypes.ItemTypeNull
 			gw.MenuCallback = nil
 			gw.InventoryCallbackPrompt = ""
 			gw.SetStatusBarMessage("")
@@ -59,14 +59,14 @@ func (gw *GameWindow) RequestInventoryUpdate(callback interface{}, callbackPromp
 	gw.InventoryCallbackPrompt = callbackPrompt
 }
 
-func (gw *GameWindow) UpdateInventory(inventory []edenitems.Item) {
+func (gw *GameWindow) UpdateInventory(inventory []edentypes.Item) {
 	gw.InventoryMutex.Lock()
 	defer gw.InventoryMutex.Unlock()
 	gw.Inventory = inventory
 	//gw.Log.Println(logging.LogInfo, "Inventory updated - ", len(gw.Inventory))
 }
 
-func (gw *GameWindow) UpdateInventoryDisplayType(itemType edenitems.ItemType) {
+func (gw *GameWindow) UpdateInventoryDisplayType(itemType edentypes.ItemType) {
 	gw.InventoryMutex.Lock()
 	defer gw.InventoryMutex.Unlock()
 	gw.InventoryDisplayType = itemType
@@ -91,7 +91,7 @@ func (gw *GameWindow) DisplayInventory() {
 	//gw.Log.Println(logging.LogInfo, "Inventory Display Type: ", gw.InventoryDisplayType)
 	//gw.Log.Println(logging.LogInfo, "Inventory Display Internal: ", inventoryWindow.DisplayType)
 
-	if gw.InventoryDisplayType != edenitems.ItemTypeNull {
+	if gw.InventoryDisplayType != edentypes.ItemTypeNull {
 		gw.Log.Println(logging.LogInfo, fmt.Sprintf("%ss in Inventory", gw.InventoryDisplayType.String()))
 		inventoryWindow.Title = fmt.Sprintf("%ss", gw.InventoryDisplayType.String())
 	} else {
@@ -107,7 +107,7 @@ func (gw *GameWindow) BuildHotKeys() {
 	gw.InventoryMutex.Lock()
 	defer gw.InventoryMutex.Unlock()
 	for _, item := range gw.Inventory {
-		if item.Type == gw.InventoryDisplayType || gw.InventoryDisplayType == edenitems.ItemTypeNull {
+		if item.Type == gw.InventoryDisplayType || gw.InventoryDisplayType == edentypes.ItemTypeNull {
 			gw.Hotkeys[item.Hotkey] = item
 		}
 	}
@@ -115,10 +115,10 @@ func (gw *GameWindow) BuildHotKeys() {
 
 type InventoryDisplay struct {
 	MenuBox
-	Inventory   []edenitems.Item
-	DisplayType edenitems.ItemType
+	Inventory   []edentypes.Item
+	DisplayType edentypes.ItemType
 	Content     []string
-	Hotkeys     map[string]edenitems.Item
+	Hotkeys     map[string]edentypes.Item
 	GW          *GameWindow
 }
 
@@ -190,13 +190,13 @@ func (inv *InventoryDisplay) PrepareContent() {
 	stackableCounts := make(map[string]int) // Storing the count for each stackable item
 	weightMap := make(map[string]float64)   // Storing the weight for each item/stack of items
 	countMap := make(map[string]string)     // Storing the output strings for each item/stack of items
-	inv.Hotkeys = make(map[string]edenitems.Item)
+	inv.Hotkeys = make(map[string]edentypes.Item)
 
 	weight := 0.0
 	//gw.Log.Println(logging.LogInfo, "Inventory Display Type: ", inv.DisplayType)
 
 	for _, item := range inv.Inventory {
-		if item.Type == inv.DisplayType || inv.DisplayType == edenitems.ItemTypeNull {
+		if item.Type == inv.DisplayType || inv.DisplayType == edentypes.ItemTypeNull {
 			//itemInfo := fmt.Sprintf("%s) %-*s", item.Hotkey, maxNameWidth, item.Name)
 			itemInfo := fmt.Sprintf("%s) %s", item.Hotkey, item.Name)
 			if item.Stackable {
@@ -251,7 +251,7 @@ func (inv *InventoryDisplay) PrepareContent() {
 	}
 
 	weightLine := ""
-	if inv.DisplayType != edenitems.ItemTypeNull {
+	if inv.DisplayType != edentypes.ItemTypeNull {
 		//gw.Log.Println(logging.LogInfo, fmt.Sprintf("%ss Weight: %.2fkg", gw.InventoryDisplayType.String(), weight))
 		//inventoryContents += fmt.Sprintf("%ss Weight: %.2fkg", inv.DisplayType.String(), weight)
 		weightLine = fmt.Sprintf("%ss Weight: %.2fkg", inv.DisplayType.String(), weight)

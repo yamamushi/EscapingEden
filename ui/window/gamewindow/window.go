@@ -1,7 +1,7 @@
 package gamewindow
 
 import (
-	"github.com/yamamushi/EscapingEden/edenitems"
+	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
@@ -45,13 +45,13 @@ type GameWindow struct {
 	MenusMutex sync.Mutex
 	CloseMenus bool
 
-	Inventory []edenitems.Item
-	Hotkeys   map[string]edenitems.Item
+	Inventory []edentypes.Item
+	Hotkeys   map[string]edentypes.Item
 
 	InventoryMutex              sync.Mutex
 	PendingInventoryMutex       sync.Mutex
 	PendingInventory            bool
-	InventoryDisplayType        edenitems.ItemType
+	InventoryDisplayType        edentypes.ItemType
 	MenuCallback                interface{}
 	InventoryCallbackPrompt     string
 	DisplayInventoryPostReceive bool
@@ -123,7 +123,7 @@ func (gw *GameWindow) UpdateContents() {
 				gw.RemoveMenuBox(menu)
 			}
 			gw.CloseMenus = false
-			gw.InventoryDisplayType = edenitems.ItemTypeNull
+			gw.InventoryDisplayType = edentypes.ItemTypeNull
 			gw.MenuCallback = nil
 			gw.InventoryCallbackPrompt = ""
 			//gw.SetStatusBarMessage("")

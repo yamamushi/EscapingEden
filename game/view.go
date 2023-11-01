@@ -91,8 +91,10 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 						} else {
 							if currentMap.TileMap[mapX][mapY][0].Passable {
 								plane[j][i].Character = "."
+								plane[j][i].EscapeCode = "\033[38;5;130m"
 							} else {
 								plane[j][i].Character = "\u2588"
+								plane[j][i].EscapeCode = "\033[38;5;240m"
 							}
 						}
 					}
@@ -147,8 +149,10 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 						} else {
 							if deltaMapChunk.TileMap[mapX][mapY][0].Passable {
 								plane[j][i].Character = "."
+								plane[j][i].EscapeCode = "\033[38;5;130m"
 							} else {
 								plane[j][i].Character = "\u2588"
+								plane[j][i].EscapeCode = "\033[38;5;240m"
 							}
 						}
 					}

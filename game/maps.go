@@ -6,5 +6,5 @@ func (gm *GameManager) GetMapChunkByID(ID string) *MapChunk {
 			return &chunk
 		}
 	}
-	return nil
+	return &gm.MapChunks[0] // This is the default map chunk, if the map chunk is not found.
 }

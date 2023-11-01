@@ -10,3 +10,40 @@ type World struct {
 	RegionIDs    []string
 	CreationTime time.Time
 }
+
+type MapChunk struct {
+	ID string
+	// The chunk's position in the world as a string [x,y,z]
+	GlobalPosition struct {
+		X int
+		Y int
+		Z int
+	}
+	// The chunk's data
+	TileMap [][][]Tile
+	//Mutex   sync.Mutex
+}
+
+type Tile struct {
+	ID        string
+	WallType  string
+	BuilderID string
+	Position  struct {
+		X int
+		Y int
+		Z int
+	}
+
+	Draw struct {
+		Character string
+		Color     struct {
+			FG string
+			BG string
+		}
+	}
+
+	Date time.Time
+
+	Passable     bool
+	BlocksVision bool
+}

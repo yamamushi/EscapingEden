@@ -5,7 +5,7 @@ path = "tmp/log/"       # only used if type is "file", note this is a directory,
 # The server config section
 [server]
 host = "localhost"
-port = "8080"
+port = "3000"
 shutdown_timeout = 10 # Seconds to wait before terminating the server
 
 # The database config section
@@ -31,4 +31,4 @@ registration_channel_id = "channel id for registration updates goes here"
 registered_role_id = "role id for registered users goes here"
 
 [worldgen]
-dimensions = "x,x,x" # comma separated integers representing the dimensions of the world
+dimensions = "10,10,10" # comma separated values representing the dimensions of the world

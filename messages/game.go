@@ -27,6 +27,7 @@ const (
 	GM_CharacterView
 	GM_Inventory
 	GM_Dig
+	GM_BuildWall
 )
 
 type GameMessageCommand int
@@ -68,4 +69,11 @@ type GameCharDig struct {
 	DeltaX int
 	DeltaY int
 	ItemID string
+}
+
+type GameCharBuildWall struct {
+	DeltaX int
+	DeltaY int
+	ItemID string
+	ToolID string // Unused for now, but will be used for tools that are required to build
 }
