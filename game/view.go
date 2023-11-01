@@ -89,7 +89,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 							plane[j][i].Character = "@"
 							plane[j][i].EscapeCode = playercheck.FGColor.FG() + playercheck.BGColor.BG()
 						} else {
-							if currentMap.TileMap[mapX][mapY][0].Passable {
+							if currentMap.TileMap[mapX][mapY][0].TileType == "floor" {
 								plane[j][i].Character = "."
 								plane[j][i].EscapeCode = "\033[38;5;130m"
 							} else {
@@ -147,7 +147,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 							plane[j][i].Character = "@"
 							plane[j][i].EscapeCode = playercheck.FGColor.FG() + playercheck.BGColor.BG()
 						} else {
-							if deltaMapChunk.TileMap[mapX][mapY][0].Passable {
+							if deltaMapChunk.TileMap[mapX][mapY][0].TileType == "floor" {
 								plane[j][i].Character = "."
 								plane[j][i].EscapeCode = "\033[38;5;130m"
 							} else {

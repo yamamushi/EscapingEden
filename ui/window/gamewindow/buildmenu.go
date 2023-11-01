@@ -51,7 +51,7 @@ func (gw *GameWindow) BuildWallConfirmDirection(box *MenuBox, input string) {
 func (gw *GameWindow) BuildWallSend(box *MenuBox, input string) {
 	gw.StatusBarMutex.Lock()
 	defer gw.StatusBarMutex.Unlock()
-	log.Println("BuildWallSend received input: ", input)
+	//log.Println("BuildWallSend received input: ", input)
 	if input == "?" {
 		gw.InventoryDisplayType = edentypes.ItemMaterial
 		gw.RequestInventoryUpdate(gw.BuildWallSend, "Build with what?")

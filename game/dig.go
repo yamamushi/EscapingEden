@@ -24,10 +24,10 @@ func (gm *GameManager) HandleDigRequest(itemID string, charID string, deltaX, de
 		log.Println("Tile not found")
 		return errors.New("tile not found")
 	}
-	if tile.Passable {
-		log.Println("Tile is passable")
-		return errors.New("tile is passable")
+	if tile.TileType == "floor" {
+		log.Println("Tile is already floor")
+		return errors.New("tile is already floor")
 	}
-	tile.Passable = true
+	tile.TileType = "floor"
 	return nil
 }

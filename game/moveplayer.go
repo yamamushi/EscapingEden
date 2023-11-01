@@ -60,7 +60,7 @@ func (gm *GameManager) MovePlayer(charID string, deltax, deltay int) {
 
 	gm.activeCharactersMutex.Lock()
 	defer gm.activeCharactersMutex.Unlock()
-	if currentMap.TileMap[newPosX][newPosY][0].Passable {
+	if currentMap.TileMap[newPosX][newPosY][0].TileType == "floor" {
 		character.Position.X = newPosX
 		character.Position.Y = newPosY
 	}

@@ -25,25 +25,11 @@ type MapChunk struct {
 }
 
 type Tile struct {
-	ID        string
-	WallType  string
-	BuilderID string
-	Position  struct {
-		X int
-		Y int
-		Z int
-	}
+	TileType string
+}
 
-	Draw struct {
-		Character string
-		Color     struct {
-			FG string
-			BG string
-		}
-	}
-
-	Date time.Time
-
+type TileInfo struct {
+	TileType     string
 	Passable     bool
 	BlocksVision bool
 }

@@ -22,6 +22,7 @@ type GameManager struct {
 
 	// Temporary will remove in a refactor of the map generation
 	MapChunks []MapChunk
+	TileTypes map[string]TileInfo
 	Config    *edenconfig.Config
 }
 
@@ -50,6 +51,9 @@ func (gm *GameManager) Init() error {
 		gm.Log.Println(logging.LogError, messages.GMError_DBError.Error(), err)
 		return err
 	}
+
+	// We're going to load the tile types first
+	gm.LoadTileTypes()
 
 	// Now we load up the world, this could take a while...
 	gm.LoadWorld()

@@ -37,11 +37,11 @@ func (gm *GameManager) HandleBuildWallRequest(itemID string, toolID string, char
 		log.Println("Tile not found")
 		return errors.New("tile not found")
 	}
-	if !tile.Passable {
-		log.Println("Tile is not passable")
-		return errors.New("tile is not passable")
+	if tile.TileType == "wall" {
+		log.Println("Tile is already wall")
+		return errors.New("tile is already wall")
 	}
-	tile.Passable = false
+	tile.TileType = "wall"
 
 	// Log
 	//gm.Log.Println(logging.LogInfo, "Tile at", character.Position.X+deltaX, character.Position.Y+deltaY, "is now passable")

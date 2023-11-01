@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"encoding/gob"
 	"errors"
-	"github.com/google/uuid"
 	"os"
 )
 
@@ -64,29 +63,7 @@ func (gm *GameManager) CreateMapChunk(x, y, z int, gX, gY, gZ int, ID string) Ma
 			for k := range tiles[i][j] {
 				// Initialize each point if needed.
 				tiles[i][j][k] = Tile{
-					ID: uuid.New().String(),
-					Position: struct {
-						X int
-						Y int
-						Z int
-					}{X: i, Y: j, Z: k},
-					BuilderID: "0",
-					WallType:  "floor",
-					Draw: struct {
-						Character string
-						Color     struct {
-							FG string
-							BG string
-						}
-					}{
-						Character: ".",
-						Color: struct {
-							FG string
-							BG string
-						}{FG: "white", BG: "black"},
-					},
-					Passable:     true,
-					BlocksVision: true,
+					TileType: "floor",
 				} // Example initialization.
 			}
 		}
@@ -101,5 +78,24 @@ func (gm *GameManager) CreateMapChunk(x, y, z int, gX, gY, gZ int, ID string) Ma
 		}{X: gX, Y: gY, Z: gZ},
 		TileMap: tiles,
 	}
+}
 
+func (gm *GameManager) GetTileType(tile *Tile) TileInfo {
+	return gm.TileTypes[tile.TileType]
+}
+
+func (gm *GameManager) LoadTileTypes() {
+	gm.TileTypes = make(map[string]TileInfo)
+
+	gm.TileTypes["floor"] = TileInfo{
+		TileType:     "floor",
+		Passable:     true,
+		BlocksVision: false,
+	}
+
+	gm.TileTypes["wall"] = TileInfo{
+		TileType:     "wall",
+		Passable:     false,
+		BlocksVision: true,
+	}
 }
