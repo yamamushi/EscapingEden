@@ -47,16 +47,36 @@ func NewConnection(conn net.Conn, id string, manager *ConnectionManager, log log
 	return connection
 }
 
-// Write writes a byte to the connection
+// Write writes a byte slice to the connection in chunks of defined size or less
 func (c *Connection) Write(msg []byte) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	_, err := c.conn.Write(msg)
-	if err != nil {
-		//log.Println(err)
-		return err
+	// Define the maximum chunk size
+	maxChunkSize := 128
+
+	// Iterate over the input msg and send it in chunks
+	for len(msg) > 0 {
+		// Determine the chunk size for this iteration
+		chunkSize := len(msg)
+		if chunkSize > maxChunkSize {
+			chunkSize = maxChunkSize
+		}
+
+		// Extract a chunk of data from msg
+		chunk := msg[:chunkSize]
+
+		// Send the chunk over the connection
+		_, err := c.conn.Write(chunk)
+		if err != nil {
+			//log.Println(err)
+			return err
+		}
+
+		// Remove the sent chunk from msg
+		msg = msg[chunkSize:]
 	}
+
 	return nil
 }
 

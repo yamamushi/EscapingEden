@@ -13,7 +13,7 @@ func (w *GameWindow) DrawBorder(winX int, winY int) {
 		w.PrintChar(winX, winY, "\u250c", "\033[32m")
 
 	} else {
-		w.PrintChar(winX, winY, "\u250c", w.Terminal.Bold())
+		w.PrintChar(winX, winY, "\u250c", w.Terminal.Bold()+w.Terminal.Reset())
 	}
 
 	// Draw left border
@@ -23,13 +23,13 @@ func (w *GameWindow) DrawBorder(winX int, winY int) {
 			if w.Active {
 				w.PrintChar(winX, winY+i, "\u251C", "\033[32m")
 			} else {
-				w.PrintChar(winX, winY+i, "\u251C", w.Terminal.Bold())
+				w.PrintChar(winX, winY+i, "\u251C", w.Terminal.Bold()+w.Terminal.Reset())
 			}
 		} else {
 			if w.Active {
 				w.PrintChar(winX, winY+i, "\u2502", "\033[32m")
 			} else {
-				w.PrintChar(winX, winY+i, "\u2502", w.Terminal.Bold())
+				w.PrintChar(winX, winY+i, "\u2502", w.Terminal.Bold()+w.Terminal.Reset())
 			}
 		}
 
@@ -38,7 +38,7 @@ func (w *GameWindow) DrawBorder(winX int, winY int) {
 	if w.Active {
 		w.PrintChar(winX, winY+w.Height+1, "\u2514", "\033[32m")
 	} else {
-		w.PrintChar(winX, winY+w.Height+1, "\u2514", w.Terminal.Bold())
+		w.PrintChar(winX, winY+w.Height+1, "\u2514", w.Terminal.Bold()+w.Terminal.Reset())
 	}
 
 	// Draw top border
@@ -47,7 +47,7 @@ func (w *GameWindow) DrawBorder(winX int, winY int) {
 		if w.Active {
 			w.PrintCharColor(winX+i, winY, "\u2500", "\033[32m")
 		} else {
-			w.PrintCharColor(winX+i, winY, "\u2500", w.Terminal.Bold())
+			w.PrintCharColor(winX+i, winY, "\u2500", w.Terminal.Bold()+w.Terminal.Reset())
 		}
 	}
 
@@ -55,7 +55,7 @@ func (w *GameWindow) DrawBorder(winX int, winY int) {
 	if w.Active {
 		w.PrintChar(winX+w.Width, winY, "\u2510", "\033[32m")
 	} else {
-		w.PrintChar(winX+w.Width, winY, "\u2510", w.Terminal.Bold())
+		w.PrintChar(winX+w.Width, winY, "\u2510", w.Terminal.Bold()+w.Terminal.Reset())
 	}
 
 	// Draw right border
@@ -65,13 +65,13 @@ func (w *GameWindow) DrawBorder(winX int, winY int) {
 			if w.Active {
 				w.PrintChar(winX+w.Width, winY+i, "\u2524", "\033[32m")
 			} else {
-				w.PrintChar(winX+w.Width, winY+i, "\u2524", w.Terminal.Bold())
+				w.PrintChar(winX+w.Width, winY+i, "\u2524", w.Terminal.Bold()+w.Terminal.Reset())
 			}
 		} else {
 			if w.Active {
 				w.PrintChar(winX+w.Width, winY+i, "\u2502", "\033[32m")
 			} else {
-				w.PrintChar(winX+w.Width, winY+i, "\u2502", w.Terminal.Bold())
+				w.PrintChar(winX+w.Width, winY+i, "\u2502", w.Terminal.Bold()+w.Terminal.Reset())
 			}
 		}
 	}
@@ -80,7 +80,7 @@ func (w *GameWindow) DrawBorder(winX int, winY int) {
 	if w.Active {
 		w.PrintChar(winX+w.Width, winY+w.Height+1, "\u2518", "\033[32m")
 	} else {
-		w.PrintChar(winX+w.Width, winY+w.Height+1, "\u2518", w.Terminal.Bold())
+		w.PrintChar(winX+w.Width, winY+w.Height+1, "\u2518", w.Terminal.Bold()+w.Terminal.Reset())
 	}
 
 	// Draw bottom border
@@ -89,7 +89,7 @@ func (w *GameWindow) DrawBorder(winX int, winY int) {
 		if w.Active {
 			w.PrintCharColor(winX+i, winY+w.Height+1, "\u2500", "\033[32m")
 		} else {
-			w.PrintCharColor(winX+i, winY+w.Height+1, "\u2500", w.Terminal.Bold())
+			w.PrintCharColor(winX+i, winY+w.Height+1, "\u2500", w.Terminal.Bold()+w.Terminal.Reset())
 		}
 	}
 
@@ -99,7 +99,7 @@ func (w *GameWindow) DrawBorder(winX int, winY int) {
 		if w.Active {
 			w.PrintCharColor(winX+i, winY+w.Height-statusBarHeight, "\u2500", "\033[32m")
 		} else {
-			w.PrintCharColor(winX+i, winY+w.Height-statusBarHeight, "\u2500", w.Terminal.Bold())
+			w.PrintCharColor(winX+i, winY+w.Height-statusBarHeight, "\u2500", w.Terminal.Bold()+w.Terminal.Reset())
 		}
 	}
 }

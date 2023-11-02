@@ -52,7 +52,7 @@
     "TileType": "wood_wall",
     "Passable": false,
     "BlocksVision": true,
-    "Character": "\u25A2",
+    "Character": "\u25A1",
     "FG": 130,
     "BG": 0
   },
