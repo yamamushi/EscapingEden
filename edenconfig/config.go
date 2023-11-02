@@ -48,6 +48,7 @@ type discordConfig struct {
 
 type worldgenConfig struct {
 	Dimensions string `toml:"dimensions"`
+	ChunkSize  int    `toml:"chunk_size"`
 }
 
 // ReadConfig function

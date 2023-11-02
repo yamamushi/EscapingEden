@@ -7,3 +7,4 @@ EscapingEden
 deploy.sh
 *.map
 update-assets.sh
+.DS_Store

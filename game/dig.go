@@ -25,11 +25,13 @@ func (gm *GameManager) HandleDigRequest(itemID string, charID string, deltaX, de
 		return errors.New("tile not found")
 	}
 	if tile.TileType == "floor" {
-		log.Println("Tile is already floor")
+		//log.Println("Tile is already floor")
 		return errors.New("tile is already floor")
 	}
 	tile.TileType = "floor"
-	gm.FixWallAlignment(charID, character.Position.X+deltaX, character.Position.Y+deltaY, 0, 3)
+
+	globalX, globalY, globalZ := gm.LocalToGlobalTile(character.Position.X+deltaX, character.Position.Y+deltaY, 0, gm.GetMapChunkByID(character.CurrentMapID))
+	gm.FixWallAlignment(globalX, globalY, globalZ, 1, false)
 
 	return nil
 }

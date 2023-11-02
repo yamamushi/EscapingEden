@@ -55,7 +55,6 @@ func (gm *GameManager) LoadWorld() {
 				}
 			}
 		}
-		return
 	}
 
 	gm.Log.Println(logging.LogInfo, "Testing Map Chunk Loading...")

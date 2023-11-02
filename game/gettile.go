@@ -5,6 +5,120 @@ import (
 	"log"
 )
 
+func (gm *GameManager) GlobalTile(x, y, z int) (*Tile, *MapChunk) {
+
+	chunkSize := gm.Config.World.ChunkSize
+	worldDimensionsString := gm.Config.World.Dimensions
+	worldX, worldY, worldZ := gm.ParseWorldDimensions(worldDimensionsString)
+	if x < 0 {
+		x = (worldX * chunkSize) - 1
+	}
+	if x > (worldX*chunkSize)-1 {
+		x = 0
+	}
+	if y < 0 {
+		y = (worldY * chunkSize) - 1
+	}
+	if y > (worldY*chunkSize)-1 {
+		y = 0
+	}
+	if y < 0 {
+		y = (worldZ * chunkSize) - 1
+	}
+	if y > (worldZ*chunkSize)-1 {
+		z = 0
+	}
+
+	// Deduce the map chunk 0,0,0 from the given coordinates
+	globalX := x / chunkSize
+	globalY := y / chunkSize
+	globalZ := z / chunkSize
+
+	// Get the map chunk at the given coordinates
+	mapChunk, err := gm.MapChunkByPos(globalX, globalY, globalZ)
+	if err != nil {
+		log.Println("Failed to get map chunk", err.Error())
+		return nil, nil
+	}
+
+	// Get the tile at the given coordinates
+	tile := &mapChunk.TileMap[x%chunkSize][y%chunkSize][z%chunkSize]
+	return tile, mapChunk
+}
+
+func (gm *GameManager) GlobalToLocalTile(x, y, z int) (X, Y, Z int, chunk *MapChunk) {
+	chunkSize := gm.Config.World.ChunkSize
+	worldDimensionsString := gm.Config.World.Dimensions
+	worldX, worldY, worldZ := gm.ParseWorldDimensions(worldDimensionsString)
+	if x < 0 {
+		x = (worldX * chunkSize) - 1
+	}
+	if x > (worldX*chunkSize)-1 {
+		x = 0
+	}
+	if y < 0 {
+		y = (worldY * chunkSize) - 1
+	}
+	if y > (worldY*chunkSize)-1 {
+		y = 0
+	}
+	if y < 0 {
+		y = (worldZ * chunkSize) - 1
+	}
+	if y > (worldZ*chunkSize)-1 {
+		z = 0
+	}
+
+	// Deduce the map chunk 0,0,0 from the given coordinates
+	globalX := x / chunkSize
+	globalY := y / chunkSize
+	globalZ := z / chunkSize
+
+	// Get the map chunk at the given coordinates
+	mapChunk, err := gm.MapChunkByPos(globalX, globalY, globalZ)
+	if err != nil {
+		log.Println("Failed to get map chunk", err.Error())
+		return 0, 0, 0, nil
+	}
+
+	return x % chunkSize, y % chunkSize, z % chunkSize, mapChunk
+}
+
+// Takes a local tile position and returns the global tile position with wrapping
+func (gm *GameManager) LocalToGlobalTile(x, y, z int, mapChunk *MapChunk) (X, Y, Z int) {
+	chunkSize := gm.Config.World.ChunkSize
+	globalBaseX := mapChunk.GlobalPosition.X * chunkSize
+	globalBaseY := mapChunk.GlobalPosition.Y * chunkSize
+	globalBaseZ := mapChunk.GlobalPosition.Z * chunkSize
+
+	worldDimensionsString := gm.Config.World.Dimensions
+	worldX, worldY, worldZ := gm.ParseWorldDimensions(worldDimensionsString)
+	if x < 0 {
+		x = (worldX * chunkSize) - 1
+	}
+	if x > (worldX*chunkSize)-1 {
+		x = 0
+	}
+	if y < 0 {
+		y = (worldY * chunkSize) - 1
+	}
+	if y > (worldY*chunkSize)-1 {
+		y = 0
+	}
+	if y < 0 {
+		y = (worldZ * chunkSize) - 1
+	}
+	if y > (worldZ*chunkSize)-1 {
+		z = 0
+	}
+
+	X = globalBaseX + x
+	Y = globalBaseY + y
+	Z = globalBaseZ + z
+
+	return X, Y, Z
+}
+
 func (gm *GameManager) GetTileFromCharacter(charID string, x, y, z int) (mapChunk *MapChunk, tile *Tile, X, Y, Z int) {
 	character, err := gm.GetCharacter(charID)
 	if err != nil {
@@ -41,60 +155,15 @@ func (gm *GameManager) GetTileFromCharacter(charID string, x, y, z int) (mapChun
 	}
 }
 
+// GetSurroundingTiles returns the tiles surrounding the given position and tileMap which represents the chunk the tile is in
 func (gm *GameManager) GetSurroundingTiles(tileMap *MapChunk, x, y, z int) (*Tile, *Tile, *Tile, *Tile, *Tile, *Tile, *Tile, *Tile) {
-	log.Println("Checking surrounding tiles from, ", x, y, z)
-
 	n, ne, e, se, s, sw, w, nw := &Tile{}, &Tile{}, &Tile{}, &Tile{}, &Tile{}, &Tile{}, &Tile{}, &Tile{}
+	//	x, y, z = gm.LocalToGlobalTile(x, y, z, tileMap)
 
 	// Cover the top row first, gathering a new map chunk if necessary
-	n = gm.GetNorthTile(tileMap, x, y, z)
-	e = gm.GetEastTile(tileMap, x, y, z)
-	s = gm.GetSouthTile(tileMap, x, y, z)
-	w = gm.GetWestTile(tileMap, x, y, z)
+	n, _ = gm.GlobalTile(x, y-1, z)
+	e, _ = gm.GlobalTile(x+1, y, z)
+	s, _ = gm.GlobalTile(x, y+1, z)
+	w, _ = gm.GlobalTile(x-1, y, z)
 	return n, ne, e, se, s, sw, w, nw
-}
-
-// Returns the tile north of the given position
-func (gm *GameManager) GetNorthTile(tileMap *MapChunk, x, y, z int) *Tile {
-	if y == 0 {
-		// Get the map chunk north of the current one
-		mapChunk := gm.GetMapChunkFrom(tileMap, 0, -1, 0)
-		return &mapChunk.TileMap[x][len(mapChunk.TileMap[0])-1][z]
-	} else {
-		return &tileMap.TileMap[x][y-1][z]
-	}
-}
-
-// Returns the tile east of the given position
-func (gm *GameManager) GetEastTile(tileMap *MapChunk, x, y, z int) *Tile {
-	if x == len(tileMap.TileMap)-1 {
-		// Get the map chunk east of the current one
-		mapChunk := gm.GetMapChunkFrom(tileMap, 1, 0, 0)
-		log.Println("East tile is", mapChunk.TileMap[0][y][z])
-		return &mapChunk.TileMap[0][y][z]
-	} else {
-		return &tileMap.TileMap[x+1][y][z]
-	}
-}
-
-// Returns the tile south of the given position
-func (gm *GameManager) GetSouthTile(tileMap *MapChunk, x, y, z int) *Tile {
-	if y == len(tileMap.TileMap[0])-1 {
-		// Get the map chunk south of the current one
-		mapChunk := gm.GetMapChunkFrom(tileMap, 0, 1, 0)
-		return &mapChunk.TileMap[x][0][z]
-	} else {
-		return &tileMap.TileMap[x][y+1][z]
-	}
-}
-
-// Returns the tile west of the given position
-func (gm *GameManager) GetWestTile(tileMap *MapChunk, x, y, z int) *Tile {
-	if x == 0 {
-		// Get the map chunk west of the current one
-		mapChunk := gm.GetMapChunkFrom(tileMap, -1, 0, 0)
-		return &mapChunk.TileMap[len(mapChunk.TileMap)-1][y][z]
-	} else {
-		return &tileMap.TileMap[x-1][y][z]
-	}
 }

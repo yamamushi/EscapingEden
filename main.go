@@ -93,7 +93,7 @@ func main() {
 	}
 
 	gameManagerReceiver := make(chan messages.GameManagerMessage)
-	_, err = InitGameManager(gameManagerReceiver, connectionManagerReceive, dbConn, log, &conf)
+	gameManager, err := InitGameManager(gameManagerReceiver, connectionManagerReceive, dbConn, log, &conf)
 	if err != nil {
 		log.Println(logging.LogFatal, "Error initializing game manager: ", err)
 	}
@@ -132,8 +132,9 @@ func main() {
 	managerMessage = messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_ServerShutdown}
 	server.ConnectionManagerSend <- managerMessage
 
-	// We sleep for the configured ShutdownTimeout
+	// We sleep for the configured ShutdownTimeout (now is when we can ctrl-c if we want to skip cleanup, etc)
 	time.Sleep(time.Second * time.Duration(conf.Server.ShutdownTimeout))
+	gameManager.Cleanup()
 
 	log.Println(logging.LogInfo, "Server exited cleanly.")
 	if log.GetTypeID() != logging.LoggerTypeID_Console {

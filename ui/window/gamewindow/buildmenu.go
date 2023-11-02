@@ -4,7 +4,6 @@ import (
 	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"log"
 )
 
 func (gw *GameWindow) BuildMenu() {
@@ -63,7 +62,7 @@ func (gw *GameWindow) BuildWallSend(box *MenuBox, input string) {
 	// So later we'll have to retrieve the material from the inventory
 	item := gw.ItemForHotkey(input)
 	if item == nil {
-		log.Println("BuildWallSend received nil item")
+		//log.Println("BuildWallSend received nil item")
 		box.SetCallbackStatusBarMessage("You don't have that item.")
 		//gw.MenusMutex.Lock()
 		//defer gw.MenusMutex.Unlock()
