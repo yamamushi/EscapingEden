@@ -19,7 +19,7 @@ func (gm *GameManager) HandleDigRequest(itemID string, charID string, deltaX, de
 		log.Println("Failed to get character", err.Error())
 		return errors.New("character not found")
 	}
-	tile, _, _, _ := gm.GetTileFromCharacter(charID, character.Position.X+deltaX, character.Position.Y+deltaY, 0)
+	_, tile, _, _, _ := gm.GetTileFromCharacter(charID, character.Position.X+deltaX, character.Position.Y+deltaY, 0)
 	if tile == nil {
 		log.Println("Tile not found")
 		return errors.New("tile not found")

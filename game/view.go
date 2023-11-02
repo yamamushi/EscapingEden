@@ -175,29 +175,28 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 // GetMapChunkFrom returns a map chunk from a source map chunk and a delta
 func (gm *GameManager) GetMapChunkFrom(source *MapChunk, deltaX, deltaY, deltaZ int) *MapChunk {
 	//gm.Log.Println(logging.LogInfo, "Getting map chunk at", x, y)
-	worldLat := 1
-	worldLon := 1
-	worldHeight := 1
+	worldDimensionsString := gm.Config.World.Dimensions
+	worldLat, worldLon, worldHeight := gm.ParseWorldDimensions(worldDimensionsString)
 	x, y, z := 0, 0, 0
 
 	if deltaX+source.GlobalPosition.X < 0 {
-		x = 0
-	} else if deltaX+source.GlobalPosition.X > worldLat-1 {
 		x = worldLat - 1
+	} else if deltaX+source.GlobalPosition.X > worldLat-1 {
+		x = 0
 	} else {
 		x = deltaX + source.GlobalPosition.X
 	}
 	if deltaY+source.GlobalPosition.Y < 0 {
-		y = 0
-	} else if deltaY+source.GlobalPosition.Y > worldLon-1 {
 		y = worldLon - 1
+	} else if deltaY+source.GlobalPosition.Y > worldLon-1 {
+		y = 0
 	} else {
 		y = deltaY + source.GlobalPosition.Y
 	}
 	if deltaZ+source.GlobalPosition.Z < 0 {
-		z = 0
-	} else if deltaZ+source.GlobalPosition.Z > worldHeight-1 {
 		z = worldHeight - 1
+	} else if deltaZ+source.GlobalPosition.Z > worldHeight-1 {
+		z = 0
 	} else {
 		z = deltaZ + source.GlobalPosition.Z
 	}
@@ -215,5 +214,6 @@ func (gm *GameManager) MapChunkByPos(x, y, z int) (*MapChunk, error) {
 			return &mapChunk, nil
 		}
 	}
+	gm.Log.Println(logging.LogError, "map chunk not found at", x, y, z)
 	return nil, fmt.Errorf("map chunk not found at %d, %d, %d", x, y, z)
 }

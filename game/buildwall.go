@@ -3,7 +3,6 @@ package game
 import (
 	"errors"
 	"github.com/yamamushi/EscapingEden/edentypes"
-	"github.com/yamamushi/EscapingEden/logging"
 	"log"
 	"strings"
 )
@@ -36,7 +35,7 @@ func (gm *GameManager) HandleBuildWallRequest(itemID string, toolID string, char
 		log.Println("Failed to get character", err.Error())
 		return errors.New("character not found")
 	}
-	tile, _, _, _ := gm.GetTileFromCharacter(charID, character.Position.X+deltaX, character.Position.Y+deltaY, 0)
+	_, tile, _, _, _ := gm.GetTileFromCharacter(charID, character.Position.X+deltaX, character.Position.Y+deltaY, 0)
 	if tile == nil {
 		//log.Println("Tile not found")
 		return errors.New("tile not found")
@@ -57,7 +56,7 @@ func (gm *GameManager) FixWallAlignment(charID string, x, y, z int, recurseCount
 	}
 	recurseCount -= 1
 	//gm.Log.Println(logging.LogInfo, "Fixing wall alignment")
-	thisTile, x, y, z := gm.GetTileFromCharacter(charID, x, y, z)
+	mapChunk, thisTile, x, y, z := gm.GetTileFromCharacter(charID, x, y, z)
 	tileVars := strings.Split(thisTile.TileType, "_")
 	if len(tileVars) < 2 {
 		return
@@ -66,12 +65,6 @@ func (gm *GameManager) FixWallAlignment(charID string, x, y, z int, recurseCount
 		return
 	}
 	thisTile.TileType = strings.Split(thisTile.TileType, "_")[0]
-	character, err := gm.GetCharacter(charID)
-	if err != nil {
-		gm.Log.Println(logging.LogInfo, "Failed to get character", err.Error())
-		return
-	}
-	mapChunk := gm.GetMapChunkByID(character.CurrentMapID)
 
 	n, _, e, _, s, _, w, _ := gm.GetSurroundingTiles(mapChunk, x, y, z)
 	pN, pE, pS, pW := false, false, false, false

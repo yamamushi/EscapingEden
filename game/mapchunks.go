@@ -12,6 +12,7 @@ import (
 
 func (gm *GameManager) SaveMapChunk(data MapChunk, filename string) error {
 
+	filename = "./assets/world/" + filename
 	var _, err = os.Stat(filename)
 	// create file if not exists
 	if os.IsNotExist(err) {
@@ -35,6 +36,7 @@ func (gm *GameManager) SaveMapChunk(data MapChunk, filename string) error {
 }
 
 func (gm *GameManager) LoadMapChunk(filename string) (*MapChunk, error) {
+	filename = "./assets/world/" + filename
 	compressedFile, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err

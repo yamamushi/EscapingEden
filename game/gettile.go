@@ -2,13 +2,14 @@ package game
 
 import (
 	"github.com/yamamushi/EscapingEden/logging"
+	"log"
 )
 
-func (gm *GameManager) GetTileFromCharacter(charID string, x, y, z int) (tile *Tile, X, Y, Z int) {
+func (gm *GameManager) GetTileFromCharacter(charID string, x, y, z int) (mapChunk *MapChunk, tile *Tile, X, Y, Z int) {
 	character, err := gm.GetCharacter(charID)
 	if err != nil {
 		gm.Log.Println(logging.LogError, "Failed to get character", err.Error())
-		return nil, 0, 0, 0
+		return nil, nil, 0, 0, 0
 	}
 
 	targetMap := gm.GetMapChunkByID(character.CurrentMapID)
@@ -32,18 +33,19 @@ func (gm *GameManager) GetTileFromCharacter(charID string, x, y, z int) (tile *T
 		}
 
 		targetMap = gm.GetMapChunkFrom(targetMap, dX, dY, 0)
-		return &targetMap.TileMap[x][y][z], x, y, z
+		return targetMap, &targetMap.TileMap[x][y][z], x, y, z
 
 	} else {
 		// Get the tile at the requested position
-		return &targetMap.TileMap[x][y][z], x, y, z
+		return targetMap, &targetMap.TileMap[x][y][z], x, y, z
 	}
 }
 
 func (gm *GameManager) GetSurroundingTiles(tileMap *MapChunk, x, y, z int) (*Tile, *Tile, *Tile, *Tile, *Tile, *Tile, *Tile, *Tile) {
+	log.Println("Checking surrounding tiles from, ", x, y, z)
 
 	n, ne, e, se, s, sw, w, nw := &Tile{}, &Tile{}, &Tile{}, &Tile{}, &Tile{}, &Tile{}, &Tile{}, &Tile{}
-	
+
 	// Cover the top row first, gathering a new map chunk if necessary
 	n = gm.GetNorthTile(tileMap, x, y, z)
 	e = gm.GetEastTile(tileMap, x, y, z)
@@ -68,6 +70,7 @@ func (gm *GameManager) GetEastTile(tileMap *MapChunk, x, y, z int) *Tile {
 	if x == len(tileMap.TileMap)-1 {
 		// Get the map chunk east of the current one
 		mapChunk := gm.GetMapChunkFrom(tileMap, 1, 0, 0)
+		log.Println("East tile is", mapChunk.TileMap[0][y][z])
 		return &mapChunk.TileMap[0][y][z]
 	} else {
 		return &tileMap.TileMap[x+1][y][z]

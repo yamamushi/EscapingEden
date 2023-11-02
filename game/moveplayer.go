@@ -64,5 +64,5 @@ func (gm *GameManager) MovePlayer(charID string, deltax, deltay int) {
 		character.Position.X = newPosX
 		character.Position.Y = newPosY
 	}
-	//gm.Log.Println(logging.LogInfo, "Game Manager Moved Player To: ", character.Position.X, character.Position.Y)
+	gm.Log.Println(logging.LogInfo, "Game Manager Moved Player To: ", character.Position.X, character.Position.Y, currentMap.GlobalPosition.X, currentMap.GlobalPosition.Y)
 }
