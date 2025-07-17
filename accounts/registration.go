@@ -74,11 +74,6 @@ func (am *AccountManager) CreateAccount(username, password, discordTag string) m
 		return response
 	}
 
-	// Validate Discord ID format (if it's not a tag format)
-	if !strings.Contains(discordTag, "#") && !edenutil.ValidateDiscordID(discordTag) {
-		response.Error = messages.AMError_InvalidDiscordID
-		return response
-	}
 	// Before we work, lets make sure the username and discord are not already taken
 	foundAccount, err := am.DiscordTagExists(discordTag)
 	if err == messages.AMError_DBError {
