@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/yamamushi/EscapingEden/edentypes"
@@ -11,6 +12,36 @@ import (
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
 )
+
+// cleanUnicodeWhitespace removes all types of Unicode whitespace characters
+// including regular spaces, non-breaking spaces, zero-width spaces, etc.
+func cleanUnicodeWhitespace(s string) string {
+	// Convert to runes for proper Unicode handling
+	runes := []rune(s)
+	result := make([]rune, 0, len(runes))
+
+	for _, r := range runes {
+		// Skip all Unicode whitespace characters
+		if r != ' ' && r != '\t' && r != '\n' && r != '\r' &&
+			r != '\u00A0' && // Non-breaking space
+			r != '\u2000' && r != '\u2001' && r != '\u2002' && r != '\u2003' && // En quad, Em quad, En space, Em space
+			r != '\u2004' && r != '\u2005' && r != '\u2006' && r != '\u2007' && // Three-per-em space, Four-per-em space, Six-per-em space, Figure space
+			r != '\u2008' && r != '\u2009' && r != '\u200A' && r != '\u200B' && // Punctuation space, Thin space, Hair space, Zero-width space
+			r != '\u200C' && r != '\u200D' && r != '\u2028' && r != '\u2029' && // Zero-width non-joiner, Zero-width joiner, Line separator, Paragraph separator
+			r != '\u202F' && r != '\u205F' && r != '\u3000' && r != '\uFEFF' { // Narrow no-break space, Medium mathematical space, Ideographic space, Zero-width no-break space
+			result = append(result, r)
+		}
+	}
+
+	return string(result)
+}
+
+// formatItemColor converts integer color codes to escape sequences (same format as tiles)
+func formatItemColor(fgColor, bgColor int) string {
+	fg := strconv.Itoa(fgColor)
+	bg := strconv.Itoa(bgColor)
+	return "\033[38;5;" + fg + "m" + "\033[48;5;" + bg + "m"
+}
 
 func (gw *GameWindow) ItemForHotkey(hotkey string) *edentypes.Item {
 	gw.InventoryMutex.Lock()
@@ -84,8 +115,8 @@ func (gw *GameWindow) DisplayInventory() {
 		DisplayType: gw.InventoryDisplayType, GW: gw}
 	inventoryWindow.ResponseCallback = gw.MenuCallback
 	inventoryWindow.CallbackStatusBarMessage = gw.InventoryCallbackPrompt
-	inventoryWindow.X = gw.Width - 30
-	inventoryWindow.Y = gw.Height/2 - 10
+	inventoryWindow.X = gw.Width - 35 // Move further left to avoid border overlap
+	inventoryWindow.Y = 3             // Position near top with some margin
 	inventoryWindow.Type = MenuTypeInventory
 	inventoryWindow.ToggleHotkeyCheck(true) // Enable hotkey checking for interactive inventory
 	//inventoryWindow.Width = 29
@@ -219,12 +250,17 @@ func (inv *InventoryDisplay) PrepareContent() {
 
 	for _, item := range inv.Inventory {
 		if item.Type == inv.DisplayType || inv.DisplayType == edentypes.ItemTypeNull {
-			// Include item symbol in the display - no brackets, just the symbol
-			symbolDisplay := ""
-			if item.Symbol != "" {
-				symbolDisplay = fmt.Sprintf("%s ", item.Symbol)
+			// Create clean item display with exactly one space between symbol and name
+			// Clean any Unicode whitespace from symbol and name
+			cleanSymbol := cleanUnicodeWhitespace(item.Symbol)
+			cleanName := cleanUnicodeWhitespace(item.Name)
+
+			var itemInfo string
+			if cleanSymbol != "" {
+				itemInfo = fmt.Sprintf("%s) %s %s", item.Hotkey, cleanSymbol, cleanName)
+			} else {
+				itemInfo = fmt.Sprintf("%s) %s", item.Hotkey, cleanName)
 			}
-			itemInfo := fmt.Sprintf("%s) %s%s", item.Hotkey, symbolDisplay, item.Name)
 			if item.Stackable {
 				// Check if we've encountered this stackable item before
 				if count, ok := stackableCounts[item.Name]; ok {
@@ -267,8 +303,8 @@ func (inv *InventoryDisplay) PrepareContent() {
 	for _, itemName := range itemNames {
 		itemEntry := countMap[itemName]
 		//weightInfo := fmt.Sprintf("- %.2fkg", weightMap[itemName])
-		itemInfo := fmt.Sprintf("%-*s", maxNameWidth, itemEntry)
-		itemInfo += fmt.Sprintf(" - %.2fkg", weightMap[itemName])
+		itemInfo := fmt.Sprintf("%s - %.2fkg", itemEntry, weightMap[itemName])
+
 		//gw.Log.Println(logging.LogInfo, itemInfo)
 		//inventoryContents += itemInfo + "\n"
 		//gw.PrintStringToMap(inv.X+2, inv.Y+index+2, itemInfo, "")
@@ -312,34 +348,45 @@ func (inv *InventoryDisplay) DrawMenuItems(gw *GameWindow) {
 	//gw.Log.Println(logging.LogInfo, "Drawing inventory items")
 
 	for index, content := range inv.Content {
-		// Check if this line contains an item with a symbol (format: "a) symbol Name")
+		// Apply colored symbols to inventory items
 		parts := strings.Split(content, ")")
 		if len(parts) > 1 {
 			hotkey := strings.TrimSpace(parts[0])
 			if item, exists := inv.Hotkeys[hotkey]; exists && item.Symbol != "" {
-				// Find the symbol right after the hotkey and parenthesis
-				afterHotkey := parts[1] // Everything after "a)"
-				trimmedAfter := strings.TrimSpace(afterHotkey)
-				if strings.HasPrefix(trimmedAfter, item.Symbol) {
-					// Draw the hotkey and parenthesis
-					hotkeyPart := parts[0] + ") "
-					inv.PrintToMenu(gw, 2, index+2, hotkeyPart, "")
+				// Find the symbol in the content and apply color
+				symbolIndex := strings.Index(content, item.Symbol)
+				if symbolIndex != -1 {
+					// Draw everything before the symbol
+					beforeSymbol := content[:symbolIndex]
+					inv.PrintToMenu(gw, 2, index+2, beforeSymbol, "")
 
 					// Draw the colored symbol
-					itemColorCode := item.FGColor.FG() + item.BGColor.BG()
-					inv.PrintToMenu(gw, 2+len(hotkeyPart), index+2, item.Symbol, itemColorCode)
+					itemColorCode := formatItemColor(item.FGColor, item.BGColor)
+					inv.PrintToMenu(gw, 2+len(beforeSymbol), index+2, item.Symbol, itemColorCode)
 
-					// Draw the rest of the line (space and item name) - use proper Unicode string slicing
+					// Draw everything after the symbol - use proper Unicode-aware slicing
+					// Convert to runes for proper Unicode handling
+					contentRunes := []rune(content)
 					symbolRunes := []rune(item.Symbol)
-					afterSymbolRunes := []rune(trimmedAfter)[len(symbolRunes):]
-					restOfLine := string(afterSymbolRunes)
-					inv.PrintToMenu(gw, 2+len(hotkeyPart)+len(item.Symbol), index+2, restOfLine, "")
+
+					// Find the symbol position in runes
+					symbolStartRune := len([]rune(beforeSymbol))
+					symbolEndRune := symbolStartRune + len(symbolRunes)
+
+					// Get the part after the symbol
+					if symbolEndRune < len(contentRunes) {
+						afterSymbol := string(contentRunes[symbolEndRune:])
+						// Use rune length for proper positioning with Unicode characters
+						beforeSymbolRuneLen := len([]rune(beforeSymbol))
+						symbolRuneLen := len(symbolRunes)
+						inv.PrintToMenu(gw, 2+beforeSymbolRuneLen+symbolRuneLen, index+2, afterSymbol, "")
+					}
 					continue
 				}
 			}
 		}
 
-		// Normal drawing for lines without symbols or if parsing fails
+		// Normal drawing for lines without symbols
 		inv.PrintToMenu(gw, 2, index+2, content, "")
 	}
 }

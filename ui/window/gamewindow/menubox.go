@@ -214,7 +214,7 @@ func (mb *MenuBox) DrawMenuItems(gw *GameWindow) {
 				// Check if the option name starts with the symbol
 				if strings.HasPrefix(option.Name, item.Symbol) {
 					// Draw the colored symbol
-					itemColorCode := item.FGColor.FG() + item.BGColor.BG()
+					itemColorCode := formatItemColor(item.FGColor, item.BGColor)
 					mb.PrintToMenu(gw, 5, i+2, item.Symbol, itemColorCode)
 
 					// Draw the rest of the line (space and item name) - use proper Unicode string slicing

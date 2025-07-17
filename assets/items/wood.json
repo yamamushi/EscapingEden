@@ -5,21 +5,12 @@
   "weight": 1.0,
   "type": 1,
   "stackable": true,
+  "equippable": false,
   "symbol": "≡",
-  "fg_color": {
-    "R": 139,
-    "G": 69,
-    "B": 19
-  },
-  "bg_color": {
-    "R": 0,
-    "G": 0,
-    "B": 0
-  },
-  "value": 5,
+  "fg_color": 130,
+  "bg_color": 0,
   "durability": -1,
   "max_stack": 64,
-  "rarity": "common",
   "category": "wood",
   "tags": ["material", "building", "crafting", "natural"]
 }

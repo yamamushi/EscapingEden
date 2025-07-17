@@ -301,34 +301,40 @@ func (gm *GameManager) RepairItemDatabase() {
 		// Repair items in character inventory
 		for i, item := range character.Inventory {
 			// Check if this item needs repair (missing symbol or colors)
-			needsRepair := item.Symbol == "" || (item.FGColor.R == 0 && item.FGColor.G == 0 && item.FGColor.B == 0)
+			needsRepair := item.Symbol == "" || item.FGColor == 0
 
 			if needsRepair {
-				// Try to find the item definition by matching name or creating a reasonable ID
-				itemID := gm.guessItemID(item.Name)
-				if itemID != "" {
-					if def, exists := gm.ItemRegistry.GetItemDefinition(itemID); exists {
-						// Update the item with data from JSON definition
-						character.Inventory[i].Symbol = def.Symbol
-						character.Inventory[i].FGColor = def.FGColor
-						character.Inventory[i].BGColor = def.BGColor
-						character.Inventory[i].Category = def.Category
-						character.Inventory[i].Tags = def.Tags
-						character.Inventory[i].Rarity = def.Rarity
-						character.Inventory[i].Value = def.Value
-						character.Inventory[i].MaxStack = def.MaxStack
-
-						// Update durability if it's not set
-						if character.Inventory[i].Durability == 0 && def.Durability != 0 {
-							character.Inventory[i].Durability = def.Durability
-						}
-
-						characterUpdated = true
-						repairedCount++
-
-						gm.Log.Println(logging.LogInfo, fmt.Sprintf("Repaired item '%s' for character '%s' with symbol '%s'",
-							item.Name, character.Name, def.Symbol))
+				// Try to find the item definition by matching name directly
+				var def edentypes.ItemDefinition
+				var exists bool
+				for _, itemDef := range gm.ItemRegistry.Items {
+					if itemDef.Name == item.Name {
+						def = itemDef
+						exists = true
+						break
 					}
+				}
+				if exists {
+					// Update the item with data from JSON definition
+					character.Inventory[i].Symbol = def.Symbol
+					character.Inventory[i].FGColor = def.FGColor
+					character.Inventory[i].BGColor = def.BGColor
+					character.Inventory[i].Category = def.Category
+					character.Inventory[i].Tags = def.Tags
+					character.Inventory[i].Rarity = def.Rarity
+					character.Inventory[i].Value = def.Value
+					character.Inventory[i].MaxStack = def.MaxStack
+
+					// Update durability if it's not set
+					if character.Inventory[i].Durability == 0 && def.Durability != 0 {
+						character.Inventory[i].Durability = def.Durability
+					}
+
+					characterUpdated = true
+					repairedCount++
+
+					gm.Log.Println(logging.LogInfo, fmt.Sprintf("Repaired item '%s' for character '%s' with symbol '%s'",
+						item.Name, character.Name, def.Symbol))
 				}
 			}
 		}
@@ -350,66 +356,115 @@ func (gm *GameManager) RepairItemDatabase() {
 		gm.Log.Println(logging.LogWarn, "Failed to get standalone items for repair:", err)
 	} else {
 		for _, item := range items {
-			needsRepair := item.Symbol == "" || (item.FGColor.R == 0 && item.FGColor.G == 0 && item.FGColor.B == 0)
+			needsRepair := item.Symbol == "" || item.FGColor == 0
 
 			if needsRepair {
-				itemID := gm.guessItemID(item.Name)
-				if itemID != "" {
-					if def, exists := gm.ItemRegistry.GetItemDefinition(itemID); exists {
-						// Update the item with data from JSON definition
-						item.Symbol = def.Symbol
-						item.FGColor = def.FGColor
-						item.BGColor = def.BGColor
-						item.Category = def.Category
-						item.Tags = def.Tags
-						item.Rarity = def.Rarity
-						item.Value = def.Value
-						item.MaxStack = def.MaxStack
+				// Try to find the item definition by matching name directly
+				var def edentypes.ItemDefinition
+				var exists bool
+				for _, itemDef := range gm.ItemRegistry.Items {
+					if itemDef.Name == item.Name {
+						def = itemDef
+						exists = true
+						break
+					}
+				}
+				if exists {
+					// Update the item with data from JSON definition
+					item.Symbol = def.Symbol
+					item.FGColor = def.FGColor
+					item.BGColor = def.BGColor
+					item.Category = def.Category
+					item.Tags = def.Tags
+					item.Rarity = def.Rarity
+					item.Value = def.Value
+					item.MaxStack = def.MaxStack
 
-						if item.Durability == 0 && def.Durability != 0 {
-							item.Durability = def.Durability
-						}
+					if item.Durability == 0 && def.Durability != 0 {
+						item.Durability = def.Durability
+					}
 
-						err := gm.DB.UpdateRecord("Items", &item)
-						if err != nil {
-							gm.Log.Println(logging.LogError, fmt.Sprintf("Failed to save repaired item '%s': %v", item.Name, err))
-							errorCount++
-						} else {
-							repairedCount++
-							gm.Log.Println(logging.LogInfo, fmt.Sprintf("Repaired standalone item '%s' with symbol '%s'",
-								item.Name, def.Symbol))
-						}
+					err := gm.DB.UpdateRecord("Items", &item)
+					if err != nil {
+						gm.Log.Println(logging.LogError, fmt.Sprintf("Failed to save repaired item '%s': %v", item.Name, err))
+						errorCount++
+					} else {
+						repairedCount++
+						gm.Log.Println(logging.LogInfo, fmt.Sprintf("Repaired standalone item '%s' with symbol '%s'",
+							item.Name, def.Symbol))
 					}
 				}
 			}
 		}
 	}
-
 	gm.Log.Println(logging.LogInfo, fmt.Sprintf("Item database repair completed: %d items repaired, %d errors", repairedCount, errorCount))
+
 }
 
-// guessItemID attempts to determine the item ID from the item name
-func (gm *GameManager) guessItemID(itemName string) string {
-	// Direct mapping for common items
-	nameToID := map[string]string{
-		"Wood":     "wood",
-		"Stone":    "stone",
-		"Pickaxe":  "pickaxe",
-		"Torch":    "torch",
-		"Rope":     "rope",
-		"Iron Ore": "iron_ore",
+// SyncItemWithJSON synchronizes an item's immutable properties with its JSON definition
+// while preserving mutable fields like durability, ID, and hotkey
+func (gm *GameManager) SyncItemWithJSON(item *edentypes.Item) bool {
+	if gm.ItemRegistry == nil {
+		return false
 	}
 
-	if id, exists := nameToID[itemName]; exists {
-		return id
+	// Try to find the item definition by matching name directly
+	var def edentypes.ItemDefinition
+	var exists bool
+	for _, itemDef := range gm.ItemRegistry.Items {
+		if itemDef.Name == item.Name {
+			def = itemDef
+			exists = true
+			break
+		}
+	}
+	if !exists {
+		return false
 	}
 
-	// Try to find by checking all item definitions
-	for id, def := range gm.ItemRegistry.Items {
-		if def.Name == itemName {
-			return id
+	// Preserve mutable fields
+	originalID := item.ID
+	originalHotkey := item.Hotkey
+	originalDurability := item.Durability
+
+	// Sync immutable properties from JSON
+	item.Symbol = def.Symbol
+	item.FGColor = def.FGColor
+	item.BGColor = def.BGColor
+	item.Category = def.Category
+	item.Tags = def.Tags
+	item.MaxStack = def.MaxStack
+	item.Description = def.Description
+	item.Weight = def.Weight
+	item.Type = edentypes.ItemType(def.Type)
+	item.Stackable = def.Stackable
+	item.Equippable = def.Equippable
+
+	// Restore mutable fields
+	item.ID = originalID
+	item.Hotkey = originalHotkey
+	// Only restore durability if it was previously set (not 0)
+	if originalDurability != 0 {
+		item.Durability = originalDurability
+	} else if def.Durability != 0 {
+		item.Durability = def.Durability
+	}
+
+	return true
+}
+
+// SyncInventoryWithJSON synchronizes all items in an inventory with their JSON definitions
+func (gm *GameManager) SyncInventoryWithJSON(inventory []edentypes.Item) []edentypes.Item {
+	syncedCount := 0
+	for i := range inventory {
+		if gm.SyncItemWithJSON(&inventory[i]) {
+			syncedCount++
 		}
 	}
 
-	return ""
+	if syncedCount > 0 {
+		gm.Log.Println(logging.LogInfo, fmt.Sprintf("Synced %d items with JSON definitions", syncedCount))
+	}
+
+	return inventory
 }

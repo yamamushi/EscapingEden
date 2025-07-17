@@ -9,7 +9,6 @@ import (
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"github.com/yamamushi/EscapingEden/ui/util"
 )
 
 type ActiveCharacter struct {
@@ -41,6 +40,16 @@ func (gm *GameManager) LoadCharacter(id string, consoleID string) (err error) {
 
 	// Debug logging to see what map IDs are loaded from database
 	gm.Log.Println(logging.LogInfo, "Loaded character", character.Name, "from database: position", character.Position.X, character.Position.Y, "CurrentMapID", character.CurrentMapID, "Position.MapChunkID", character.Position.MapChunkID)
+
+	// Automatically sync character inventory with JSON definitions
+	if len(character.Inventory) > 0 {
+		character.Inventory = gm.SyncInventoryWithJSON(character.Inventory)
+		// Save the updated character back to the database
+		err = gm.DB.UpdateRecord("Characters", &character)
+		if err != nil {
+			gm.Log.Println(logging.LogWarn, "Failed to save synced character inventory:", err.Error())
+		}
+	}
 
 	gm.AddToLiveCharacterList(character, consoleID)
 
@@ -136,6 +145,9 @@ func (gm *GameManager) GetCharacterInventory(characterID string) ([]edentypes.It
 				inventory := gm.CreateDefaultInventory()
 				gm.AssignItemHotkeys(inventory)
 				gm.ActiveCharacters[i].Record.Inventory = inventory
+			} else {
+				// Automatically sync existing inventory items with JSON definitions
+				gm.ActiveCharacters[i].Record.Inventory = gm.SyncInventoryWithJSON(gm.ActiveCharacters[i].Record.Inventory)
 			}
 			return gm.ActiveCharacters[i].Record.Inventory, nil
 		}
@@ -244,134 +256,53 @@ func (gm *GameManager) SendLoadingMessage(characterID, message string) {
 }
 
 // CreateDefaultInventory creates a default starting inventory for new characters
+// Only uses JSON-based item definitions - no hardcoded fallbacks
 func (gm *GameManager) CreateDefaultInventory() []edentypes.Item {
 	var inventory []edentypes.Item
 
-	// Try to create items from JSON definitions first
-	if gm.ItemRegistry != nil {
-		// Add 10 wood items
-		for j := 0; j < 10; j++ {
-			if item, err := gm.ItemRegistry.CreateItemFromDefinition("wood", ""); err == nil {
-				item.ID = edenutil.GenerateID() // Generate unique ID for this instance
-				if err := gm.DB.AddRecord("Items", item); err != nil {
-					gm.Log.Println(logging.LogError, "Failed to add wood item to DB:", err.Error())
-				}
-				inventory = append(inventory, *item)
-			} else {
-				gm.Log.Println(logging.LogWarn, "Failed to create wood item from registry:", err.Error())
-			}
-		}
+	// Only create items from JSON definitions
+	if gm.ItemRegistry == nil {
+		gm.Log.Println(logging.LogError, "ItemRegistry is nil - cannot create default inventory")
+		return inventory
+	}
 
-		// Add 10 stone items
-		for j := 0; j < 10; j++ {
-			if item, err := gm.ItemRegistry.CreateItemFromDefinition("stone", ""); err == nil {
-				item.ID = edenutil.GenerateID() // Generate unique ID for this instance
-				if err := gm.DB.AddRecord("Items", item); err != nil {
-					gm.Log.Println(logging.LogError, "Failed to add stone item to DB:", err.Error())
-				}
-				inventory = append(inventory, *item)
-			} else {
-				gm.Log.Println(logging.LogWarn, "Failed to create stone item from registry:", err.Error())
-			}
-		}
-
-		// Add 1 pickaxe
-		if item, err := gm.ItemRegistry.CreateItemFromDefinition("pickaxe", ""); err == nil {
+	// Add 10 wood items
+	for j := 0; j < 10; j++ {
+		if item, err := gm.ItemRegistry.CreateItemFromDefinition("wood", ""); err == nil {
 			item.ID = edenutil.GenerateID() // Generate unique ID for this instance
 			if err := gm.DB.AddRecord("Items", item); err != nil {
-				gm.Log.Println(logging.LogError, "Failed to add pickaxe item to DB:", err.Error())
+				gm.Log.Println(logging.LogError, "Failed to add wood item to DB:", err.Error())
 			}
 			inventory = append(inventory, *item)
 		} else {
-			gm.Log.Println(logging.LogWarn, "Failed to create pickaxe item from registry:", err.Error())
+			gm.Log.Println(logging.LogError, "Failed to create wood item from registry:", err.Error())
 		}
-
-		gm.Log.Println(logging.LogInfo, "Created default inventory with", len(inventory), "items from JSON definitions")
 	}
 
-	// Fallback to hardcoded items if JSON system failed or is unavailable
-	if len(inventory) == 0 {
-		gm.Log.Println(logging.LogWarn, "JSON item system unavailable, using fallback hardcoded items")
-
-		// Add 10 wood items (fallback)
-		for j := 0; j < 10; j++ {
-			id := edenutil.GenerateID()
-			wood := edentypes.Item{
-				ID:          id,
-				Name:        "Wood",
-				Description: "A piece of wood.",
-				Type:        edentypes.ItemMaterial,
-				Weight:      1,
-				Stackable:   true,
-				Symbol:      "≡",
-				FGColor:     util.ColorCode{R: 139, G: 69, B: 19},
-				BGColor:     util.ColorCode{R: 0, G: 0, B: 0},
-				Value:       5,
-				MaxStack:    64,
-				Rarity:      "common",
-				Category:    "wood",
-				Tags:        []string{"material", "building", "crafting", "natural"},
+	// Add 10 stone items
+	for j := 0; j < 10; j++ {
+		if item, err := gm.ItemRegistry.CreateItemFromDefinition("stone", ""); err == nil {
+			item.ID = edenutil.GenerateID() // Generate unique ID for this instance
+			if err := gm.DB.AddRecord("Items", item); err != nil {
+				gm.Log.Println(logging.LogError, "Failed to add stone item to DB:", err.Error())
 			}
-			if err := gm.DB.AddRecord("Items", &wood); err != nil {
-				gm.Log.Println(logging.LogError, "Failed to add fallback wood item to DB:", err.Error())
-			}
-			inventory = append(inventory, wood)
+			inventory = append(inventory, *item)
+		} else {
+			gm.Log.Println(logging.LogError, "Failed to create stone item from registry:", err.Error())
 		}
-
-		// Add 10 stone items (fallback)
-		for j := 0; j < 10; j++ {
-			id := edenutil.GenerateID()
-			stone := edentypes.Item{
-				ID:          id,
-				Name:        "Stone",
-				Description: "A piece of stone.",
-				Type:        edentypes.ItemMaterial,
-				Weight:      2.5,
-				Stackable:   true,
-				Symbol:      "◊",
-				FGColor:     util.ColorCode{R: 128, G: 128, B: 128},
-				BGColor:     util.ColorCode{R: 0, G: 0, B: 0},
-				Value:       3,
-				MaxStack:    32,
-				Rarity:      "common",
-				Category:    "stone",
-				Tags:        []string{"material", "building", "heavy", "durable"},
-			}
-			if err := gm.DB.AddRecord("Items", &stone); err != nil {
-				gm.Log.Println(logging.LogError, "Failed to add fallback stone item to DB:", err.Error())
-			}
-			inventory = append(inventory, stone)
-		}
-
-		// Add 1 pickaxe (fallback)
-		pickid := edenutil.GenerateID()
-		pickaxeAttributes := make(map[string]bool)
-		pickaxeAttributes["digging"] = true
-		pickaxe := edentypes.Item{
-			ID:          pickid,
-			Name:        "Pickaxe",
-			Description: "A pickaxe that looks like it should be suitable for digging through stone",
-			Type:        edentypes.ItemTool,
-			Weight:      5,
-			Stackable:   false,
-			Attributes:  pickaxeAttributes,
-			Symbol:      "⚒",
-			FGColor:     util.ColorCode{R: 192, G: 192, B: 192},
-			BGColor:     util.ColorCode{R: 0, G: 0, B: 0},
-			Value:       50,
-			Durability:  100,
-			MaxStack:    1,
-			Rarity:      "common",
-			Category:    "tool",
-			Tags:        []string{"tool", "mining", "digging", "metal"},
-		}
-		if err := gm.DB.AddRecord("Items", &pickaxe); err != nil {
-			gm.Log.Println(logging.LogError, "Failed to add fallback pickaxe item to DB:", err.Error())
-		}
-		inventory = append(inventory, pickaxe)
-
-		gm.Log.Println(logging.LogInfo, "Created default inventory with", len(inventory), "fallback items")
 	}
 
+	// Add 1 pickaxe
+	if item, err := gm.ItemRegistry.CreateItemFromDefinition("pickaxe", ""); err == nil {
+		item.ID = edenutil.GenerateID() // Generate unique ID for this instance
+		if err := gm.DB.AddRecord("Items", item); err != nil {
+			gm.Log.Println(logging.LogError, "Failed to add pickaxe item to DB:", err.Error())
+		}
+		inventory = append(inventory, *item)
+	} else {
+		gm.Log.Println(logging.LogError, "Failed to create pickaxe item from registry:", err.Error())
+	}
+
+	gm.Log.Println(logging.LogInfo, "Created default inventory with", len(inventory), "items from JSON definitions")
 	return inventory
 }

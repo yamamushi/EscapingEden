@@ -5,21 +5,12 @@
   "weight": 3.0,
   "type": 1,
   "stackable": true,
+  "equippable": false,
   "symbol": "●",
-  "fg_color": {
-    "R": 165,
-    "G": 42,
-    "B": 42
-  },
-  "bg_color": {
-    "R": 0,
-    "G": 0,
-    "B": 0
-  },
-  "value": 15,
+  "fg_color": 1,
+  "bg_color": 0,
   "durability": -1,
   "max_stack": 16,
-  "rarity": "uncommon",
   "category": "ore",
   "tags": ["material", "ore", "metal", "mining", "heavy"]
 }

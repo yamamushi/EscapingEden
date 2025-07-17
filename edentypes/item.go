@@ -1,7 +1,5 @@
 package edentypes
 
-import "github.com/yamamushi/EscapingEden/ui/util"
-
 type Item struct {
 	ID          string
 	Name        string
@@ -9,13 +7,14 @@ type Item struct {
 	Weight      float64
 	Type        ItemType
 	Stackable   bool
+	Equippable  bool
 	Hotkey      string
 	Attributes  map[string]bool
 
 	// Visual properties
-	Symbol  string         `json:"symbol"`   // Character/symbol when dropped on ground
-	FGColor util.ColorCode `json:"fg_color"` // Foreground color
-	BGColor util.ColorCode `json:"bg_color"` // Background color
+	Symbol  string `json:"symbol"`   // Character/symbol when dropped on ground
+	FGColor int    `json:"fg_color"` // Foreground color (integer)
+	BGColor int    `json:"bg_color"` // Background color (integer)
 
 	// Extended properties
 	Value      int    `json:"value"`      // Economic value

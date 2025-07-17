@@ -2,6 +2,7 @@ package gamewindow
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/yamamushi/EscapingEden/edentypes"
@@ -17,6 +18,13 @@ type ItemInfoDisplay struct {
 
 func (info *ItemInfoDisplay) GetType() MenuType {
 	return MenuTypeItemInfo
+}
+
+// formatItemColor converts integer color codes to escape sequences (same format as tiles)
+func formatItemColorInfo(fgColor, bgColor int) string {
+	fg := strconv.Itoa(fgColor)
+	bg := strconv.Itoa(bgColor)
+	return "\033[38;5;" + fg + "m" + "\033[48;5;" + bg + "m"
 }
 
 func (info *ItemInfoDisplay) HandleInput(gw *GameWindow, inputType types.InputType, input string) {
@@ -46,89 +54,93 @@ func (info *ItemInfoDisplay) Draw(gw *GameWindow) {
 func (info *ItemInfoDisplay) PrepareContent() {
 	info.Content = []string{}
 
-	// Item name and basic info
-	info.Content = append(info.Content, fmt.Sprintf("Name: %s", info.Item.Name))
-	info.Content = append(info.Content, fmt.Sprintf("Type: %s", info.Item.Type.String()))
-	info.Content = append(info.Content, fmt.Sprintf("Category: %s", info.Item.Category))
-	info.Content = append(info.Content, "")
-
-	// Description (word wrap)
-	wrappedDesc := info.wrapText(info.Item.Description, 45)
-	info.Content = append(info.Content, "Description:")
-	for _, line := range wrappedDesc {
-		info.Content = append(info.Content, "  "+line)
-	}
-	info.Content = append(info.Content, "")
-
-	// Physical properties
-	info.Content = append(info.Content, "Physical Properties:")
-	info.Content = append(info.Content, fmt.Sprintf("  Weight: %.2f kg", info.Item.Weight))
+	// Header with name and symbol
+	headerLine := fmt.Sprintf("Name: %s", info.Item.Name)
 	if info.Item.Symbol != "" {
-		info.Content = append(info.Content, fmt.Sprintf("  Symbol: %s", info.Item.Symbol))
+		headerLine += fmt.Sprintf("  Symbol: %s", info.Item.Symbol)
 	}
-	// Show foreground color
-	if info.Item.FGColor.R != 0 || info.Item.FGColor.G != 0 || info.Item.FGColor.B != 0 {
-		info.Content = append(info.Content, fmt.Sprintf("  FG Color: RGB(%d, %d, %d)", info.Item.FGColor.R, info.Item.FGColor.G, info.Item.FGColor.B))
-	}
-	// Show background color if not black
-	if info.Item.BGColor.R != 0 || info.Item.BGColor.G != 0 || info.Item.BGColor.B != 0 {
-		info.Content = append(info.Content, fmt.Sprintf("  BG Color: RGB(%d, %d, %d)", info.Item.BGColor.R, info.Item.BGColor.G, info.Item.BGColor.B))
-	}
-	info.Content = append(info.Content, "")
+	info.Content = append(info.Content, headerLine)
 
-	// Game properties
-	info.Content = append(info.Content, "Game Properties:")
+	// Basic info line - Type, Category, Weight
+	basicLine := fmt.Sprintf("Type: %s  Category: %s  Weight: %.2f kg",
+		info.Item.Type.String(), info.Item.Category, info.Item.Weight)
+	info.Content = append(info.Content, basicLine)
+
+	// Game properties line
+	var gameProps []string
+
+	// Show stackable status
 	if info.Item.Stackable {
 		if info.Item.MaxStack > 0 {
-			info.Content = append(info.Content, fmt.Sprintf("  Stackable: Yes (max %d)", info.Item.MaxStack))
+			gameProps = append(gameProps, fmt.Sprintf("Stackable: yes (max %d)", info.Item.MaxStack))
 		} else {
-			info.Content = append(info.Content, "  Stackable: Yes")
+			gameProps = append(gameProps, "Stackable: yes")
 		}
 	} else {
-		info.Content = append(info.Content, "  Stackable: No")
+		gameProps = append(gameProps, "Stackable: no")
 	}
 
-	if info.Item.Value > 0 {
-		info.Content = append(info.Content, fmt.Sprintf("  Value: %d coins", info.Item.Value))
+	// Show equippable status
+	if info.Item.Equippable {
+		gameProps = append(gameProps, "Equippable: yes")
+	} else {
+		gameProps = append(gameProps, "Equippable: no")
 	}
 
+	// Only show durability if it's a positive value (not infinite/unset)
 	if info.Item.Durability > 0 {
-		info.Content = append(info.Content, fmt.Sprintf("  Durability: %d", info.Item.Durability))
-	} else if info.Item.Durability == -1 {
-		info.Content = append(info.Content, "  Durability: Infinite")
+		gameProps = append(gameProps, fmt.Sprintf("Durability: %d", info.Item.Durability))
 	}
 
-	if info.Item.Rarity != "" {
-		info.Content = append(info.Content, fmt.Sprintf("  Rarity: %s", strings.Title(info.Item.Rarity)))
+	if len(gameProps) > 0 {
+		info.Content = append(info.Content, strings.Join(gameProps, "  "))
 	}
+
 	info.Content = append(info.Content, "")
 
-	// Attributes and tags
-	if len(info.Item.Attributes) > 0 {
-		info.Content = append(info.Content, "Attributes:")
-		for attr, enabled := range info.Item.Attributes {
-			if enabled {
-				info.Content = append(info.Content, fmt.Sprintf("  • %s", attr))
-			}
+	// Description (word wrap to wider width for notecard style)
+	if info.Item.Description != "" {
+		wrappedDesc := info.wrapText(info.Item.Description, 70)
+		info.Content = append(info.Content, "Description:")
+		for _, line := range wrappedDesc {
+			info.Content = append(info.Content, "  "+line)
 		}
 		info.Content = append(info.Content, "")
 	}
 
-	if len(info.Item.Tags) > 0 {
-		info.Content = append(info.Content, "Tags:")
-		tagLine := "  " + strings.Join(info.Item.Tags, ", ")
-		wrappedTags := info.wrapText(tagLine, 47)
-		for _, line := range wrappedTags {
-			info.Content = append(info.Content, line)
+	// Attributes and tags on same line if they exist
+	var extraInfo []string
+	if len(info.Item.Attributes) > 0 {
+		var attrs []string
+		for attr, enabled := range info.Item.Attributes {
+			if enabled {
+				attrs = append(attrs, attr)
+			}
 		}
+		if len(attrs) > 0 {
+			extraInfo = append(extraInfo, "Attributes: "+strings.Join(attrs, ", "))
+		}
+	}
+
+	if len(info.Item.Tags) > 0 {
+		extraInfo = append(extraInfo, "Tags: "+strings.Join(info.Item.Tags, ", "))
+	}
+
+	for _, line := range extraInfo {
+		wrappedLine := info.wrapText(line, 70)
+		for _, wrapped := range wrappedLine {
+			info.Content = append(info.Content, wrapped)
+		}
+	}
+
+	if len(extraInfo) > 0 {
 		info.Content = append(info.Content, "")
 	}
 
 	// Controls
-	info.Content = append(info.Content, "Controls:")
-	info.Content = append(info.Content, "  ! - Close")
+	info.Content = append(info.Content, "Press ! to close")
 
-	// Calculate dimensions
+	// Calculate dimensions for notecard style (wider, shorter)
 	maxWidth := 0
 	for _, line := range info.Content {
 		if len(line) > maxWidth {
@@ -136,37 +148,108 @@ func (info *ItemInfoDisplay) PrepareContent() {
 		}
 	}
 
+	// Ensure minimum width for notecard appearance
+	if maxWidth < 60 {
+		maxWidth = 60
+	}
+
 	info.Width = maxWidth + 4
 	info.Height = len(info.Content) + 4
 
-	// Center the window
-	info.X = (info.GW.Width - info.Width) / 2
-	info.Y = (info.GW.Height - info.Height) / 2
+	// Position in upper left area to avoid overlapping inventory
+	info.X = 5
+	info.Y = 3
 }
 
 func (info *ItemInfoDisplay) DrawMenuItems(gw *GameWindow) {
 	for index, content := range info.Content {
-		// Special handling for the symbol line in Physical Properties section
-		if info.Item.Symbol != "" && strings.HasPrefix(content, "  Symbol: ") && strings.Contains(content, info.Item.Symbol) {
-			// This is the line with the item symbol - draw it with colors
-			symbolIndex := strings.Index(content, info.Item.Symbol)
-
-			// Draw the part before the symbol
-			beforeSymbol := content[:symbolIndex]
-			info.PrintToMenu(gw, 2, index+2, beforeSymbol, "")
-
-			// Draw the colored symbol
-			itemColorCode := info.Item.FGColor.FG() + info.Item.BGColor.BG()
-			info.PrintToMenu(gw, 2+len(beforeSymbol), index+2, info.Item.Symbol, itemColorCode)
-
-			// Draw any remaining part after the symbol
-			afterSymbol := content[symbolIndex+len(info.Item.Symbol):]
-			info.PrintToMenu(gw, 2+len(beforeSymbol)+len(info.Item.Symbol), index+2, afterSymbol, "")
+		// Special handling for the header line that contains the symbol
+		if info.Item.Symbol != "" && strings.Contains(content, "Symbol: "+info.Item.Symbol) {
+			// This is the header line with the item symbol - draw it with colors and bold field names
+			info.drawLineWithBoldFields(gw, index, content, true)
 		} else {
-			// Normal drawing for all other lines
-			info.PrintToMenu(gw, 2, index+2, content, "")
+			// Draw other lines with bold field names
+			info.drawLineWithBoldFields(gw, index, content, false)
 		}
 	}
+}
+
+// drawLineWithBoldFields draws a line with field names in bold
+func (info *ItemInfoDisplay) drawLineWithBoldFields(gw *GameWindow, lineIndex int, content string, hasSymbol bool) {
+	// Field names that should be bold
+	fieldNames := []string{"Name:", "Type:", "Category:", "Weight:", "Symbol:", "Durability:", "Stackable", "Equippable", "Description:", "Attributes:", "Tags:"}
+
+	x := 2
+	y := lineIndex + 2
+
+	// If this line has a symbol, handle it specially
+	if hasSymbol && info.Item.Symbol != "" && strings.Contains(content, "Symbol: "+info.Item.Symbol) {
+		symbolIndex := strings.Index(content, info.Item.Symbol)
+
+		// Draw everything before the symbol (with bold field names)
+		beforeSymbol := content[:symbolIndex]
+		x = info.drawTextWithBoldFields(gw, x, y, beforeSymbol, fieldNames)
+
+		// Draw the colored symbol
+		itemColorCode := formatItemColorInfo(info.Item.FGColor, info.Item.BGColor)
+		info.PrintToMenu(gw, x, y, info.Item.Symbol, itemColorCode)
+		x += len([]rune(info.Item.Symbol))
+
+		// Draw everything after the symbol
+		afterSymbol := content[symbolIndex+len(info.Item.Symbol):]
+		info.drawTextWithBoldFields(gw, x, y, afterSymbol, fieldNames)
+	} else {
+		// Normal line - just draw with bold field names
+		info.drawTextWithBoldFields(gw, x, y, content, fieldNames)
+	}
+}
+
+// drawTextWithBoldFields draws text with specified field names in bold
+func (info *ItemInfoDisplay) drawTextWithBoldFields(gw *GameWindow, startX, y int, text string, fieldNames []string) int {
+	if text == "" {
+		return startX
+	}
+
+	x := startX
+	remaining := text
+
+	for len(remaining) > 0 {
+		// Find the next field name
+		nextFieldIndex := -1
+		nextFieldName := ""
+
+		for _, field := range fieldNames {
+			if index := strings.Index(remaining, field); index != -1 {
+				if nextFieldIndex == -1 || index < nextFieldIndex {
+					nextFieldIndex = index
+					nextFieldName = field
+				}
+			}
+		}
+
+		if nextFieldIndex == -1 {
+			// No more field names, draw the rest normally
+			info.PrintToMenu(gw, x, y, remaining, "")
+			x += len([]rune(remaining))
+			break
+		}
+
+		// Draw text before the field name
+		if nextFieldIndex > 0 {
+			beforeField := remaining[:nextFieldIndex]
+			info.PrintToMenu(gw, x, y, beforeField, "")
+			x += len([]rune(beforeField))
+		}
+
+		// Draw the field name in bold
+		info.PrintToMenu(gw, x, y, nextFieldName, gw.Terminal.Bold())
+		x += len([]rune(nextFieldName))
+
+		// Continue with the rest of the text
+		remaining = remaining[nextFieldIndex+len(nextFieldName):]
+	}
+
+	return x
 }
 
 // Implement missing MenuBoxType interface methods

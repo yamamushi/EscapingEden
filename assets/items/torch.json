@@ -5,21 +5,12 @@
   "weight": 0.8,
   "type": 2,
   "stackable": true,
+  "equippable": true,
   "symbol": "♦",
-  "fg_color": {
-    "R": 255,
-    "G": 140,
-    "B": 0
-  },
-  "bg_color": {
-    "R": 0,
-    "G": 0,
-    "B": 0
-  },
-  "value": 12,
+  "fg_color": 11,
+  "bg_color": 0,
   "durability": 60,
   "max_stack": 8,
-  "rarity": "common",
   "category": "light",
   "tags": ["tool", "light", "fire", "exploration", "consumable"]
 }

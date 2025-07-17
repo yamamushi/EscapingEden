@@ -6,27 +6,26 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
-
-	"github.com/yamamushi/EscapingEden/ui/util"
 )
 
 // ItemDefinition represents the JSON structure for item definitions
 type ItemDefinition struct {
-	ID          string         `json:"id"`
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Weight      float64        `json:"weight"`
-	Type        int            `json:"type"` // ItemType as int for JSON
-	Stackable   bool           `json:"stackable"`
-	Symbol      string         `json:"symbol"`
-	FGColor     util.ColorCode `json:"fg_color"` // Foreground color
-	BGColor     util.ColorCode `json:"bg_color"` // Background color
-	Value       int            `json:"value"`
-	Durability  int            `json:"durability"`
-	MaxStack    int            `json:"max_stack"`
-	Rarity      string         `json:"rarity"`
-	Category    string         `json:"category"`
-	Tags        []string       `json:"tags"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Weight      float64  `json:"weight"`
+	Type        int      `json:"type"` // ItemType as int for JSON
+	Stackable   bool     `json:"stackable"`
+	Equippable  bool     `json:"equippable"`
+	Symbol      string   `json:"symbol"`
+	FGColor     int      `json:"fg_color"` // Foreground color (integer)
+	BGColor     int      `json:"bg_color"` // Background color (integer)
+	Value       int      `json:"value"`
+	Durability  int      `json:"durability"`
+	MaxStack    int      `json:"max_stack"`
+	Rarity      string   `json:"rarity"`
+	Category    string   `json:"category"`
+	Tags        []string `json:"tags"`
 }
 
 // ItemRegistry holds all loaded item definitions
@@ -102,6 +101,7 @@ func (ir *ItemRegistry) CreateItemFromDefinition(id string, hotkey string) (*Ite
 		Weight:      def.Weight,
 		Type:        ItemType(def.Type),
 		Stackable:   def.Stackable,
+		Equippable:  def.Equippable,
 		Hotkey:      hotkey,
 		Attributes:  attributes,
 		Symbol:      def.Symbol,
