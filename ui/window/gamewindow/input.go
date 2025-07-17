@@ -1,6 +1,7 @@
 package gamewindow
 
 import (
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
 )
@@ -29,7 +30,7 @@ func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 	defer gw.commandMutex.Unlock()
 	//gw.log.Println(logging.LogInfo, "GameWindow Command: ", input)
 	gw.MenusMutex.Lock()
-	if int(input[0]) == 3 {
+	if len(input) > 0 && int(input[0]) == 3 {
 		for _, menu := range gw.Menus {
 			menu.SetCallbackStatusBarMessage("")
 		}
@@ -40,6 +41,21 @@ func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 		gw.RequestFlushFromConsole()
 		return
 	}
+
+	// Handle ESC key for menus
+	if inputType == types.InputEscape {
+		if len(gw.Menus) > 0 {
+			gw.Log.Println(logging.LogInfo, "GameWindow: ESC with menus open, forwarding to menu")
+			gw.Menus[len(gw.Menus)-1].HandleInput(gw, inputType, "")
+			gw.MenusMutex.Unlock()
+			return
+		}
+		// No menus open, do nothing
+		gw.Log.Println(logging.LogInfo, "GameWindow: ESC with no menus, doing nothing")
+		gw.MenusMutex.Unlock()
+		return
+	}
+
 	if len(gw.Menus) > 0 {
 		gw.Menus[len(gw.Menus)-1].HandleInput(gw, inputType, input) // Handle input for the top menu
 		gw.MenusMutex.Unlock()
@@ -48,9 +64,6 @@ func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 	gw.MenusMutex.Unlock()
 	//gw.Log.Println(logging.LogInfo, "GameWindow Input: ", strconv.Itoa(int(input[0])))
 	// convert input to an int and send the value to the console
-	if inputType == types.InputEscape {
-		return // Do nothing
-	}
 	if int(input[0]) == 4 {
 		// ^D
 		//gw.Log.Println(logging.LogInfo, "GameWindow received ^D, handling dig")

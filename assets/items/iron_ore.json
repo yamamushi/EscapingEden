@@ -1,0 +1,25 @@
+{
+  "id": "iron_ore",
+  "name": "Iron Ore",
+  "description": "Raw iron ore extracted from deep underground. This metallic ore can be smelted into iron ingots for crafting advanced tools and equipment. The ore has a distinctive reddish-brown color and feels heavy in your hands.",
+  "weight": 3.0,
+  "type": 1,
+  "stackable": true,
+  "symbol": "●",
+  "fg_color": {
+    "R": 165,
+    "G": 42,
+    "B": 42
+  },
+  "bg_color": {
+    "R": 0,
+    "G": 0,
+    "B": 0
+  },
+  "value": 15,
+  "durability": -1,
+  "max_stack": 16,
+  "rarity": "uncommon",
+  "category": "ore",
+  "tags": ["material", "ore", "metal", "mining", "heavy"]
+}

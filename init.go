@@ -129,7 +129,24 @@ func InitGameManager(input chan messages.GameManagerMessage, output chan message
 		//fmt.Print(".")
 		// no-op
 	}
+
+	// Start HTTP monitoring server
+	go startMonitoringServer(gameManager, log, conf)
+
 	return gameManager, nil
+}
+
+// startMonitoringServer starts the HTTP monitoring server
+func startMonitoringServer(gm *game.GameManager, log logging.LoggerType, conf *edenconfig.Config) {
+	// Create enhanced game monitoring server
+	monitoringAddr := ":8080" // Default monitoring port
+	server := game.NewGameMonitoringServer(monitoringAddr, gm, log)
+
+	// Start the server
+	log.Println(logging.LogInfo, "Starting enhanced monitoring server on", monitoringAddr)
+	if err := server.Start(); err != nil {
+		log.Println(logging.LogError, "Failed to start monitoring server:", err)
+	}
 }
 
 // InitCharacterManager initializes the character manager

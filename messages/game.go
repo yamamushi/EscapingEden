@@ -20,6 +20,7 @@ const (
 	GM_FailedLoadInventory
 	GM_FailedDig
 	GM_FailedBuildWall
+	GM_LoadingMessage
 
 	// Message to the game manager
 
@@ -38,12 +39,13 @@ const (
 type GameMessageCommand int
 
 const (
-	GMC_Null WindowMessageCommand = iota
+	GMC_Null GameMessageCommand = iota
 )
 
 type GameMessage struct {
-	Type GameMessageType
-	Data GameMessageData
+	Type    GameMessageType
+	Message string // For simple text messages like loading messages
+	Data    GameMessageData
 }
 
 type GameMessageData struct {

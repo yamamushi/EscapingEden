@@ -90,6 +90,13 @@ func (gm *GameManager) ParseAdminCommand(senderID, input string) bool {
 		}
 		return gm.handleAdminHelpCommand(senderID)
 
+	case "repairitems", "repair":
+		if !userRole.HasPermission(RoleAdmin) {
+			gm.sendPermissionDeniedMessage(senderID, "repair items", RoleAdmin)
+			return true
+		}
+		return gm.handleRepairItemsCommand(senderID)
+
 	default:
 		return false // Not an admin command
 	}
@@ -255,7 +262,9 @@ func (gm *GameManager) handleAdminHelpCommand(adminID string) bool {
 		helpText += "/reset <player>               - Reset player to default spawn position\n"
 		helpText += "/resetpos <player>            - Same as reset\n"
 		helpText += "/locate <player>              - Get player's current location\n"
-		helpText += "/where <player>               - Same as locate\n\n"
+		helpText += "/where <player>               - Same as locate\n"
+		helpText += "/repairitems                  - Repair item database with colors and symbols\n"
+		helpText += "/repair                       - Same as repairitems\n\n"
 	}
 
 	// Commands available to SuperAdmins only
@@ -393,6 +402,19 @@ func (gm *GameManager) handleRoleStatsCommand(adminID string) bool {
 	return true
 }
 
+// handleRepairItemsCommand handles /repairitems command
+func (gm *GameManager) handleRepairItemsCommand(adminID string) bool {
+	gm.sendAdminMessage(adminID, "Starting item database repair... This may take a moment.")
+
+	// Run the repair function
+	go func() {
+		gm.RepairItemDatabase()
+		gm.sendAdminMessage(adminID, "Item database repair completed. Check server logs for details.")
+	}()
+
+	return true
+}
+
 // sendAdminMessage sends a message directly to an admin
 func (gm *GameManager) sendAdminMessage(adminID, message string) {
 	response := messages.ConnectionManagerMessage{
@@ -429,7 +451,7 @@ func IsAdminCommand(input string) bool {
 		"teleport", "tp", "tphere", "summon", "emergency", "rescue",
 		"locate", "where", "position", "spawns", "listspawns",
 		"adminhelp", "ahelp", "reset", "resetpos", "resetposition",
-		"role", "roles", "whoami",
+		"role", "roles", "whoami", "repairitems", "repair",
 	}
 
 	for _, cmd := range adminCommands {

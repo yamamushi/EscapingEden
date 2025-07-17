@@ -1,0 +1,25 @@
+{
+  "id": "rope",
+  "name": "Rope",
+  "description": "A length of sturdy rope made from twisted fibers. Useful for climbing, securing items, or crafting various contraptions. This rope is strong enough to support considerable weight and weather.",
+  "weight": 0.5,
+  "type": 1,
+  "stackable": true,
+  "symbol": "∿",
+  "fg_color": {
+    "R": 210,
+    "G": 180,
+    "B": 140
+  },
+  "bg_color": {
+    "R": 0,
+    "G": 0,
+    "B": 0
+  },
+  "value": 8,
+  "durability": -1,
+  "max_stack": 10,
+  "rarity": "common",
+  "category": "utility",
+  "tags": ["material", "utility", "climbing", "crafting", "flexible"]
+}

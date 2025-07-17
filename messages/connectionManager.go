@@ -29,6 +29,7 @@ const (
 
 	ConnectManager_Message_GameCommand
 	ConnectManager_Message_GameCommandResponse
+	ConnectManager_Message_NewGameCommand
 
 	ConnectManager_Message_LoginResponse
 	ConnectManager_Message_BadLoginAttempt

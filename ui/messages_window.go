@@ -123,6 +123,16 @@ func (c *Console) CaptureWindowMessages() {
 				c.SendMessages <- managerMessage
 				continue
 
+			case messages.WM_NewGameCommand:
+				//c.Log.Println(logging.LogInfo, "Sending New Game Command")
+				managerMessage := messages.ConnectionManagerMessage{
+					Type:            messages.ConnectManager_Message_NewGameCommand,
+					Data:            windowMessage.Data, // This should be a *commands.PlayerCommand
+					SenderConsoleID: c.ConnectionID,
+				}
+				c.SendMessages <- managerMessage
+				continue
+
 			case messages.WM_RequestRegistration:
 				//log.Println("Sending registration request to connection manager")
 				managerMessage := messages.ConnectionManagerMessage{

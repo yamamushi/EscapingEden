@@ -40,6 +40,14 @@ func (gw *GameWindow) Listen() {
 					gw.Menus[0].SetCallbackStatusBarMessage("You can't build there.")
 				}
 				gw.SetStatusBarMessage("You can't build there.")
+
+			case messages.GM_LoadingMessage:
+				// Handle loading messages by displaying them in the status bar
+				loadingMessage := receivedMessage.Data.(messages.GameMessage).Message
+				if len(gw.Menus) > 0 {
+					gw.Menus[0].SetCallbackStatusBarMessage(loadingMessage)
+				}
+				gw.SetStatusBarMessage(loadingMessage)
 			}
 		}
 	}

@@ -58,7 +58,7 @@ func (gm *GameManager) AdminTeleportCommand(adminID, targetPlayerID, location st
 		targetCharacter.Position.X = adminCharacter.Position.X
 		targetCharacter.Position.Y = adminCharacter.Position.Y
 		targetCharacter.Position.Z = adminCharacter.Position.Z
-		targetCharacter.Position.MapChunkID = adminCharacter.CurrentMapID
+		targetCharacter.Position.MapChunkID = adminCharacter.Position.MapChunkID
 		targetCharacter.CurrentMapID = adminCharacter.CurrentMapID
 		gm.activeCharactersMutex.Unlock()
 
@@ -106,11 +106,14 @@ func (gm *GameManager) AdminTeleportCommand(adminID, targetPlayerID, location st
 
 				// Teleport player
 				gm.activeCharactersMutex.Lock()
+				// Use coordinate-based chunk ID instead of UUID
+				coordinateBasedID := fmt.Sprintf("%d-%d-%d", chunk.GlobalPosition.X, chunk.GlobalPosition.Y, chunk.GlobalPosition.Z)
+
 				targetCharacter.Position.X = localX
 				targetCharacter.Position.Y = localY
 				targetCharacter.Position.Z = localZ
-				targetCharacter.Position.MapChunkID = chunk.ID
-				targetCharacter.CurrentMapID = chunk.ID
+				targetCharacter.Position.MapChunkID = coordinateBasedID
+				targetCharacter.CurrentMapID = coordinateBasedID
 				gm.activeCharactersMutex.Unlock()
 
 				// Notify the player

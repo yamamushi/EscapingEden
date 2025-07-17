@@ -141,16 +141,51 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 
 			case messages.ConnectManager_Message_ServerShutdown:
 				cm.Log.Println(logging.LogInfo, "Server shutdown message received on Connection Manager, disconnecting all clients.")
-				cm.connectionMap.Range(func(key, value interface{}) bool {
-					if conn, ok := value.(*Connection); ok {
-						cm.HandleDisconnect(conn)
-						conn.Write([]byte("\033c\r\nThe Escaping Eden server has shut down for maintenance.\r\n" +
-							"For the latest status updates, be sure to check the Escaping Eden Discord at: https://discord.gg/uMxZnjJGGu\r\n\r\n"))
-						conn.Close()
-					}
-					return true
-				})
-				continue
+
+				// Create a channel to signal completion of connection cleanup
+				shutdownDone := make(chan struct{})
+
+				// Start connection cleanup in a goroutine
+				go func() {
+					defer close(shutdownDone)
+
+					connectionCount := 0
+					closedCount := 0
+
+					// Count total connections first
+					cm.connectionMap.Range(func(key, value interface{}) bool {
+						connectionCount++
+						return true
+					})
+
+					cm.Log.Println(logging.LogInfo, "Found", connectionCount, "active connections to close")
+
+					// Close all connections
+					cm.connectionMap.Range(func(key, value interface{}) bool {
+						if conn, ok := value.(*Connection); ok {
+							cm.HandleDisconnect(conn)
+							conn.Write([]byte("\033c\r\nThe Escaping Eden server has shut down for maintenance.\r\n" +
+								"For the latest status updates, be sure to check the Escaping Eden Discord at: https://discord.gg/uMxZnjJGGu\r\n\r\n"))
+							conn.Close()
+							closedCount++
+						}
+						return true
+					})
+
+					cm.Log.Println(logging.LogInfo, "Connection cleanup completed:", closedCount, "connections closed out of", connectionCount, "total")
+				}()
+
+				// Wait for connection cleanup with timeout
+				shutdownTimeout := 5 * time.Second
+				select {
+				case <-shutdownDone:
+					cm.Log.Println(logging.LogInfo, "All connections closed gracefully")
+				case <-time.After(shutdownTimeout):
+					cm.Log.Println(logging.LogWarn, "Connection cleanup timed out after", shutdownTimeout, "- forcing shutdown to prevent hanging")
+				}
+
+				cm.Log.Println(logging.LogInfo, "Connection manager shutdown complete")
+				return
 			case messages.ConnectManager_Message_Error:
 				// For every connection, send the message to the Console channel
 				cm.connectionMap.Range(func(key, value interface{}) bool {
@@ -287,6 +322,17 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 					cm.GMSendMessages <- messages.GameManagerMessage{
 						Type:            managerMessage.Data.(messages.GameManagerMessage).Type,
 						Data:            managerMessage.Data,
+						SenderConsoleID: managerMessage.SenderConsoleID,
+					}
+				}()
+				continue
+
+			case messages.ConnectManager_Message_NewGameCommand:
+				go func() {
+					//cm.Log.Println(logging.LogInfo, "Sending new game command to game manager from", managerMessage.SenderConsoleID)
+					cm.GMSendMessages <- messages.GameManagerMessage{
+						Type:            messages.GameManager_NewCommand,
+						Data:            managerMessage.Data, // This should be a *commands.PlayerCommand
 						SenderConsoleID: managerMessage.SenderConsoleID,
 					}
 				}()

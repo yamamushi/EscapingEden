@@ -2,11 +2,14 @@ package gamewindow
 
 import (
 	"fmt"
+	"log"
+	"strings"
+	"sync"
+
+	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"log"
-	"sync"
 )
 
 type MenuType int
@@ -14,6 +17,7 @@ type MenuType int
 const (
 	MenuTypeNull MenuType = iota
 	MenuTypeInventory
+	MenuTypeItemInfo
 )
 
 type MenuBoxType interface {
@@ -202,7 +206,28 @@ func (mb *MenuBox) DrawMenuItems(gw *GameWindow) {
 		}
 		// Draw the keybind
 		mb.PrintToMenu(gw, 2, i+2, option.Keybind+")", "")
-		// Draw the name
+
+		// Check if this option contains an item with a colored symbol (format: "symbol Name")
+		if option.Data != nil {
+			// Try to cast the data to an Item to get color information
+			if item, ok := option.Data.(edentypes.Item); ok && item.Symbol != "" {
+				// Check if the option name starts with the symbol
+				if strings.HasPrefix(option.Name, item.Symbol) {
+					// Draw the colored symbol
+					itemColorCode := item.FGColor.FG() + item.BGColor.BG()
+					mb.PrintToMenu(gw, 5, i+2, item.Symbol, itemColorCode)
+
+					// Draw the rest of the line (space and item name) - use proper Unicode string slicing
+					symbolRunes := []rune(item.Symbol)
+					nameRunes := []rune(option.Name)
+					afterSymbol := string(nameRunes[len(symbolRunes):])
+					mb.PrintToMenu(gw, 5+len(item.Symbol), i+2, afterSymbol, "")
+					continue
+				}
+			}
+		}
+
+		// Normal drawing for options without colored symbols
 		mb.PrintToMenu(gw, 5, i+2, option.Name, "")
 	}
 }

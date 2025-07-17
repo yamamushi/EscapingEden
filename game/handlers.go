@@ -2,6 +2,7 @@ package game
 
 import (
 	"github.com/yamamushi/EscapingEden/edenutil"
+	"github.com/yamamushi/EscapingEden/game/commands"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 )
@@ -214,6 +215,47 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 					}
 					gm.SendChannel <- response
 				}
+
+			case messages.GameManager_NewCommand:
+				//gm.Log.Println(logging.LogInfo, "Game Manager received new command")
+				cmd := managerMessage.Data.(*commands.PlayerCommand)
+
+				// Process the command through the new system
+				result, err := gm.ProcessCommand(cmd)
+
+				// Send response back to the client
+				var responseType messages.GameMessageType
+				var responseData interface{}
+
+				if err != nil || (result != nil && !result.Success) {
+					// Command failed
+					responseType = messages.GM_SystemMessage
+					if result != nil && result.Error != nil {
+						responseData = result.Error.Error()
+					} else if err != nil {
+						responseData = err.Error()
+					} else {
+						responseData = "Command failed"
+					}
+				} else if result != nil {
+					// Command succeeded
+					responseType = messages.GM_SystemMessage
+					responseData = result.Message
+				}
+
+				// Send response
+				response := messages.ConnectionManagerMessage{
+					Type:               messages.ConnectManager_Message_GameCommandResponse,
+					RecipientConsoleID: managerMessage.SenderConsoleID,
+					Data: messages.GameMessage{
+						Type: responseType,
+						Data: messages.GameMessageData{
+							CharacterID: cmd.PlayerID,
+							Data:        responseData,
+						},
+					},
+				}
+				gm.SendChannel <- response
 
 			}
 		}

@@ -1,0 +1,25 @@
+{
+  "id": "torch",
+  "name": "Torch",
+  "description": "A wooden torch wrapped with cloth and soaked in oil. Provides light in dark places and can be used to ignite flammable materials. The flame dances gently, casting warm light in all directions.",
+  "weight": 0.8,
+  "type": 2,
+  "stackable": true,
+  "symbol": "♦",
+  "fg_color": {
+    "R": 255,
+    "G": 140,
+    "B": 0
+  },
+  "bg_color": {
+    "R": 0,
+    "G": 0,
+    "B": 0
+  },
+  "value": 12,
+  "durability": 60,
+  "max_stack": 8,
+  "rarity": "common",
+  "category": "light",
+  "tags": ["tool", "light", "fire", "exploration", "consumable"]
+}

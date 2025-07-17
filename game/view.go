@@ -35,6 +35,9 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 			return messages.GameCharView{}, err
 		}
 
+		// Use coordinate-based chunk ID instead of UUID
+		coordinateBasedID := fmt.Sprintf("%d-%d-%d", chunk.GlobalPosition.X, chunk.GlobalPosition.Y, chunk.GlobalPosition.Z)
+
 		character.Position = struct {
 			MapChunkID string
 			X          int
@@ -44,10 +47,10 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 			X:          len(chunk.TileMap) / 2,
 			Y:          len(chunk.TileMap[0]) / 2,
 			Z:          0,
-			MapChunkID: chunk.ID,
+			MapChunkID: coordinateBasedID,
 		}
 		character.Initialized = true
-		character.CurrentMapID = chunk.ID
+		character.CurrentMapID = coordinateBasedID
 	}
 	defer gm.activeCharactersMutex.Unlock()
 
@@ -59,7 +62,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 		plane[i] = make([]types.Point, height)
 	}
 
-	currentMap := gm.GetMapChunkByID(character.CurrentMapID)
+	currentMap := gm.GetMapChunkByIDWithLoading(character.CurrentMapID, charID)
 	if currentMap == nil {
 		return messages.GameCharView{}, fmt.Errorf("current map chunk %s not found", character.CurrentMapID)
 	} // plane[i][j] is the window drawing we're sending to the client

@@ -1,0 +1,25 @@
+{
+  "id": "stone",
+  "name": "Stone",
+  "description": "A solid piece of stone. Heavy but durable, perfect for construction and tool-making. This fundamental building material has been used by civilizations for millennia.",
+  "weight": 2.5,
+  "type": 1,
+  "stackable": true,
+  "symbol": "◊",
+  "fg_color": {
+    "R": 128,
+    "G": 128,
+    "B": 128
+  },
+  "bg_color": {
+    "R": 0,
+    "G": 0,
+    "B": 0
+  },
+  "value": 3,
+  "durability": -1,
+  "max_stack": 32,
+  "rarity": "common",
+  "category": "stone",
+  "tags": ["material", "building", "heavy", "durable"]
+}

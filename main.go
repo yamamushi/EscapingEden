@@ -156,11 +156,20 @@ func run() error {
 	time.Sleep(time.Second * time.Duration(conf.Server.ShutdownTimeout))
 
 	// Now we tell the connection manager we're shutting down and to close all connections
+	fmt.Println("Closing all client connections...")
 	managerMessage = messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_ServerShutdown}
 	server.ConnectionManagerSend <- managerMessage
 
-	// We sleep for the configured ShutdownTimeout (now is when we can ctrl-c if we want to skip cleanup, etc)
-	time.Sleep(time.Second * time.Duration(conf.Server.ShutdownTimeout))
+	// Wait a shorter time for graceful disconnects (reduced to prevent hanging)
+	gracefulDisconnectTime := time.Second * time.Duration(conf.Server.ShutdownTimeout/2)
+	if gracefulDisconnectTime < 3*time.Second {
+		gracefulDisconnectTime = 3 * time.Second
+	}
+	fmt.Printf("Waiting %.0f seconds for graceful disconnects...\n", gracefulDisconnectTime.Seconds())
+	time.Sleep(gracefulDisconnectTime)
+
+	// Run cleanup with built-in timeout protection
+	fmt.Println("Running final cleanup...")
 	gameManager.Cleanup()
 
 	log.Println(logging.LogInfo, "Server exited cleanly.")

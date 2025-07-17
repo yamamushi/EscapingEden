@@ -36,6 +36,7 @@ const (
 
 	WM_GameCommand
 	WM_GameCommandResponse
+	WM_NewGameCommand // New command system
 
 	// These are messages that are parsed by the windows themselves if they receive an event
 	WM_RegistrationResponse

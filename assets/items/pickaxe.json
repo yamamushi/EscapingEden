@@ -1,0 +1,30 @@
+{
+  "id": "pickaxe",
+  "name": "Pickaxe",
+  "description": "A sturdy pickaxe designed for mining and excavation. The sharp metal head can break through stone and earth with ease. Essential for any serious mining operation.",
+  "weight": 5.0,
+  "type": 2,
+  "stackable": false,
+  "symbol": "⚒",
+  "fg_color": {
+    "R": 192,
+    "G": 192,
+    "B": 192
+  },
+  "bg_color": {
+    "R": 0,
+    "G": 0,
+    "B": 0
+  },
+  "value": 50,
+  "durability": 100,
+  "max_stack": 1,
+  "rarity": "common",
+  "category": "tool",
+  "tags": [
+    "tool",
+    "mining",
+    "digging",
+    "metal"
+  ]
+}

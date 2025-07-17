@@ -15,8 +15,9 @@ type Config struct {
 
 // LoggerConfig holds logging configuration
 type LoggerConfig struct {
-	Type string `toml:"type"`
-	Path string `toml:"path"`
+	Type       string `toml:"type"`
+	Path       string `toml:"path"`
+	DebugChunk bool   `toml:"debug_chunk"`
 }
 
 // ServerConfig holds server configuration

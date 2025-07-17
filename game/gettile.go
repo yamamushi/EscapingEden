@@ -64,10 +64,10 @@ func (gm *GameManager) GlobalToLocalTile(x, y, z int) (X, Y, Z int, chunk *MapCh
 	if y > (worldY*chunkSize)-1 {
 		y = 0
 	}
-	if y < 0 {
-		y = (worldZ * chunkSize) - 1
+	if z < 0 {
+		z = (worldZ * chunkSize) - 1
 	}
-	if y > (worldZ*chunkSize)-1 {
+	if z > (worldZ*chunkSize)-1 {
 		z = 0
 	}
 
@@ -83,7 +83,11 @@ func (gm *GameManager) GlobalToLocalTile(x, y, z int) (X, Y, Z int, chunk *MapCh
 		return 0, 0, 0, nil
 	}
 
-	return x % chunkSize, y % chunkSize, z % chunkSize, mapChunk
+	localX, localY, localZ := x%chunkSize, y%chunkSize, z%chunkSize
+	if gm.Config.Logger.DebugChunk {
+		gm.Log.Println(logging.LogDebug, "GlobalToLocal: global", x, y, z, "-> local", localX, localY, localZ, "chunk", globalX, globalY, globalZ)
+	}
+	return localX, localY, localZ, mapChunk
 }
 
 // Takes a local tile position and returns the global tile position with wrapping
@@ -92,6 +96,11 @@ func (gm *GameManager) LocalToGlobalTile(x, y, z int, mapChunk *MapChunk) (X, Y,
 	globalBaseX := mapChunk.GlobalPosition.X * chunkSize
 	globalBaseY := mapChunk.GlobalPosition.Y * chunkSize
 	globalBaseZ := mapChunk.GlobalPosition.Z * chunkSize
+
+	// Debug logging (only if enabled)
+	if gm.Config.Logger.DebugChunk {
+		gm.Log.Println(logging.LogDebug, "LocalToGlobal: local", x, y, z, "chunk pos", mapChunk.GlobalPosition.X, mapChunk.GlobalPosition.Y, mapChunk.GlobalPosition.Z, "chunk size", chunkSize)
+	}
 
 	worldDimensionsString := gm.Config.WorldGen.Dimensions
 	worldX, worldY, worldZ := gm.ParseWorldDimensions(worldDimensionsString)
@@ -107,10 +116,10 @@ func (gm *GameManager) LocalToGlobalTile(x, y, z int, mapChunk *MapChunk) (X, Y,
 	if y > (worldY*chunkSize)-1 {
 		y = 0
 	}
-	if y < 0 {
-		y = (worldZ * chunkSize) - 1
+	if z < 0 {
+		z = (worldZ * chunkSize) - 1
 	}
-	if y > (worldZ*chunkSize)-1 {
+	if z > (worldZ*chunkSize)-1 {
 		z = 0
 	}
 
@@ -118,6 +127,9 @@ func (gm *GameManager) LocalToGlobalTile(x, y, z int, mapChunk *MapChunk) (X, Y,
 	Y = globalBaseY + y
 	Z = globalBaseZ + z
 
+	if gm.Config.Logger.DebugChunk {
+		gm.Log.Println(logging.LogDebug, "LocalToGlobal result: global", X, Y, Z)
+	}
 	return X, Y, Z
 }
 

@@ -20,7 +20,7 @@ func (gm *GameManager) CharacterSafetyCheck(characterID string) error {
 	}
 
 	// Check if character's map exists
-	currentMap := gm.GetMapChunkByID(character.CurrentMapID)
+	currentMap := gm.GetMapChunkByIDWithLoading(character.CurrentMapID, characterID)
 	if currentMap == nil {
 		gm.Log.Println(logging.LogWarn, fmt.Sprintf("Safety check: Character %s has invalid map ID %s",
 			characterID, character.CurrentMapID))
@@ -144,7 +144,7 @@ func (gm *GameManager) EnsureSafeLogin(characterID string) error {
 
 	// For existing characters, perform safety check
 	// But first, let's verify their current map exists
-	currentMap := gm.GetMapChunkByID(character.CurrentMapID)
+	currentMap := gm.GetMapChunkByIDWithLoading(character.CurrentMapID, characterID)
 	if currentMap == nil {
 		gm.Log.Println(logging.LogWarn, fmt.Sprintf("Character %s has invalid map ID %s, resetting to safe spawn",
 			characterID, character.CurrentMapID))

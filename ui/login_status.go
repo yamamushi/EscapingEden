@@ -74,7 +74,7 @@ func (c *Console) LogoutCharacter() {
 	c.characterLoggedInMutex.Lock()
 	defer c.characterLoggedInMutex.Unlock()
 	c.characterLoggedIn = false
-	c.SendMessages <- messages.ConnectionManagerMessage{Data: messages.GameManagerMessage{Data: messages.GameMessageData{CharacterID: c.currentCharID}, Type: messages.GameManager_NotifyLoggedInCharacter}, Type: messages.ConnectManager_Message_GameCommand, SenderConsoleID: c.ConnectionID}
+	c.SendMessages <- messages.ConnectionManagerMessage{Data: messages.GameManagerMessage{Data: messages.GameMessageData{CharacterID: c.currentCharID}, Type: messages.GameManager_NotifyLoggedOutCharacter}, Type: messages.ConnectManager_Message_GameCommand, SenderConsoleID: c.ConnectionID}
 	c.UpdateCharacterInfo(messages.CharacterInfo{})
 	c.RemoveWindow(c.GetGameWindow().GetID())
 	c.SetActiveWindowNoThread(c.GetUserDashboard())

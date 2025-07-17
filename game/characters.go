@@ -2,12 +2,14 @@ package game
 
 import (
 	"errors"
+	"sync"
+
 	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"sync"
+	"github.com/yamamushi/EscapingEden/ui/util"
 )
 
 type ActiveCharacter struct {
@@ -36,7 +38,12 @@ func (gm *GameManager) LoadCharacter(id string, consoleID string) (err error) {
 		gm.Log.Println(logging.LogError, "Failed to load character:", err.Error())
 		return err
 	}
+
+	// Debug logging to see what map IDs are loaded from database
+	gm.Log.Println(logging.LogInfo, "Loaded character", character.Name, "from database: position", character.Position.X, character.Position.Y, "CurrentMapID", character.CurrentMapID, "Position.MapChunkID", character.Position.MapChunkID)
+
 	gm.AddToLiveCharacterList(character, consoleID)
+
 	return nil
 }
 
@@ -125,35 +132,8 @@ func (gm *GameManager) GetCharacterInventory(characterID string) ([]edentypes.It
 	for i, character := range gm.ActiveCharacters {
 		if character.ID == characterID {
 			if len(gm.ActiveCharacters[i].Record.Inventory) == 0 {
-				// Add some default items to the inventory
-				inventory := []edentypes.Item{}
-				for j := 0; j < 10; j++ {
-					id := edenutil.GenerateID()
-					wood := edentypes.Item{ID: id, Name: "Wood", Description: "A piece of wood.", Type: edentypes.ItemMaterial, Weight: 1, Stackable: true}
-					err := gm.DB.AddRecord("Items", &wood)
-					if err != nil {
-						gm.Log.Println(logging.LogError, "Failed to add item to DB:", err.Error())
-					}
-					inventory = append(inventory, wood)
-				}
-				for j := 0; j < 10; j++ {
-					id := edenutil.GenerateID()
-					stone := edentypes.Item{ID: id, Name: "Stone", Description: "A piece of stone.", Type: edentypes.ItemMaterial, Weight: 1, Stackable: true}
-					err := gm.DB.AddRecord("Items", &stone)
-					if err != nil {
-						gm.Log.Println(logging.LogError, "Failed to add item to DB:", err.Error())
-					}
-					inventory = append(inventory, stone)
-				}
-				pickid := edenutil.GenerateID()
-				pickaxeAttributes := make(map[string]bool)
-				pickaxeAttributes["digging"] = true
-				pickaxe := edentypes.Item{ID: pickid, Name: "Pickaxe", Description: "A pickaxe that looks like it should be suitable for digging through stone", Type: edentypes.ItemTool, Weight: 5, Stackable: false, Attributes: pickaxeAttributes}
-				err := gm.DB.AddRecord("Items", &pickaxe)
-				if err != nil {
-					gm.Log.Println(logging.LogError, "Failed to add item to DB:", err.Error())
-				}
-				inventory = append(inventory, pickaxe)
+				// Create default inventory using JSON-based item system
+				inventory := gm.CreateDefaultInventory()
 				gm.AssignItemHotkeys(inventory)
 				gm.ActiveCharacters[i].Record.Inventory = inventory
 			}
@@ -188,39 +168,34 @@ func (gm *GameManager) AssignItemHotkeys(inventory []edentypes.Item) {
 	hotkey := 'a'                        // Start with lowercase 'a'
 	hotkeyMap := make(map[string]string) // Map to store assigned hotkeys for stackable items
 
-	for i, item := range inventory {
+	for i := range inventory {
 		// Check if the item is stackable
-		if item.Stackable {
+		if inventory[i].Stackable {
 			// Check if an item with the same name has been assigned a hotkey
-			if stackableHotkey, ok := hotkeyMap[item.Name]; ok {
+			if stackableHotkey, ok := hotkeyMap[inventory[i].Name]; ok {
 				// Assign the same hotkey to the current stackable item
-				item.Hotkey = stackableHotkey
+				inventory[i].Hotkey = stackableHotkey
 			} else {
 				// Assign the next available hotkey to the item
 				if hotkey <= 'z' || (hotkey >= 'A' && hotkey <= 'Z') || (hotkey >= '0' && hotkey <= '9') {
-					item.Hotkey = string(hotkey)
-					hotkeyMap[item.Name] = string(hotkey) // Update the hotkey map for stackable items
+					inventory[i].Hotkey = string(hotkey)
+					hotkeyMap[inventory[i].Name] = string(hotkey) // Update the hotkey map for stackable items
 					hotkey++
-					//log.Println("Assigned hotkey", item.Hotkey, "to item", item.Name)
 				} else {
 					// No more hotkeys available, don't assign a hotkey to this item
-					item.Hotkey = ""
+					inventory[i].Hotkey = ""
 				}
 			}
 		} else {
 			// Non-stackable item, assign a new hotkey
 			if hotkey <= 'z' || (hotkey >= 'A' && hotkey <= 'Z') || (hotkey >= '0' && hotkey <= '9') {
-				item.Hotkey = string(hotkey)
+				inventory[i].Hotkey = string(hotkey)
 				hotkey++
-				//log.Println("Assigned hotkey", item.Hotkey, "to item", item.Name)
 			} else {
 				// No more hotkeys available, don't assign a hotkey to this item
-				item.Hotkey = ""
+				inventory[i].Hotkey = ""
 			}
 		}
-
-		// Update the item in the inventory
-		inventory[i] = item
 	}
 }
 
@@ -234,4 +209,169 @@ func (gm *GameManager) AddToCharacterInventory(characterID string, item edentype
 		}
 	}
 	return errors.New("character not found")
+}
+
+// SendLoadingMessage sends a loading message to a specific player
+func (gm *GameManager) SendLoadingMessage(characterID, message string) {
+	// Find the connection ID for this character
+	gm.activeCharactersMutex.Lock()
+	var connectionID string
+	for _, character := range gm.ActiveCharacters {
+		if character.ID == characterID {
+			connectionID = character.ConnectionID
+			break
+		}
+	}
+	gm.activeCharactersMutex.Unlock()
+
+	if connectionID == "" {
+		gm.Log.Println(logging.LogWarn, "Could not find connection ID for character", characterID, "- cannot send loading message")
+		return
+	}
+
+	// Send the loading message to the specific player
+	response := messages.ConnectionManagerMessage{
+		Type:               messages.ConnectManager_Message_GameCommandResponse,
+		RecipientConsoleID: connectionID,
+		Data: messages.GameMessage{
+			Type:    messages.GM_LoadingMessage,
+			Message: message,
+		},
+	}
+
+	gm.SendChannel <- response
+	gm.Log.Println(logging.LogInfo, "Sent loading message to player", characterID, "(connection:", connectionID, "):", message)
+}
+
+// CreateDefaultInventory creates a default starting inventory for new characters
+func (gm *GameManager) CreateDefaultInventory() []edentypes.Item {
+	var inventory []edentypes.Item
+
+	// Try to create items from JSON definitions first
+	if gm.ItemRegistry != nil {
+		// Add 10 wood items
+		for j := 0; j < 10; j++ {
+			if item, err := gm.ItemRegistry.CreateItemFromDefinition("wood", ""); err == nil {
+				item.ID = edenutil.GenerateID() // Generate unique ID for this instance
+				if err := gm.DB.AddRecord("Items", item); err != nil {
+					gm.Log.Println(logging.LogError, "Failed to add wood item to DB:", err.Error())
+				}
+				inventory = append(inventory, *item)
+			} else {
+				gm.Log.Println(logging.LogWarn, "Failed to create wood item from registry:", err.Error())
+			}
+		}
+
+		// Add 10 stone items
+		for j := 0; j < 10; j++ {
+			if item, err := gm.ItemRegistry.CreateItemFromDefinition("stone", ""); err == nil {
+				item.ID = edenutil.GenerateID() // Generate unique ID for this instance
+				if err := gm.DB.AddRecord("Items", item); err != nil {
+					gm.Log.Println(logging.LogError, "Failed to add stone item to DB:", err.Error())
+				}
+				inventory = append(inventory, *item)
+			} else {
+				gm.Log.Println(logging.LogWarn, "Failed to create stone item from registry:", err.Error())
+			}
+		}
+
+		// Add 1 pickaxe
+		if item, err := gm.ItemRegistry.CreateItemFromDefinition("pickaxe", ""); err == nil {
+			item.ID = edenutil.GenerateID() // Generate unique ID for this instance
+			if err := gm.DB.AddRecord("Items", item); err != nil {
+				gm.Log.Println(logging.LogError, "Failed to add pickaxe item to DB:", err.Error())
+			}
+			inventory = append(inventory, *item)
+		} else {
+			gm.Log.Println(logging.LogWarn, "Failed to create pickaxe item from registry:", err.Error())
+		}
+
+		gm.Log.Println(logging.LogInfo, "Created default inventory with", len(inventory), "items from JSON definitions")
+	}
+
+	// Fallback to hardcoded items if JSON system failed or is unavailable
+	if len(inventory) == 0 {
+		gm.Log.Println(logging.LogWarn, "JSON item system unavailable, using fallback hardcoded items")
+
+		// Add 10 wood items (fallback)
+		for j := 0; j < 10; j++ {
+			id := edenutil.GenerateID()
+			wood := edentypes.Item{
+				ID:          id,
+				Name:        "Wood",
+				Description: "A piece of wood.",
+				Type:        edentypes.ItemMaterial,
+				Weight:      1,
+				Stackable:   true,
+				Symbol:      "≡",
+				FGColor:     util.ColorCode{R: 139, G: 69, B: 19},
+				BGColor:     util.ColorCode{R: 0, G: 0, B: 0},
+				Value:       5,
+				MaxStack:    64,
+				Rarity:      "common",
+				Category:    "wood",
+				Tags:        []string{"material", "building", "crafting", "natural"},
+			}
+			if err := gm.DB.AddRecord("Items", &wood); err != nil {
+				gm.Log.Println(logging.LogError, "Failed to add fallback wood item to DB:", err.Error())
+			}
+			inventory = append(inventory, wood)
+		}
+
+		// Add 10 stone items (fallback)
+		for j := 0; j < 10; j++ {
+			id := edenutil.GenerateID()
+			stone := edentypes.Item{
+				ID:          id,
+				Name:        "Stone",
+				Description: "A piece of stone.",
+				Type:        edentypes.ItemMaterial,
+				Weight:      2.5,
+				Stackable:   true,
+				Symbol:      "◊",
+				FGColor:     util.ColorCode{R: 128, G: 128, B: 128},
+				BGColor:     util.ColorCode{R: 0, G: 0, B: 0},
+				Value:       3,
+				MaxStack:    32,
+				Rarity:      "common",
+				Category:    "stone",
+				Tags:        []string{"material", "building", "heavy", "durable"},
+			}
+			if err := gm.DB.AddRecord("Items", &stone); err != nil {
+				gm.Log.Println(logging.LogError, "Failed to add fallback stone item to DB:", err.Error())
+			}
+			inventory = append(inventory, stone)
+		}
+
+		// Add 1 pickaxe (fallback)
+		pickid := edenutil.GenerateID()
+		pickaxeAttributes := make(map[string]bool)
+		pickaxeAttributes["digging"] = true
+		pickaxe := edentypes.Item{
+			ID:          pickid,
+			Name:        "Pickaxe",
+			Description: "A pickaxe that looks like it should be suitable for digging through stone",
+			Type:        edentypes.ItemTool,
+			Weight:      5,
+			Stackable:   false,
+			Attributes:  pickaxeAttributes,
+			Symbol:      "⚒",
+			FGColor:     util.ColorCode{R: 192, G: 192, B: 192},
+			BGColor:     util.ColorCode{R: 0, G: 0, B: 0},
+			Value:       50,
+			Durability:  100,
+			MaxStack:    1,
+			Rarity:      "common",
+			Category:    "tool",
+			Tags:        []string{"tool", "mining", "digging", "metal"},
+		}
+		if err := gm.DB.AddRecord("Items", &pickaxe); err != nil {
+			gm.Log.Println(logging.LogError, "Failed to add fallback pickaxe item to DB:", err.Error())
+		}
+		inventory = append(inventory, pickaxe)
+
+		gm.Log.Println(logging.LogInfo, "Created default inventory with", len(inventory), "fallback items")
+	}
+
+	return inventory
 }

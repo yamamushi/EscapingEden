@@ -166,11 +166,14 @@ func (mfm *MapFallbackManager) tryMoveToSafeSpawn(character *messages.CharacterI
 
 	// Move character to safe location
 	mfm.gm.activeCharactersMutex.Lock()
+	// Use coordinate-based chunk ID instead of UUID
+	coordinateBasedID := fmt.Sprintf("%d-%d-%d", chunk.GlobalPosition.X, chunk.GlobalPosition.Y, chunk.GlobalPosition.Z)
+
 	character.Position.X = spawn.LocalX
 	character.Position.Y = spawn.LocalY
 	character.Position.Z = spawn.LocalZ
-	character.Position.MapChunkID = chunk.ID
-	character.CurrentMapID = chunk.ID
+	character.Position.MapChunkID = coordinateBasedID
+	character.CurrentMapID = coordinateBasedID
 	character.Initialized = true
 	mfm.gm.activeCharactersMutex.Unlock()
 

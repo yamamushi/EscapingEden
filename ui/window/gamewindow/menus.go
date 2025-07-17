@@ -26,6 +26,11 @@ func (gw *GameWindow) AddMenuBox(mb MenuBoxType) {
 	gw.Menus = append(gw.Menus, mb)
 }
 
+// AddMenuBoxUnsafe adds a menu box without acquiring the mutex (for use when mutex is already held)
+func (gw *GameWindow) AddMenuBoxUnsafe(mb MenuBoxType) {
+	gw.Menus = append(gw.Menus, mb)
+}
+
 // not sure if this actually works or not
 func (gw *GameWindow) RemoveMenuBox(mb MenuBoxType) {
 	gw.MenusMutex.Lock()
@@ -33,6 +38,17 @@ func (gw *GameWindow) RemoveMenuBox(mb MenuBoxType) {
 	for i, menu := range gw.Menus {
 		if menu == mb {
 			gw.Menus = append(gw.Menus[:i], gw.Menus[i+1:]...)
+			return
+		}
+	}
+}
+
+// RemoveMenuBoxUnsafe removes a menu box without acquiring the mutex (for use when mutex is already held)
+func (gw *GameWindow) RemoveMenuBoxUnsafe(mb MenuBoxType) {
+	for i, menu := range gw.Menus {
+		if menu == mb {
+			gw.Menus = append(gw.Menus[:i], gw.Menus[i+1:]...)
+			return
 		}
 	}
 }

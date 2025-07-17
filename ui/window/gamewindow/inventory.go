@@ -2,12 +2,14 @@ package gamewindow
 
 import (
 	"fmt"
+	"log"
+	"sort"
+	"strings"
+
 	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
-	"log"
-	"sort"
 )
 
 func (gw *GameWindow) ItemForHotkey(hotkey string) *edentypes.Item {
@@ -85,6 +87,7 @@ func (gw *GameWindow) DisplayInventory() {
 	inventoryWindow.X = gw.Width - 30
 	inventoryWindow.Y = gw.Height/2 - 10
 	inventoryWindow.Type = MenuTypeInventory
+	inventoryWindow.ToggleHotkeyCheck(true) // Enable hotkey checking for interactive inventory
 	//inventoryWindow.Width = 29
 	//inventoryWindow.Height = len(gw.Inventory) + 4
 
@@ -131,14 +134,27 @@ func (inv *InventoryDisplay) UpdateCallbackFunction() {
 }
 
 func (inv *InventoryDisplay) HandleInput(gw *GameWindow, inputType types.InputType, input string) {
-	//inv.UpdateCallbackFunction()
 	// Handle input for the menu box
 	switch inputType {
 	case types.InputEscape:
-		//gw.Log.Println(logging.LogInfo, "InventoryDisplay received close")
+		// Close inventory
 		gw.CloseMenus = true
 		return
 	case types.InputCharacter:
+		// Check if this is the close key
+		if input == "!" {
+			gw.CloseMenus = true
+			return
+		}
+
+		// Check if this is a hotkey for an item
+		if item, exists := inv.Hotkeys[input]; exists {
+			// Show item info popup
+			inv.ShowItemInfo(gw, item)
+			return
+		}
+
+		// Handle other character input if needed
 		inv.HandleCharInput(input)
 	}
 }
@@ -183,7 +199,13 @@ func (inv *InventoryDisplay) Draw(gw *GameWindow) {
 	inv.DrawPopupMenu(gw)
 	inv.StatusBarMessageMutex.Lock()
 	defer inv.StatusBarMessageMutex.Unlock()
-	gw.SetStatusBarMessage(inv.CallbackStatusBarMessage)
+
+	// Show instructions for inventory interaction
+	if inv.CallbackStatusBarMessage != "" {
+		gw.SetStatusBarMessage(inv.CallbackStatusBarMessage)
+	} else {
+		gw.SetStatusBarMessage("Press item letter (a, b, c...) for info, ! to close")
+	}
 }
 
 func (inv *InventoryDisplay) PrepareContent() {
@@ -197,8 +219,12 @@ func (inv *InventoryDisplay) PrepareContent() {
 
 	for _, item := range inv.Inventory {
 		if item.Type == inv.DisplayType || inv.DisplayType == edentypes.ItemTypeNull {
-			//itemInfo := fmt.Sprintf("%s) %-*s", item.Hotkey, maxNameWidth, item.Name)
-			itemInfo := fmt.Sprintf("%s) %s", item.Hotkey, item.Name)
+			// Include item symbol in the display - no brackets, just the symbol
+			symbolDisplay := ""
+			if item.Symbol != "" {
+				symbolDisplay = fmt.Sprintf("%s ", item.Symbol)
+			}
+			itemInfo := fmt.Sprintf("%s) %s%s", item.Hotkey, symbolDisplay, item.Name)
 			if item.Stackable {
 				// Check if we've encountered this stackable item before
 				if count, ok := stackableCounts[item.Name]; ok {
@@ -266,6 +292,10 @@ func (inv *InventoryDisplay) PrepareContent() {
 	//gw.PrintStringToMap(inv.X+2, inv.Y+linecount+3, weightLine, "")
 	inv.Content = append(inv.Content, weightLine)
 
+	// Add close instruction at the bottom
+	inv.Content = append(inv.Content, "")
+	inv.Content = append(inv.Content, "Press ! to close")
+
 	widthAdjustment := 0
 	for _, line := range inv.Content {
 		if len(line) > widthAdjustment {
@@ -280,10 +310,50 @@ func (inv *InventoryDisplay) PrepareContent() {
 
 func (inv *InventoryDisplay) DrawMenuItems(gw *GameWindow) {
 	//gw.Log.Println(logging.LogInfo, "Drawing inventory items")
-	// Create a map to count stackable items by their names
 
-	// Reset the inventory display type
 	for index, content := range inv.Content {
+		// Check if this line contains an item with a symbol (format: "a) symbol Name")
+		parts := strings.Split(content, ")")
+		if len(parts) > 1 {
+			hotkey := strings.TrimSpace(parts[0])
+			if item, exists := inv.Hotkeys[hotkey]; exists && item.Symbol != "" {
+				// Find the symbol right after the hotkey and parenthesis
+				afterHotkey := parts[1] // Everything after "a)"
+				trimmedAfter := strings.TrimSpace(afterHotkey)
+				if strings.HasPrefix(trimmedAfter, item.Symbol) {
+					// Draw the hotkey and parenthesis
+					hotkeyPart := parts[0] + ") "
+					inv.PrintToMenu(gw, 2, index+2, hotkeyPart, "")
+
+					// Draw the colored symbol
+					itemColorCode := item.FGColor.FG() + item.BGColor.BG()
+					inv.PrintToMenu(gw, 2+len(hotkeyPart), index+2, item.Symbol, itemColorCode)
+
+					// Draw the rest of the line (space and item name) - use proper Unicode string slicing
+					symbolRunes := []rune(item.Symbol)
+					afterSymbolRunes := []rune(trimmedAfter)[len(symbolRunes):]
+					restOfLine := string(afterSymbolRunes)
+					inv.PrintToMenu(gw, 2+len(hotkeyPart)+len(item.Symbol), index+2, restOfLine, "")
+					continue
+				}
+			}
+		}
+
+		// Normal drawing for lines without symbols or if parsing fails
 		inv.PrintToMenu(gw, 2, index+2, content, "")
 	}
+}
+
+// ShowItemInfo displays detailed information about an item
+func (inv *InventoryDisplay) ShowItemInfo(gw *GameWindow, item edentypes.Item) {
+	itemInfo := ItemInfoDisplay{
+		Item: item,
+		GW:   gw,
+	}
+	itemInfo.Type = MenuTypeItemInfo
+	itemInfo.Title = fmt.Sprintf("Item Info: %s", item.Name)
+	itemInfo.PrepareContent()
+
+	// Add the item info popup on top of the inventory (using unsafe version since mutex is already held by input handler)
+	gw.AddMenuBoxUnsafe(&itemInfo)
 }

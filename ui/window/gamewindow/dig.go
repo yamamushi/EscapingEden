@@ -1,6 +1,8 @@
 package gamewindow
 
 import (
+	"fmt"
+
 	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
@@ -17,7 +19,12 @@ func (gw *GameWindow) DigMenu() {
 	for _, item := range gw.Inventory {
 		if item.Type == edentypes.ItemTool {
 			if item.Attributes["digging"] {
-				option := MenuBoxOption{Name: item.Name, Keybind: item.Hotkey, Callback: gw.HandleDig}
+				// Include item symbol in the option name - no brackets
+				optionName := item.Name
+				if item.Symbol != "" {
+					optionName = fmt.Sprintf("%s %s", item.Symbol, item.Name)
+				}
+				option := MenuBoxOption{Name: optionName, Keybind: item.Hotkey, Callback: gw.HandleDig, Data: item}
 				options = append(options, option)
 			}
 			//log.Println(item.Attributes)

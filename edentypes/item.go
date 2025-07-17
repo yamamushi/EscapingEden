@@ -1,5 +1,7 @@
 package edentypes
 
+import "github.com/yamamushi/EscapingEden/ui/util"
+
 type Item struct {
 	ID          string
 	Name        string
@@ -9,6 +11,21 @@ type Item struct {
 	Stackable   bool
 	Hotkey      string
 	Attributes  map[string]bool
+
+	// Visual properties
+	Symbol  string         `json:"symbol"`   // Character/symbol when dropped on ground
+	FGColor util.ColorCode `json:"fg_color"` // Foreground color
+	BGColor util.ColorCode `json:"bg_color"` // Background color
+
+	// Extended properties
+	Value      int    `json:"value"`      // Economic value
+	Durability int    `json:"durability"` // For tools/equipment (-1 = infinite)
+	MaxStack   int    `json:"max_stack"`  // Maximum stack size (0 = not stackable)
+	Rarity     string `json:"rarity"`     // common, uncommon, rare, epic, legendary
+
+	// Metadata
+	Category string   `json:"category"` // More specific than Type (e.g., "wood", "stone", "metal")
+	Tags     []string `json:"tags"`     // Searchable tags
 }
 
 type ItemType int

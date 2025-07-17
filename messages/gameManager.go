@@ -41,6 +41,7 @@ const (
 	GameManager_DigCommand
 	GameManager_BuildWallCommand
 	GameManager_AdminCommand
+	GameManager_NewCommand
 )
 
 type GameManagerMessage struct {

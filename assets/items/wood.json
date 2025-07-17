@@ -1,0 +1,25 @@
+{
+  "id": "wood",
+  "name": "Wood",
+  "description": "A sturdy piece of wood. Can be used for crafting or building. This common material is found throughout the world and forms the basis of many construction projects.",
+  "weight": 1.0,
+  "type": 1,
+  "stackable": true,
+  "symbol": "≡",
+  "fg_color": {
+    "R": 139,
+    "G": 69,
+    "B": 19
+  },
+  "bg_color": {
+    "R": 0,
+    "G": 0,
+    "B": 0
+  },
+  "value": 5,
+  "durability": -1,
+  "max_stack": 64,
+  "rarity": "common",
+  "category": "wood",
+  "tags": ["material", "building", "crafting", "natural"]
+}
