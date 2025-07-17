@@ -1,13 +1,15 @@
 package network
 
 import (
+	"net"
+	"sync"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"net"
-	"sync"
 )
 
 /*
@@ -23,15 +25,20 @@ type Server struct {
 	ConnectionManager     *ConnectionManager
 	ConnectionManagerSend chan messages.ConnectionManagerMessage
 	Log                   logging.LoggerType
+	RateLimiter           *edenutil.ConnectionRateLimiter
 }
 
 // NewServer creates a new server
 func NewServer(host string, port string, log logging.LoggerType) *Server {
+	// Allow 10 connections per minute per IP
+	rateLimiter := edenutil.NewConnectionRateLimiter(10, time.Minute)
+
 	return &Server{
-		Host:       host,
-		Port:       port,
-		ConnectMap: &sync.Map{},
-		Log:        log,
+		Host:        host,
+		Port:        port,
+		ConnectMap:  &sync.Map{},
+		Log:         log,
+		RateLimiter: rateLimiter,
 	}
 }
 
@@ -61,9 +68,19 @@ func (s *Server) Listen(l net.Listener) {
 		}
 
 		ipAddress, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+
+		// Check blacklist
 		if edenutil.CheckBlacklist(ipAddress, edenutil.BlackListIPs) {
 			s.Log.Println(logging.LogWarn, "Connection from blacklisted IP: ", conn.RemoteAddr().String())
 			_, _ = conn.Write([]byte("\r\nConnections from this IP are not allowed."))
+			_ = conn.Close()
+			continue
+		}
+
+		// Check rate limit
+		if !s.RateLimiter.Allow(ipAddress) {
+			s.Log.Println(logging.LogWarn, "Rate limit exceeded for IP: ", ipAddress)
+			_, _ = conn.Write([]byte("\r\nToo many connections. Please try again later."))
 			_ = conn.Close()
 			continue
 		}

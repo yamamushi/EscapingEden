@@ -24,10 +24,11 @@ func (p *Point) Print(term terminals.TerminalType) string {
 		output += p.EscapeCode
 		output += p.Character
 		if !p.NoReset {
-			output += term.Reset()
+			//output += term.Reset()
+			//output += "\033[49m"
 		}
 	} else {
-		output += p.Character
+		output += "\033[0m" + p.Character
 	}
 
 	return output

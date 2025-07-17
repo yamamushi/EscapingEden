@@ -1,4 +1,4 @@
-package edenitems
+package edentypes
 
 type Item struct {
 	ID          string

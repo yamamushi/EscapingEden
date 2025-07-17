@@ -5,17 +5,20 @@ Escaping Eden is a simple text adventure mud ;)
 */
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	"github.com/yamamushi/EscapingEden/edenconfig"
-	"github.com/yamamushi/EscapingEden/logging"
-	"github.com/yamamushi/EscapingEden/messages"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 	"time"
+
+	"github.com/yamamushi/EscapingEden/edenconfig"
+	"github.com/yamamushi/EscapingEden/edenutil"
+	"github.com/yamamushi/EscapingEden/logging"
+	"github.com/yamamushi/EscapingEden/messages"
 )
 
 const EscapingEdenVersion = "0.0.1"
@@ -23,25 +26,33 @@ const EscapingEdenVersion = "0.0.1"
 // Variables used for command line parameters
 
 var (
-	ConfPath string
+	ConfPath   string
+	ResetWorld bool
 )
 
 // init is called before main()
 func init() {
 	// Read our command line options
 	flag.StringVar(&ConfPath, "c", "server.conf", "Path to Config File")
+	flag.BoolVar(&ResetWorld, "reset-world", false, "Delete and regenerate the world (requires confirmation)")
 	flag.Parse()
-
-	_, err := os.Stat(ConfPath)
-	if err != nil {
-		fmt.Println("Config file is missing: ", ConfPath)
-		flag.Usage()
-		os.Exit(1)
-	}
 }
 
 // main is the entry point for Escaping Eden
 func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+// run contains the main application logic with proper error handling
+func run() error {
+	// Validate config file exists
+	if _, err := os.Stat(ConfPath); err != nil {
+		return fmt.Errorf("config file missing: %s", ConfPath)
+	}
+
 	timestamp := time.Now().Format("01/02/2006 15:04:05")
 	//go http.ListenAndServe("localhost:6060", nil)
 
@@ -49,21 +60,38 @@ func main() {
 	fmt.Println("Reading config file at:", ConfPath+"\n")
 	conf, err := edenconfig.ReadConfig(ConfPath)
 	if err != nil {
-		fmt.Println("Error reading config: ", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to read config: %w", err)
 	}
 
 	// Setup logging
 	log, err := InitLogger(conf)
 	if err != nil {
-		fmt.Println("Error initializing logger: ", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to initialize logger: %w", err)
 	}
+
+	// Handle world reset if requested
+	if ResetWorld {
+		err := handleWorldReset(conf, log)
+		if err != nil {
+			return fmt.Errorf("failed to reset world: %w", err)
+		}
+	}
+
+	// Setup context for graceful shutdown (will be used in future improvements)
+	_, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Setup context manager for coordinated shutdown
+	ctxManager := edenutil.NewContextManager()
+	defer func() {
+		ctxManager.Cancel()
+		ctxManager.Wait()
+	}()
 
 	// Setup database
 	dbConn, err := InitDB(conf, log)
 	if err != nil {
-		log.Println(logging.LogFatal, "Error initializing database: ", err)
+		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 
 	// Setup Edenbot
@@ -71,7 +99,7 @@ func main() {
 	edenbotOutput := make(chan messages.SystemManagerMessage) // TODO: this needs a whole new manager created
 	edenBot, err := InitEdenbot(edenbotInput, edenbotOutput, dbConn, log, &conf)
 	if err != nil {
-		log.Println(logging.LogFatal, "Error initializing edenbot: ", err)
+		return fmt.Errorf("failed to initialize edenbot: %w", err)
 	}
 
 	// Setup channels for account manager and connection manager
@@ -79,29 +107,28 @@ func main() {
 	connectionManagerReceive := make(chan messages.ConnectionManagerMessage)
 
 	// Initialize account manager
-	_, err = InitAccountManager(accountManagerReceiver, connectionManagerReceive, dbConn, log, *edenBot)
+	_, err = InitAccountManager(accountManagerReceiver, connectionManagerReceive, dbConn, log, edenBot)
 	if err != nil {
-		// Fatal errors will os.Exit(1)
-		log.Println(logging.LogFatal, "Error initializing account manager: ", err)
+		return fmt.Errorf("failed to initialize account manager: %w", err)
 	}
 
 	// Initialize the character manager
 	characterManagerReceiver := make(chan messages.CharacterManagerMessage)
 	_, err = InitCharacterManager(characterManagerReceiver, connectionManagerReceive, dbConn, &conf, log)
 	if err != nil {
-		log.Println(logging.LogFatal, "Error initializing character manager: ", err)
+		return fmt.Errorf("failed to initialize character manager: %w", err)
 	}
 
 	gameManagerReceiver := make(chan messages.GameManagerMessage)
-	_, err = InitGameManager(gameManagerReceiver, connectionManagerReceive, dbConn, log, &conf)
+	gameManager, err := InitGameManager(gameManagerReceiver, connectionManagerReceive, dbConn, log, &conf)
 	if err != nil {
-		log.Println(logging.LogFatal, "Error initializing game manager: ", err)
+		return fmt.Errorf("failed to initialize game manager: %w", err)
 	}
 
 	// Initialize the server, and by proxy, the connection manager
 	server, err := InitServer(conf, accountManagerReceiver, characterManagerReceiver, connectionManagerReceive, edenbotInput, gameManagerReceiver, dbConn, log)
 	if err != nil {
-		log.Println(logging.LogFatal, "Error initializing server: ", err)
+		return fmt.Errorf("failed to initialize server: %w", err)
 	}
 
 	// Wait here until CTRL-C or other term signal is received.
@@ -132,11 +159,14 @@ func main() {
 	managerMessage = messages.ConnectionManagerMessage{Type: messages.ConnectManager_Message_ServerShutdown}
 	server.ConnectionManagerSend <- managerMessage
 
-	// We sleep for the configured ShutdownTimeout
+	// We sleep for the configured ShutdownTimeout (now is when we can ctrl-c if we want to skip cleanup, etc)
 	time.Sleep(time.Second * time.Duration(conf.Server.ShutdownTimeout))
+	gameManager.Cleanup()
 
 	log.Println(logging.LogInfo, "Server exited cleanly.")
 	if log.GetTypeID() != logging.LoggerTypeID_Console {
 		fmt.Println("Server exited cleanly.")
 	}
+
+	return nil
 }

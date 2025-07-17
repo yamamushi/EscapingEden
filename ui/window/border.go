@@ -16,7 +16,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 		w.PrintChar(winX, winY, edenutil.UCTopLeftBorder, "\033[32m")
 
 	} else {
-		w.PrintChar(winX, winY, edenutil.UCTopLeftBorder, w.Terminal.Bold())
+		w.PrintChar(winX, winY, edenutil.UCTopLeftBorder, w.Terminal.Bold()+w.Terminal.Reset())
 	}
 
 	// Draw left border
@@ -25,14 +25,14 @@ func (w *Window) DrawBorder(winX int, winY int) {
 		if w.Active {
 			w.PrintChar(winX, winY+i, edenutil.UCVerticalBorder, "\033[32m")
 		} else {
-			w.PrintChar(winX, winY+i, edenutil.UCVerticalBorder, w.Terminal.Bold())
+			w.PrintChar(winX, winY+i, edenutil.UCVerticalBorder, w.Terminal.Bold()+w.Terminal.Reset())
 		}
 	}
 	// Draw bottom left corner
 	if w.Active {
 		w.PrintChar(winX, winY+w.Height+1, edenutil.UCBottomLeftBorder, "\033[32m")
 	} else {
-		w.PrintChar(winX, winY+w.Height+1, edenutil.UCBottomLeftBorder, w.Terminal.Bold())
+		w.PrintChar(winX, winY+w.Height+1, edenutil.UCBottomLeftBorder, w.Terminal.Bold()+w.Terminal.Reset())
 	}
 
 	// Draw top border
@@ -41,7 +41,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 		if w.Active {
 			w.PrintCharColor(winX+i, winY, edenutil.UCHorizontalBorder, "\033[32m")
 		} else {
-			w.PrintCharColor(winX+i, winY, edenutil.UCHorizontalBorder, w.Terminal.Bold())
+			w.PrintCharColor(winX+i, winY, edenutil.UCHorizontalBorder, w.Terminal.Bold()+w.Terminal.Reset())
 		}
 	}
 
@@ -49,7 +49,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 	if w.Active {
 		w.PrintChar(winX+w.Width, winY, edenutil.UCTopRightBorder, "\033[32m")
 	} else {
-		w.PrintChar(winX+w.Width, winY, edenutil.UCTopRightBorder, w.Terminal.Bold())
+		w.PrintChar(winX+w.Width, winY, edenutil.UCTopRightBorder, w.Terminal.Bold()+w.Terminal.Reset())
 	}
 
 	// Draw right border
@@ -58,7 +58,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 		if w.Active {
 			w.PrintChar(winX+w.Width, winY+i, edenutil.UCVerticalBorder, "\033[32m")
 		} else {
-			w.PrintChar(winX+w.Width, winY+i, edenutil.UCVerticalBorder, w.Terminal.Bold())
+			w.PrintChar(winX+w.Width, winY+i, edenutil.UCVerticalBorder, w.Terminal.Bold()+w.Terminal.Reset())
 		}
 	}
 
@@ -66,7 +66,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 	if w.Active {
 		w.PrintChar(winX+w.Width, winY+w.Height+1, edenutil.UCBottomRightBorder, "\033[32m")
 	} else {
-		w.PrintChar(winX+w.Width, winY+w.Height+1, edenutil.UCBottomRightBorder, w.Terminal.Bold())
+		w.PrintChar(winX+w.Width, winY+w.Height+1, edenutil.UCBottomRightBorder, w.Terminal.Bold()+w.Terminal.Reset())
 	}
 
 	// Draw bottom border
@@ -75,7 +75,7 @@ func (w *Window) DrawBorder(winX int, winY int) {
 		if w.Active {
 			w.PrintCharColor(winX+i, winY+w.Height+1, edenutil.UCHorizontalBorder, "\033[32m")
 		} else {
-			w.PrintCharColor(winX+i, winY+w.Height+1, edenutil.UCHorizontalBorder, w.Terminal.Bold())
+			w.PrintCharColor(winX+i, winY+w.Height+1, edenutil.UCHorizontalBorder, w.Terminal.Bold()+w.Terminal.Reset())
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package gamewindow
 
 import (
-	"github.com/yamamushi/EscapingEden/edenitems"
+	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 )
@@ -15,7 +15,7 @@ func (gw *GameWindow) DigMenu() {
 	// Build our options
 	options := []MenuBoxOption{}
 	for _, item := range gw.Inventory {
-		if item.Type == edenitems.ItemTool {
+		if item.Type == edentypes.ItemTool {
 			if item.Attributes["digging"] {
 				option := MenuBoxOption{Name: item.Name, Keybind: item.Hotkey, Callback: gw.HandleDig}
 				options = append(options, option)
@@ -49,8 +49,8 @@ func (gw *GameWindow) DigConfirmDirection(box *MenuBox, input string) {
 
 	// Check vi movement keys
 	if input != "y" || input != "u" || input != "h" || input != "j" || input != "k" || input != "l" || input != "b" || input != "n" {
-		box.SetCallbackStatusBarMessage("Digging with " + item.Name + " in " + input + " direction")
-		gw.StatusBarMessage = "Digging with " + item.Name + " in " + input + " direction"
+		box.SetCallbackStatusBarMessage("")
+		gw.StatusBarMessage = ""
 		// Now we fire off our dig request and handle the response in the messages loop outside of here
 		gw.SendDigRequest(item, input)
 	} else {
@@ -62,7 +62,7 @@ func (gw *GameWindow) DigConfirmDirection(box *MenuBox, input string) {
 	gw.CloseMenus = true
 }
 
-func (gw *GameWindow) SendDigRequest(item *edenitems.Item, dir string) {
+func (gw *GameWindow) SendDigRequest(item *edentypes.Item, dir string) {
 	deltaX, deltaY := 0, 0
 	switch dir {
 	case "y":

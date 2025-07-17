@@ -1,7 +1,7 @@
 package messages
 
 import (
-	"github.com/yamamushi/EscapingEden/edenitems"
+	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/ui/util"
 	"time"
 )
@@ -25,7 +25,7 @@ type CharacterInfo struct {
 	Error         string
 
 	// The character's inventory
-	Inventory    []edenitems.Item
+	Inventory    []edentypes.Item
 	CurrentMapID string
 }
 

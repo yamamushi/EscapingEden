@@ -52,7 +52,16 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 						Data:               messages.GameMessage{Type: messages.GM_FailedLoadCharacter},
 					}
 					gm.SendChannel <- response
+					continue
 				}
+
+				// Ensure character is in a safe location when logging in
+				err = gm.EnsureSafeLogin(charID)
+				if err != nil {
+					gm.Log.Println(logging.LogWarn, "Failed to ensure safe login for character:", err)
+					// Even if safety check fails, let them login - they'll be in emergency chunk
+				}
+
 				response := messages.ConnectionManagerMessage{
 					Type: messages.ConnectManager_Message_Broadcast,
 					Data: edenutil.EdenTime{}.CurrentTimeString() + " - " + gm.GetCharacterName(charID) + " entered the world.",
@@ -158,6 +167,50 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 						Type:               messages.ConnectManager_Message_GameCommandResponse,
 						RecipientConsoleID: managerMessage.SenderConsoleID,
 						Data:               messages.GameMessage{Type: messages.GM_FailedDig},
+					}
+					gm.SendChannel <- response
+				}
+
+			case messages.GameManager_BuildWallCommand:
+				//gm.Log.Println(logging.LogInfo, "Game Manager received dig request")
+				charID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).CharacterID
+				if charID == "" {
+					continue
+				}
+				deltaX := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharBuildWall).DeltaX
+				deltaY := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharBuildWall).DeltaY
+				itemID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharBuildWall).ItemID
+				toolID := managerMessage.Data.(messages.GameManagerMessage).Data.(messages.GameMessageData).Data.(messages.GameCharBuildWall).ToolID
+				err := gm.HandleBuildWallRequest(itemID, toolID, charID, deltaX, deltaY)
+				if err != nil {
+					//gm.Log.Println(logging.LogError, "Game Manager failed to dig", err.Error())
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: managerMessage.SenderConsoleID,
+						Data:               messages.GameMessage{Type: messages.GM_FailedBuildWall},
+					}
+					gm.SendChannel <- response
+				}
+
+			case messages.GameManager_AdminCommand:
+				gm.Log.Println(logging.LogInfo, "Game Manager received admin command")
+				senderID := managerMessage.SenderConsoleID
+				commandString := managerMessage.Data.(messages.GameMessageData).Data.(string)
+
+				// Parse and handle the admin command
+				handled := gm.ParseAdminCommand(senderID, commandString)
+				if !handled {
+					// Send error message for unrecognized command
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: senderID,
+						Data: messages.GameMessage{
+							Type: messages.GM_SystemMessage,
+							Data: messages.GameMessageData{
+								CharacterID: senderID,
+								Data:        "Unknown command. Type /adminhelp for available commands.",
+							},
+						},
 					}
 					gm.SendChannel <- response
 				}

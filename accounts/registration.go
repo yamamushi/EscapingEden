@@ -1,10 +1,12 @@
 package accounts
 
 import (
+	"strings"
+
 	"github.com/google/uuid"
+	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"strings"
 )
 
 /*
@@ -53,10 +55,30 @@ func (am *AccountManager) DiscordTagExists(discordTag string) (*messages.Account
 // CreateAccount creates a new account, returns nil on success or error on failure
 func (am *AccountManager) CreateAccount(username, password, discordTag string) messages.AccountRegistrationResponse {
 
-	username = strings.TrimSpace(username)
-	discordTag = strings.TrimSpace(discordTag)
+	// Sanitize and validate input
+	username = edenutil.SanitizeInput(strings.TrimSpace(username))
+	password = edenutil.SanitizeInput(password)
+	discordTag = edenutil.SanitizeInput(strings.TrimSpace(discordTag))
 
 	response := messages.AccountRegistrationResponse{}
+
+	// Validate username format
+	if !edenutil.ValidateUsername(username) {
+		response.Error = messages.AMError_InvalidUsername
+		return response
+	}
+
+	// Validate password strength
+	if !edenutil.ValidatePassword(password) {
+		response.Error = messages.AMError_InvalidPassword
+		return response
+	}
+
+	// Validate Discord ID format (if it's not a tag format)
+	if !strings.Contains(discordTag, "#") && !edenutil.ValidateDiscordID(discordTag) {
+		response.Error = messages.AMError_InvalidDiscordID
+		return response
+	}
 	// Before we work, lets make sure the username and discord are not already taken
 	foundAccount, err := am.DiscordTagExists(discordTag)
 	if err == messages.AMError_DBError {

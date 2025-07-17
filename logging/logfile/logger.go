@@ -2,11 +2,12 @@ package logfile
 
 import (
 	"fmt"
-	"github.com/yamamushi/EscapingEden/edenutil"
-	"github.com/yamamushi/EscapingEden/logging"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/yamamushi/EscapingEden/edenutil"
+	"github.com/yamamushi/EscapingEden/logging"
 )
 
 type FileLogger struct {
@@ -67,7 +68,5 @@ func (fl *FileLogger) Println(level logging.LogLevel, message string, v ...inter
 		}
 	}
 
-	if level == logging.LogFatal {
-		os.Exit(1)
-	}
+	// Note: Removed os.Exit(1) call - let the application handle fatal errors gracefully
 }

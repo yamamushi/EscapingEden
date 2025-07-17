@@ -13,6 +13,7 @@ The project is currently in a rapid state of development, and information here i
 
   * [Introduction](#introduction)
   * [Eden](#Eden)
+  * [Documentation](#documentation)
   * [Roadmap](#roadmap)
   * [Development](#development)
   * [Connecting](#connecting)
@@ -52,6 +53,28 @@ and the wealth of the town may attract bandits and other hostile creatures.
 
 There are many more features to be found in Escaping Eden, and I hope that you'll stick around while I continue to develop
 it! 
+
+## Documentation
+
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
+### 📚 **For Server Administrators**
+- **[Configuration Guide](docs/CONFIG_GUIDE.md)** - Complete server configuration reference
+- **[Admin Commands](docs/ADMIN_COMMANDS.md)** - Player management and teleport commands
+- **[Role System](docs/ROLES_SYSTEM.md)** - User roles and permissions management
+- **[World Reset Guide](docs/WORLD_RESET_GUIDE.md)** - How to safely reset and regenerate the world
+- **[Monitoring Endpoints](docs/MONITORING_ENDPOINTS.md)** - HTTP endpoints for server monitoring and health checks
+
+### 🛠️ **For Developers**
+- **[Startup Optimization](docs/STARTUP_OPTIMIZATION.md)** - Server startup performance improvements
+- **[Rendering Refactor Guide](docs/RENDERING_REFACTOR_GUIDE.md)** - UI rendering system improvements
+
+### 🚀 **Quick Start**
+1. Review the [Configuration Guide](docs/CONFIG_GUIDE.md) for server setup
+2. Learn [Admin Commands](docs/ADMIN_COMMANDS.md) for player management
+3. Set up [Monitoring](docs/MONITORING_ENDPOINTS.md) for server health tracking
+
+For a complete documentation index, see [`docs/README.md`](docs/README.md).
 
 ## Roadmap
 

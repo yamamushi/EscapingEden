@@ -13,12 +13,12 @@ type AccountManager struct {
 	SendChannel    chan messages.ConnectionManagerMessage // We only send connection manager messages
 
 	Log logging.LoggerType
-	EB  edenbot.EdenBot
+	EB  edenbot.EdenBotInterface
 
 	DB edendb.DatabaseType
 }
 
-func NewAccountManager(receiveChannel chan messages.AccountManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType, edenbot edenbot.EdenBot) *AccountManager {
+func NewAccountManager(receiveChannel chan messages.AccountManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType, edenbot edenbot.EdenBotInterface) *AccountManager {
 	return &AccountManager{ReceiveChannel: receiveChannel, SendChannel: sendChannel, DB: db, Log: log, EB: edenbot}
 }
 

@@ -2,9 +2,10 @@ package bolt
 
 import (
 	"errors"
+	"sync"
+
 	"github.com/asdine/storm/v3" // We use storm as a wrapper for boltdb, it's much easier to use than the native boltdb
 	"github.com/yamamushi/EscapingEden/edendb"
-	"sync"
 )
 
 type BoltDB struct {
@@ -140,4 +141,19 @@ func (db *BoltDB) One(collectionName string, field string, value interface{}, ou
 	collection := boltDB.From(collectionName)
 
 	return collection.One(field, value, output)
+}
+
+func (db *BoltDB) All(collectionName string, output interface{}) error {
+	db.queryMutex.Lock()
+	defer db.queryMutex.Unlock()
+
+	boltDB, err := storm.Open(db.Path)
+	if err != nil {
+		return err
+	}
+	defer boltDB.Close()
+
+	collection := boltDB.From(collectionName)
+
+	return collection.All(output)
 }

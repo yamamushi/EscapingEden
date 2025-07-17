@@ -14,8 +14,11 @@ const (
 )
 
 func CheckBlacklist(input string, blacklist BlackListTypeID) bool {
+	return CheckBlacklistWithPath(input, blacklist, "assets/blacklist")
+}
 
-	path := "assets/blacklist"
+func CheckBlacklistWithPath(input string, blacklist BlackListTypeID, basePath string) bool {
+	path := basePath
 
 	switch blacklist {
 	case BlackListIPs:

@@ -2,23 +2,26 @@ package network
 
 import (
 	"bufio"
+	"net"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
 	xterm_256color "github.com/yamamushi/EscapingEden/terminals/xterm-256color"
 	"github.com/yamamushi/EscapingEden/ui"
-	"net"
-	"strings"
-	"sync"
 )
 
 // Connection is a connection to a client in case we need to store any extra details later
 type Connection struct {
-	ID      string
-	conn    net.Conn
-	mutex   sync.Mutex
-	Console *ui.Console
-	manager *ConnectionManager
+	ID           string
+	conn         net.Conn
+	mutex        sync.Mutex
+	Console      *ui.Console
+	manager      *ConnectionManager
+	lastActivity time.Time
 
 	Log logging.LoggerType
 
@@ -38,25 +41,46 @@ type Connection struct {
 // NewConnection creates a new connection
 func NewConnection(conn net.Conn, id string, manager *ConnectionManager, log logging.LoggerType) *Connection {
 	connection := &Connection{
-		conn:    conn,
-		ID:      id,
-		manager: manager,
-		Log:     log,
+		conn:         conn,
+		ID:           id,
+		manager:      manager,
+		Log:          log,
+		lastActivity: time.Now(),
 	}
 	go connection.Handle()
 	return connection
 }
 
-// Write writes a byte to the connection
+// Write writes a byte slice to the connection in chunks of defined size or less
 func (c *Connection) Write(msg []byte) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	_, err := c.conn.Write(msg)
-	if err != nil {
-		//log.Println(err)
-		return err
+	// Define the maximum chunk size
+	maxChunkSize := 128
+
+	// Iterate over the input msg and send it in chunks
+	for len(msg) > 0 {
+		// Determine the chunk size for this iteration
+		chunkSize := len(msg)
+		if chunkSize > maxChunkSize {
+			chunkSize = maxChunkSize
+		}
+
+		// Extract a chunk of data from msg
+		chunk := msg[:chunkSize]
+
+		// Send the chunk over the connection
+		_, err := c.conn.Write(chunk)
+		if err != nil {
+			//log.Println(err)
+			return err
+		}
+
+		// Remove the sent chunk from msg
+		msg = msg[chunkSize:]
 	}
+
 	return nil
 }
 

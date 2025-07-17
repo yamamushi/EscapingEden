@@ -44,6 +44,7 @@ type WindowType interface {
 	GetBorderFG() int
 	GetBorderBG() int
 	GetConfig() *config.WindowConfig
+	GetRect() types.Rect
 
 	CheckScrollBufferNew() bool
 	SetScrollBufferNew(bool)
@@ -376,4 +377,13 @@ func (w *Window) NotifyConsoleLoggedIn(info messages.UserInfo) {
 	msg := messages.WindowMessage{Type: messages.WM_ConsoleCommand, Command: messages.WMC_SetAccountLoggedIn, TargetID: w.GetID(), Data: info}
 	// Send the message to the console so that we can enable the full dashboard control
 	w.SendToConsole(msg)
+}
+
+func (w *Window) GetRect() types.Rect {
+	return types.Rect{
+		X:      w.GetX(),
+		Y:      w.GetY(),
+		Width:  w.GetWidth() + 1,
+		Height: w.GetHeight() + 2,
+	}
 }
