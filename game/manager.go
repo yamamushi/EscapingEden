@@ -1,12 +1,13 @@
 package game
 
 import (
+	"sync"
+
 	"github.com/google/uuid"
 	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"sync"
 )
 
 type GameManager struct {
@@ -20,10 +21,23 @@ type GameManager struct {
 	ActiveCharacters      ActiveCharacters
 	activeCharactersMutex sync.Mutex
 
+	// ChunkCache is a map of map chunk IDs to map chunks
+	ChunkCache map[string]*MapChunk
+
 	// Temporary will remove in a refactor of the map generation
-	MapChunks []MapChunk
 	TileTypes map[string]TileInfo
 	Config    *edenconfig.Config
+
+	// Performance optimizations
+	ChunkRegistry  *ChunkRegistry
+	LazyLoader     *LazyChunkLoader
+	WorldValidated bool
+
+	// Map fallback system
+	FallbackManager *MapFallbackManager
+
+	// Role management system
+	RoleManager *RoleManager
 }
 
 func NewGameManager(receiveChannel chan messages.GameManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType, conf *edenconfig.Config) *GameManager {
@@ -52,10 +66,36 @@ func (gm *GameManager) Init() error {
 		return err
 	}
 
+	gm.ChunkCache = make(map[string]*MapChunk)
+
+	// Initialize performance optimizations
+	gm.ChunkRegistry = NewChunkRegistry("./assets/world")
+	gm.LazyLoader = NewLazyChunkLoader(gm, 100) // Cache up to 100 chunks
+
 	// We're going to load the tile types first
 	gm.LoadTileTypes()
 
-	// Now we load up the world, this could take a while...
-	gm.LoadWorld()
+	// Fast world validation instead of full loading
+	gm.FastWorldValidation()
+
+	// Initialize map fallback system
+	gm.FallbackManager = NewMapFallbackManager(gm)
+
+	// Initialize role management system
+	gm.RoleManager = NewRoleManager(gm)
+
+	// Ensure first user is super admin
+	err = gm.RoleManager.EnsureFirstUserIsSuperAdmin()
+	if err != nil {
+		gm.Log.Println(logging.LogWarn, "Failed to ensure first user is super admin:", err)
+	}
+
+	// Start performance monitoring
+	monitor := NewChunkMonitor(gm)
+	monitor.StartPerformanceMonitoring()
+
+	// Schedule periodic character safety checks
+	gm.ScheduleCharacterSafetyChecks()
+
 	return nil
 }

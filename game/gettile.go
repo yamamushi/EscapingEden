@@ -1,15 +1,17 @@
 package game
 
 import (
-	"github.com/yamamushi/EscapingEden/logging"
 	"log"
+
+	"github.com/yamamushi/EscapingEden/logging"
 )
 
 func (gm *GameManager) GlobalTile(x, y, z int) (*Tile, *MapChunk) {
-
-	chunkSize := gm.Config.World.ChunkSize
-	worldDimensionsString := gm.Config.World.Dimensions
+	chunkSize := gm.Config.WorldGen.ChunkSize
+	worldDimensionsString := gm.Config.WorldGen.Dimensions
 	worldX, worldY, worldZ := gm.ParseWorldDimensions(worldDimensionsString)
+
+	// Wrap coordinates
 	if x < 0 {
 		x = (worldX * chunkSize) - 1
 	}
@@ -22,33 +24,33 @@ func (gm *GameManager) GlobalTile(x, y, z int) (*Tile, *MapChunk) {
 	if y > (worldY*chunkSize)-1 {
 		y = 0
 	}
-	if y < 0 {
-		y = (worldZ * chunkSize) - 1
+	if z < 0 {
+		z = (worldZ * chunkSize) - 1
 	}
-	if y > (worldZ*chunkSize)-1 {
+	if z > (worldZ*chunkSize)-1 {
 		z = 0
 	}
 
-	// Deduce the map chunk 0,0,0 from the given coordinates
+	// Calculate chunk coordinates
 	globalX := x / chunkSize
 	globalY := y / chunkSize
 	globalZ := z / chunkSize
 
-	// Get the map chunk at the given coordinates
-	mapChunk, err := gm.MapChunkByPos(globalX, globalY, globalZ)
+	// Load chunk lazily
+	mapChunk, err := gm.GetMapChunk(globalX, globalY, globalZ)
 	if err != nil {
-		log.Println("Failed to get map chunk", err.Error())
+		log.Println("Failed to get map chunk:", err)
 		return nil, nil
 	}
 
-	// Get the tile at the given coordinates
+	// Access tile inside the chunk
 	tile := &mapChunk.TileMap[x%chunkSize][y%chunkSize][z%chunkSize]
 	return tile, mapChunk
 }
 
 func (gm *GameManager) GlobalToLocalTile(x, y, z int) (X, Y, Z int, chunk *MapChunk) {
-	chunkSize := gm.Config.World.ChunkSize
-	worldDimensionsString := gm.Config.World.Dimensions
+	chunkSize := gm.Config.WorldGen.ChunkSize
+	worldDimensionsString := gm.Config.WorldGen.Dimensions
 	worldX, worldY, worldZ := gm.ParseWorldDimensions(worldDimensionsString)
 	if x < 0 {
 		x = (worldX * chunkSize) - 1
@@ -86,12 +88,12 @@ func (gm *GameManager) GlobalToLocalTile(x, y, z int) (X, Y, Z int, chunk *MapCh
 
 // Takes a local tile position and returns the global tile position with wrapping
 func (gm *GameManager) LocalToGlobalTile(x, y, z int, mapChunk *MapChunk) (X, Y, Z int) {
-	chunkSize := gm.Config.World.ChunkSize
+	chunkSize := gm.Config.WorldGen.ChunkSize
 	globalBaseX := mapChunk.GlobalPosition.X * chunkSize
 	globalBaseY := mapChunk.GlobalPosition.Y * chunkSize
 	globalBaseZ := mapChunk.GlobalPosition.Z * chunkSize
 
-	worldDimensionsString := gm.Config.World.Dimensions
+	worldDimensionsString := gm.Config.WorldGen.Dimensions
 	worldX, worldY, worldZ := gm.ParseWorldDimensions(worldDimensionsString)
 	if x < 0 {
 		x = (worldX * chunkSize) - 1

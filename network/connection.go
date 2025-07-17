@@ -2,23 +2,26 @@ package network
 
 import (
 	"bufio"
+	"net"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/terminals"
 	xterm_256color "github.com/yamamushi/EscapingEden/terminals/xterm-256color"
 	"github.com/yamamushi/EscapingEden/ui"
-	"net"
-	"strings"
-	"sync"
 )
 
 // Connection is a connection to a client in case we need to store any extra details later
 type Connection struct {
-	ID      string
-	conn    net.Conn
-	mutex   sync.Mutex
-	Console *ui.Console
-	manager *ConnectionManager
+	ID           string
+	conn         net.Conn
+	mutex        sync.Mutex
+	Console      *ui.Console
+	manager      *ConnectionManager
+	lastActivity time.Time
 
 	Log logging.LoggerType
 
@@ -38,10 +41,11 @@ type Connection struct {
 // NewConnection creates a new connection
 func NewConnection(conn net.Conn, id string, manager *ConnectionManager, log logging.LoggerType) *Connection {
 	connection := &Connection{
-		conn:    conn,
-		ID:      id,
-		manager: manager,
-		Log:     log,
+		conn:         conn,
+		ID:           id,
+		manager:      manager,
+		Log:          log,
+		lastActivity: time.Now(),
 	}
 	go connection.Handle()
 	return connection

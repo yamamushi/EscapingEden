@@ -40,6 +40,7 @@ const (
 	GameManager_RequestInventory
 	GameManager_DigCommand
 	GameManager_BuildWallCommand
+	GameManager_AdminCommand
 )
 
 type GameManagerMessage struct {

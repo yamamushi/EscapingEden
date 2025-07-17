@@ -42,6 +42,9 @@ type DatabaseType interface {
 	// Collection, Field, Value, Output
 	One(string, string, interface{}, interface{}) error
 
+	// All records from collection
+	All(string, interface{}) error
+
 	// FindAll records in collection that match the interface.
 	FindAll(string, []interface{}) error
 
@@ -97,6 +100,10 @@ func (db *Database) RemoveCollection(collectionName string) error {
 }
 
 func (db *Database) One(collectionName string, field string, value interface{}, output interface{}) error {
+	return nil
+}
+
+func (db *Database) All(collectionName string, output interface{}) error {
 	return nil
 }
 

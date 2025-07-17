@@ -6,16 +6,18 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"errors"
-	"github.com/yamamushi/EscapingEden/logging"
+	"fmt"
 	"os"
+
+	"github.com/yamamushi/EscapingEden/logging"
 )
 
-func (gm *GameManager) SaveMapChunk(data MapChunk, filename string) error {
+func (gm *GameManager) SaveMapChunk(data MapChunk, filename string, overwrite bool) error {
 
 	filename = "./assets/world/" + filename
 	var _, err = os.Stat(filename)
 	// create file if not exists
-	if os.IsNotExist(err) {
+	if os.IsNotExist(err) || overwrite {
 		var buf bytes.Buffer
 
 		// Compress using gzip
@@ -149,4 +151,49 @@ func (gm *GameManager) LoadTileTypesFromAssets(directoryPath string) {
 
 		}
 	}
+}
+
+func (gm *GameManager) GetMapChunk(globalX, globalY, globalZ int) (*MapChunk, error) {
+	// Use the lazy loader for better performance
+	if gm.LazyLoader != nil {
+		return gm.LazyLoader.GetChunkAsync(globalX, globalY, globalZ)
+	}
+
+	// Fallback to old method if lazy loader not initialized
+	id := fmt.Sprintf("%d-%d-%d", globalX, globalY, globalZ)
+
+	// Check cache
+	if chunk, ok := gm.ChunkCache[id]; ok {
+		return chunk, nil
+	}
+
+	// Load from disk
+	filename := id + ".map"
+	chunk, err := gm.LoadMapChunk(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load chunk %s: %w", id, err)
+	}
+
+	// Store in cache
+	gm.ChunkCache[id] = chunk
+	return chunk, nil
+}
+
+func (gm *GameManager) UnloadMapChunk(chunkID string) error {
+	chunk, ok := gm.ChunkCache[chunkID]
+	if !ok {
+		return fmt.Errorf("chunk %s not found in cache", chunkID)
+	}
+
+	// Optional: only save if dirty
+	// if gm.DirtyChunks[chunkID] {
+	filename := fmt.Sprintf("%d-%d-%d.map", chunk.GlobalPosition.X, chunk.GlobalPosition.Y, chunk.GlobalPosition.Z)
+	if err := gm.SaveMapChunk(*chunk, filename, true); err != nil {
+		return fmt.Errorf("failed to save chunk %s: %w", chunkID, err)
+	}
+	// delete(gm.DirtyChunks, chunkID)
+	// }
+
+	delete(gm.ChunkCache, chunkID)
+	return nil
 }

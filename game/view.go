@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
@@ -29,14 +30,24 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 	// If character is not initialized, we need to load it into the map
 	if !character.Initialized {
 		gm.Log.Println(logging.LogInfo, "character not initialized, loading into map")
+		chunk, err := gm.GetMapChunk(0, 0, 0)
+		if err != nil {
+			return messages.GameCharView{}, err
+		}
+
 		character.Position = struct {
 			MapChunkID string
 			X          int
 			Y          int
 			Z          int
-		}{X: len(gm.MapChunks[0].TileMap) / 2, Y: len(gm.MapChunks[0].TileMap[0]) / 2, Z: 0, MapChunkID: gm.MapChunks[0].ID}
+		}{
+			X:          len(chunk.TileMap) / 2,
+			Y:          len(chunk.TileMap[0]) / 2,
+			Z:          0,
+			MapChunkID: chunk.ID,
+		}
 		character.Initialized = true
-		character.CurrentMapID = gm.MapChunks[0].ID
+		character.CurrentMapID = chunk.ID
 	}
 	defer gm.activeCharactersMutex.Unlock()
 
@@ -49,7 +60,9 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 	}
 
 	currentMap := gm.GetMapChunkByID(character.CurrentMapID)
-	// plane[i][j] is the window drawing we're sending to the client
+	if currentMap == nil {
+		return messages.GameCharView{}, fmt.Errorf("current map chunk %s not found", character.CurrentMapID)
+	} // plane[i][j] is the window drawing we're sending to the client
 	// We want to center the view around the player's position, posX and posY
 	// So we need to offset the current MapChunk starting draw position by the player's position so that
 	// When they are drawn they are always at the center and the map is drawn around them
@@ -175,7 +188,7 @@ func (gm *GameManager) GetCharacterView(charID string, width, height int) (messa
 // GetMapChunkFrom returns a map chunk from a source map chunk and a delta
 func (gm *GameManager) GetMapChunkFrom(source *MapChunk, deltaX, deltaY, deltaZ int) *MapChunk {
 	//gm.Log.Println(logging.LogInfo, "Getting map chunk at", x, y)
-	worldDimensionsString := gm.Config.World.Dimensions
+	worldDimensionsString := gm.Config.WorldGen.Dimensions
 	worldLat, worldLon, worldHeight := gm.ParseWorldDimensions(worldDimensionsString)
 	x, y, z := 0, 0, 0
 
@@ -200,7 +213,7 @@ func (gm *GameManager) GetMapChunkFrom(source *MapChunk, deltaX, deltaY, deltaZ 
 	} else {
 		z = deltaZ + source.GlobalPosition.Z
 	}
-	mapChunk, err := gm.MapChunkByPos(x, y, z)
+	mapChunk, err := gm.GetMapChunk(x, y, z)
 	if err != nil {
 		return nil
 	}
@@ -209,11 +222,5 @@ func (gm *GameManager) GetMapChunkFrom(source *MapChunk, deltaX, deltaY, deltaZ 
 }
 
 func (gm *GameManager) MapChunkByPos(x, y, z int) (*MapChunk, error) {
-	for _, mapChunk := range gm.MapChunks {
-		if mapChunk.GlobalPosition.X == x && mapChunk.GlobalPosition.Y == y && mapChunk.GlobalPosition.Z == z {
-			return &mapChunk, nil
-		}
-	}
-	gm.Log.Println(logging.LogError, "map chunk not found at", x, y, z)
-	return nil, fmt.Errorf("map chunk not found at %d, %d, %d", x, y, z)
+	return gm.GetMapChunk(x, y, z)
 }

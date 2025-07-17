@@ -29,6 +29,9 @@ func NewEdenBot(input chan messages.EdenbotMessage, output chan messages.SystemM
 	}
 }
 
+// Ensure EdenBot implements EdenBotInterface
+var _ EdenBotInterface = (*EdenBot)(nil)
+
 func (eb *EdenBot) Init() error {
 	return nil //TODO
 }
@@ -37,7 +40,7 @@ func (eb *EdenBot) Run(startNotify chan bool) error {
 	// First we start the discord bot using the credentials from eb.config
 	// Then we start the manager service
 	eb.Log.Println(logging.LogInfo, "Edenbot connecting to discord...")
-	dg, err := discordgo.New("Bot " + eb.Config.Discord.Token)
+	dg, err := discordgo.New("Bot " + eb.Config.Discord.BotToken)
 	if err != nil {
 		return err
 	}

@@ -1,13 +1,16 @@
 package network
 
 import (
+	"fmt"
+	"net"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"net"
-	"sync"
-	"time"
 )
 
 // ConnectionManager synchronizes connection output globally
@@ -34,6 +37,10 @@ type ConnectionManager struct {
 	EBSendMessages chan messages.EdenbotMessage
 
 	GMSendMessages chan messages.GameManagerMessage
+
+	// Bad login tracking
+	badLoginTracker map[string]int
+	badLoginMutex   sync.RWMutex
 }
 
 // NewConnectionManager creates a new ConnectionManager
@@ -48,6 +55,7 @@ func NewConnectionManager(connectionMap *sync.Map, receiveMessages chan messages
 		GMSendMessages:    gmSendMessages,
 		Log:               log,
 		DB:                db,
+		badLoginTracker:   make(map[string]int),
 	}
 }
 
@@ -86,7 +94,28 @@ func (cm *ConnectionManager) MessageParser(startedNotify chan bool) {
 			//cm.Log.Println(logging.LogInfo, "Message received from cm.CMReceiveMessages")
 			switch managerMessage.Type {
 			case messages.ConnectManager_Message_Chat:
-				// For every connection, send the message to the Console channel
+				chatMessage := managerMessage.Data.(string)
+				senderID := managerMessage.SenderConsoleID
+
+				// Check if this is an admin command
+				if strings.HasPrefix(chatMessage, "/") {
+					// Send admin command to game manager for processing
+					adminCommandMessage := messages.GameManagerMessage{
+						Type:            messages.GameManager_AdminCommand,
+						SenderConsoleID: senderID,
+						Data: messages.GameMessageData{
+							CharacterID: senderID,
+							Data:        chatMessage, // Send the raw command string
+						},
+					}
+
+					// Send to game manager instead of broadcasting
+					cm.GMSendMessages <- adminCommandMessage
+					cm.Log.Println(logging.LogInfo, fmt.Sprintf("Admin command from %s: %s", senderID, chatMessage))
+					continue
+				}
+
+				// For regular chat messages, send to all connections
 				cm.connectionMap.Range(func(key, value interface{}) bool {
 					if conn, ok := value.(*Connection); ok {
 						//cm.Log.Println(logging.LogInfo, "Chat message found, sending to conn.Console.ReceiveMessages")
@@ -525,4 +554,20 @@ func (cm *ConnectionManager) checkIPBadLogins(conn *Connection) (allowed bool) {
 	}
 
 	return true
+}
+
+// getBadLoginCount returns the bad login count for an IP address
+func (cm *ConnectionManager) getBadLoginCount(ipAddress string) int {
+	cm.badLoginMutex.RLock()
+	defer cm.badLoginMutex.RUnlock()
+
+	return cm.badLoginTracker[ipAddress]
+}
+
+// setBadLoginCount sets the bad login count for an IP address
+func (cm *ConnectionManager) setBadLoginCount(ipAddress string, count int) {
+	cm.badLoginMutex.Lock()
+	defer cm.badLoginMutex.Unlock()
+
+	cm.badLoginTracker[ipAddress] = count
 }

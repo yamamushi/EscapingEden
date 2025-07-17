@@ -20,6 +20,7 @@ type Account struct {
 	LastCharacterID     string    // Last character ID used.
 	LastCharacterName   string    // Last character name used.
 	Characters          []string  // List of character IDs.
+	Role                int       // User role: 0=User, 1=Moderator, 2=Admin, 3=SuperAdmin
 	Error               string    // Error message, if any.
 }
 

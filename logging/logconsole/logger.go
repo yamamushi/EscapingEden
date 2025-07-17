@@ -2,9 +2,9 @@ package logconsole
 
 import (
 	"fmt"
-	"github.com/yamamushi/EscapingEden/logging"
-	"os"
 	"time"
+
+	"github.com/yamamushi/EscapingEden/logging"
 )
 
 type ConsoleLogger struct {
@@ -40,7 +40,5 @@ func (cl *ConsoleLogger) Println(level logging.LogLevel, message string, v ...in
 		fmt.Println(colorCode, timestamp, level, message, v, "\033[0m")
 	}
 
-	if level == logging.LogFatal {
-		os.Exit(1)
-	}
+	// Note: Removed os.Exit(1) call - let the application handle fatal errors gracefully
 }

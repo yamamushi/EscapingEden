@@ -5,6 +5,9 @@ These functions are used to initialize various components, to keep main clean :)
 */
 import (
 	"errors"
+	"strings"
+	"time"
+
 	"github.com/yamamushi/EscapingEden/accounts"
 	"github.com/yamamushi/EscapingEden/character"
 	"github.com/yamamushi/EscapingEden/edenbot"
@@ -17,8 +20,6 @@ import (
 	"github.com/yamamushi/EscapingEden/logging/logfile"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/network"
-	"strings"
-	"time"
 )
 
 // InitLogger initializes the logger
@@ -78,7 +79,7 @@ func InitEdenbot(input chan messages.EdenbotMessage, output chan messages.System
 
 // InitAccountManager initializes the account manager
 func InitAccountManager(receiver chan messages.AccountManagerMessage, sender chan messages.ConnectionManagerMessage,
-	dbConn edendb.DatabaseType, log logging.LoggerType, edenbot edenbot.EdenBot) (*accounts.AccountManager, error) {
+	dbConn edendb.DatabaseType, log logging.LoggerType, edenbot edenbot.EdenBotInterface) (*accounts.AccountManager, error) {
 	log.Println(logging.LogInfo, "Starting Account Manager...")
 
 	startNotify := make(chan bool)

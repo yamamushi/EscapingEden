@@ -2,13 +2,14 @@ package edenbot
 
 import (
 	"errors"
+	"strings"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
-	"strings"
 )
 
-func (eb *EdenBot) IsUserInDiscordServer(username string) (*discordgo.User, error) {
+func (eb *EdenBot) IsUserInDiscordServer(username string) (*DiscordUser, error) {
 
 	/*usertag := strings.Split(username, "#")
 	if len(usertag) != 2 {
@@ -30,11 +31,19 @@ func (eb *EdenBot) IsUserInDiscordServer(username string) (*discordgo.User, erro
 		eb.Log.Println(logging.LogInfo, "Checking user: ", member.User.Discriminator)
 		if member.User.Discriminator == username {
 			eb.Log.Println(logging.LogInfo, "User found in server")
-			return member.User, nil
+			return &DiscordUser{
+				ID:       member.User.ID,
+				Username: member.User.Username,
+				Tag:      member.User.Username + "#" + member.User.Discriminator,
+			}, nil
 		}
 		if member.User.Username == username {
 			eb.Log.Println(logging.LogInfo, "User found in server")
-			return member.User, nil
+			return &DiscordUser{
+				ID:       member.User.ID,
+				Username: member.User.Username,
+				Tag:      member.User.Username + "#" + member.User.Discriminator,
+			}, nil
 		}
 	}
 

@@ -29,6 +29,10 @@ const (
 	GM_Inventory
 	GM_Dig
 	GM_BuildWall
+	GM_SystemMessage
+	GM_AdminTeleportResponse
+	GM_AdminSpawnListResponse
+	GM_AdminLocationResponse
 )
 
 type GameMessageCommand int
@@ -77,4 +81,19 @@ type GameCharBuildWall struct {
 	DeltaY int
 	ItemID string
 	ToolID string // Unused for now, but will be used for tools that are required to build
+}
+
+type GameAdminTeleport struct {
+	AdminID        string
+	TargetPlayerID string
+	Location       string
+}
+
+type GameAdminListSpawns struct {
+	AdminID string
+}
+
+type GameAdminGetLocation struct {
+	AdminID        string
+	TargetPlayerID string
 }

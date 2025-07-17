@@ -65,6 +65,7 @@ func (gm *GameManager) RemoveFromLiveCharacterList(ID string) {
 			}
 			gm.SendChannel <- response
 			//gm.Log.Println(logging.LogInfo, "Removed character from game manager:", ID)
+			return // Prevents continuing iteration on modified slice
 		}
 	}
 }

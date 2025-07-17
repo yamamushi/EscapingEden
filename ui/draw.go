@@ -14,66 +14,73 @@ func (c *Console) Draw() []byte {
 	defer c.mutex.Unlock()
 
 	var s string
-	//s = s + c.ConsoleCommands
-	//c.ConsoleCommands = ""
+
 	if !c.IsConsoleValidSize() {
-		s = s + c.Terminal.ClearTerminal()
-		s = s + "Invalid console size, Escaping Eden requires a terminal size of" + strconv.Itoa(MINWIDTH) + "x" + strconv.Itoa(MINHEIGHT) + "or greater.\r\n"
-		s = s + "Please resize your terminal, or press q to disconnect.\n"
-		s = s + "If your terminal is empty after resizing, you can press ctrl-r to force a screen refresh.\n"
+		s += c.Terminal.ClearTerminal()
+		s += "Invalid console size, Escaping Eden requires a terminal size of" + strconv.Itoa(MINWIDTH) + "x" + strconv.Itoa(MINHEIGHT) + "or greater.\r\n"
+		s += "Please resize your terminal, or press q to disconnect.\n"
+		s += "If your terminal is empty after resizing, you can press ctrl-r to force a screen refresh.\n"
 
 		if c.LastSentOutput != s {
 			c.LastSentOutput = s
 			return []byte(s)
-		} else {
-			return []byte("")
 		}
+		return []byte("")
 	}
 
 	if !c.consoleInitialized {
 		c.consoleInitialized = true
-		return []byte(s)
+		return []byte("")
 	}
 
 	if c.forceScreenRefresh {
-		//log.Println("force screen refresh")
 		c.forceScreenRefresh = false
-		s = s + c.Terminal.ClearTerminal()
+		s += c.Terminal.ClearTerminal()
 		return []byte(s)
 	}
 
 	if c.resizeActive {
-		//log.Println("Handling resize in buffer")
 		for _, w := range c.Windows {
 			w.FlushLastSent()
 		}
 		c.resizeActive = false
 	}
 
-	//log.Println("Drawing console")
+	// Update and draw only what’s needed
 	for _, target := range c.Windows {
-
 		c.UpdateWindow(target)
 	}
-	consoleDraw := c.GenerateScreenFromPointMap()
-	if consoleDraw != "" {
-		s = s + consoleDraw
-	}
 
-	// We do a last minute check for aborting sending messages
-	// This is useful when a screen has asked for a screen refresh
-	// And we don't want to send data that is going to get overwritten immediately
+	// Consolidated screen generation (includes flush, hover update, pointmap render)
+	s += c.RenderVisibleWindows()
+
+	// Final sync check
 	c.abortSync.Lock()
 	defer c.abortSync.Unlock()
-	// If the last output was not the same as the current output, we send it to the client and update the last output.
+
 	if c.LastSentOutput != s && s != "" && !c.abortSend {
-		//log.Println("Sending new output to client, length:", len(s))
 		c.LastSentOutput = s
 		return []byte(s)
-	} else {
-		c.abortSend = false
-		return []byte("")
 	}
+
+	c.abortSend = false
+	return []byte("")
+}
+
+func (c *Console) RenderVisibleWindows() string {
+	for _, target := range c.Windows {
+		c.FlushWindowArea(target.GetID()) // flush if needed (still preserves flush list logic)
+
+		if target.GetID() == config.WindowHelpBox || target.GetID() == config.WindowPopupBox {
+			// Re-update hover windows only if active
+			c.UpdateWindow(target)
+		}
+
+		if !target.GetHidden() {
+			c.AddToPointMap(target.GetPointMap(), target.GetConfig(), target.GetID())
+		}
+	}
+	return c.PrintPointMap()
 }
 
 // UpdateWindow takes a WindowType as an argument and updates
@@ -220,7 +227,7 @@ func (c *Console) FlushWindowArea(winID config.WindowID) {
 				//log.Println("Flushing point: ", i, j)
 				//if w.GetCharAt(i, j) != " " { // && w.GetEscapeCodeAt(i, j) != "" {
 				//log.Println("Blank point found: ", i, j)'
-				c.PointMap[i][j] = types.Point{X: i, Y: i, Character: " ", EscapeCode: ""}
+				c.PointMap[i][j] = types.Point{X: i, Y: j, Character: " ", EscapeCode: ""}
 				c.LastSentPointMap[i][j] = types.Point{X: i, Y: j, Character: c.Terminal.Reset(), EscapeCode: ""}
 				//}
 			}

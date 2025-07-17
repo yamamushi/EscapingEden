@@ -52,7 +52,16 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 						Data:               messages.GameMessage{Type: messages.GM_FailedLoadCharacter},
 					}
 					gm.SendChannel <- response
+					continue
 				}
+
+				// Ensure character is in a safe location when logging in
+				err = gm.EnsureSafeLogin(charID)
+				if err != nil {
+					gm.Log.Println(logging.LogWarn, "Failed to ensure safe login for character:", err)
+					// Even if safety check fails, let them login - they'll be in emergency chunk
+				}
+
 				response := messages.ConnectionManagerMessage{
 					Type: messages.ConnectManager_Message_Broadcast,
 					Data: edenutil.EdenTime{}.CurrentTimeString() + " - " + gm.GetCharacterName(charID) + " entered the world.",
@@ -179,6 +188,29 @@ func (gm *GameManager) HandleMessages(started chan bool) {
 						Type:               messages.ConnectManager_Message_GameCommandResponse,
 						RecipientConsoleID: managerMessage.SenderConsoleID,
 						Data:               messages.GameMessage{Type: messages.GM_FailedBuildWall},
+					}
+					gm.SendChannel <- response
+				}
+
+			case messages.GameManager_AdminCommand:
+				gm.Log.Println(logging.LogInfo, "Game Manager received admin command")
+				senderID := managerMessage.SenderConsoleID
+				commandString := managerMessage.Data.(messages.GameMessageData).Data.(string)
+
+				// Parse and handle the admin command
+				handled := gm.ParseAdminCommand(senderID, commandString)
+				if !handled {
+					// Send error message for unrecognized command
+					response := messages.ConnectionManagerMessage{
+						Type:               messages.ConnectManager_Message_GameCommandResponse,
+						RecipientConsoleID: senderID,
+						Data: messages.GameMessage{
+							Type: messages.GM_SystemMessage,
+							Data: messages.GameMessageData{
+								CharacterID: senderID,
+								Data:        "Unknown command. Type /adminhelp for available commands.",
+							},
+						},
 					}
 					gm.SendChannel <- response
 				}
