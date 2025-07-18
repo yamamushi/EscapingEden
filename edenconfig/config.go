@@ -45,6 +45,7 @@ type DiscordConfig struct {
 	AdminIDs              []string `toml:"admin_ids"`
 	RegistrationChannelID string   `toml:"registration_channel_id"`
 	RegisteredRoleID      string   `toml:"registered_role_id"`
+	RequireDiscord        bool     `toml:"require_discord"`
 }
 
 // WorldGenConfig holds world generation configuration

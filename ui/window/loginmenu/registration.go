@@ -150,9 +150,9 @@ func (lw *LoginWindow) drawRegistrationUserInfo() {
 	lw.PrintLnColor(lw.X+41, lw.Y+9, lw.registrationErrorData.PasswordConfirmError(), errorFG.FG()+errorBG.BG())
 
 	if lw.registrationUserInfoOptionSelected == UserInfoDiscord {
-		lw.PrintLn(lw.X+10, lw.Y+10, "Discord ID:", lw.Terminal.Bold())
+		lw.PrintLn(lw.X+10, lw.Y+10, "Discord ID (Optional):", lw.Terminal.Bold())
 	} else {
-		lw.PrintLn(lw.X+10, lw.Y+10, "Discord ID:", "")
+		lw.PrintLn(lw.X+10, lw.Y+10, "Discord ID (Optional):", "")
 	}
 
 	discordID := ""

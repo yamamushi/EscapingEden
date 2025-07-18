@@ -3,6 +3,7 @@ package accounts
 import (
 	"github.com/google/uuid"
 	"github.com/yamamushi/EscapingEden/edenbot"
+	"github.com/yamamushi/EscapingEden/edenconfig"
 	"github.com/yamamushi/EscapingEden/edendb"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
@@ -12,14 +13,15 @@ type AccountManager struct {
 	ReceiveChannel chan messages.AccountManagerMessage    // We only receive player manager messages
 	SendChannel    chan messages.ConnectionManagerMessage // We only send connection manager messages
 
-	Log logging.LoggerType
-	EB  edenbot.EdenBotInterface
+	Log    logging.LoggerType
+	EB     edenbot.EdenBotInterface
+	Config *edenconfig.Config
 
 	DB edendb.DatabaseType
 }
 
-func NewAccountManager(receiveChannel chan messages.AccountManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType, edenbot edenbot.EdenBotInterface) *AccountManager {
-	return &AccountManager{ReceiveChannel: receiveChannel, SendChannel: sendChannel, DB: db, Log: log, EB: edenbot}
+func NewAccountManager(receiveChannel chan messages.AccountManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType, edenbot edenbot.EdenBotInterface, config *edenconfig.Config) *AccountManager {
+	return &AccountManager{ReceiveChannel: receiveChannel, SendChannel: sendChannel, DB: db, Log: log, EB: edenbot, Config: config}
 }
 
 // Init initializes the database for the account manager if needed

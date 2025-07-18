@@ -107,7 +107,7 @@ func run() error {
 	connectionManagerReceive := make(chan messages.ConnectionManagerMessage)
 
 	// Initialize account manager
-	_, err = InitAccountManager(accountManagerReceiver, connectionManagerReceive, dbConn, log, edenBot)
+	_, err = InitAccountManager(accountManagerReceiver, connectionManagerReceive, dbConn, log, edenBot, &conf)
 	if err != nil {
 		return fmt.Errorf("failed to initialize account manager: %w", err)
 	}

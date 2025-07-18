@@ -37,14 +37,14 @@ func (lw *LoginWindow) RegistrationSubmit() *RegistrationError {
 		regError.passwordConfirmError = "Your passwords do not match."
 	}
 
-	// discord verification
-	if lw.registrationSubmitData.DiscordID == "" {
-		regError.discordError = "You must enter a Discord ID."
+	// discord verification - only validate if Discord ID is provided
+	// The backend will handle whether Discord is required based on configuration
+	if lw.registrationSubmitData.DiscordID != "" {
+		if edenutil.CheckBlacklist(lw.registrationSubmitData.DiscordID, edenutil.BlackListDiscordIDS) {
+			regError.discordError = "Discord User is not allowed to register."
+		}
 	}
-
-	if edenutil.CheckBlacklist(lw.registrationSubmitData.DiscordID, edenutil.BlackListDiscordIDS) {
-		regError.discordError = "Discord User is not allowed to register."
-	}
+	// Note: We no longer require Discord ID here - the backend will validate based on config
 
 	if !lw.registrationAgreeRules {
 		regError.rulesError = "You must agree to the rules before you can register."

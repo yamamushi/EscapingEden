@@ -79,12 +79,12 @@ func InitEdenbot(input chan messages.EdenbotMessage, output chan messages.System
 
 // InitAccountManager initializes the account manager
 func InitAccountManager(receiver chan messages.AccountManagerMessage, sender chan messages.ConnectionManagerMessage,
-	dbConn edendb.DatabaseType, log logging.LoggerType, edenbot edenbot.EdenBotInterface) (*accounts.AccountManager, error) {
+	dbConn edendb.DatabaseType, log logging.LoggerType, edenbot edenbot.EdenBotInterface, config *edenconfig.Config) (*accounts.AccountManager, error) {
 	log.Println(logging.LogInfo, "Starting Account Manager...")
 
 	startNotify := make(chan bool)
 
-	accountManager := accounts.NewAccountManager(receiver, sender, dbConn, log, edenbot)
+	accountManager := accounts.NewAccountManager(receiver, sender, dbConn, log, edenbot, config)
 	// We need to init first because we need to ensure the database has been initialized
 	// For the Account Manager to work.
 	err := accountManager.Init()

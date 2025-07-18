@@ -74,27 +74,33 @@ func (am *AccountManager) CreateAccount(username, password, discordTag string) m
 		return response
 	}
 
-	// Validate Discord ID format (if it's not a tag format)
-	//if !strings.Contains(discordTag, "#") && !edenutil.ValidateDiscordID(discordTag) {
-	//	response.Error = messages.AMError_InvalidDiscordID
-	//	return response
-	//}
+	// Check if Discord is required based on configuration
+	if am.Config.Discord.RequireDiscord {
+		// Validate Discord ID format (if it's not a tag format)
+		//if !strings.Contains(discordTag, "#") && !edenutil.ValidateDiscordID(discordTag) {
+		//	response.Error = messages.AMError_InvalidDiscordID
+		//	return response
+		//}
 
-	// Before we work, lets make sure the username and discord are not already taken
-	foundAccount, err := am.DiscordTagExists(discordTag)
-	if err == messages.AMError_DBError {
-		response.Error = messages.AMError_DBError
-		return response
-	}
-
-	if foundAccount != nil {
-		if foundAccount.ValidationStatus == 0 && foundAccount.Username == username {
-			response.Error = messages.AMError_PendingValidation
-			response.ValidationCode = foundAccount.ValidationCode
+		// Before we work, lets make sure the username and discord are not already taken
+		foundAccount, err := am.DiscordTagExists(discordTag)
+		if err == messages.AMError_DBError {
+			response.Error = messages.AMError_DBError
 			return response
 		}
-		response.Error = messages.AMError_DiscordAlreadyExists
-		return response
+
+		if foundAccount != nil {
+			if foundAccount.ValidationStatus == 0 && foundAccount.Username == username {
+				response.Error = messages.AMError_PendingValidation
+				response.ValidationCode = foundAccount.ValidationCode
+				return response
+			}
+			response.Error = messages.AMError_DiscordAlreadyExists
+			return response
+		}
+	} else {
+		// Discord not required - set discordTag to empty string to skip Discord validation
+		discordTag = ""
 	}
 
 	usernameStatus, usernameError := am.UsernameExists(username)
@@ -103,42 +109,64 @@ func (am *AccountManager) CreateAccount(username, password, discordTag string) m
 		return response
 	}
 
-	// Validate if user is in discord server
-	discordUser, serverError := am.EB.IsUserInDiscordServer(discordTag)
-	if serverError != nil {
-		response.Error = messages.AMError_UserNotInServer
-		return response
-	}
-
 	hash, hashPassError := am.HashPassword(password)
 	if hashPassError != nil {
 		response.Error = messages.AMError_SystemError
 		return response
 	}
-	// generate a random uuid for the account registration
-	registrationCode, uuidError := uuid.NewUUID()
-	if uuidError != nil {
-		response.Error = messages.AMError_SystemError
-		return response
-	}
-	// Send a message to the user to validate their account
-	// If we can't reach a user, there's no point to adding the account to the database
-	pmError := am.EB.ValidateUser(username, discordUser.ID)
-	if pmError != nil {
-		response.Error = messages.AMError_DiscordMessageError
-		return response
+
+	var discordUser *messages.DiscordUser
+	var registrationCode uuid.UUID
+	var uuidError error
+
+	if am.Config.Discord.RequireDiscord {
+		// Discord validation required
+		// Validate if user is in discord server
+		var serverError error
+		discordUser, serverError = am.EB.IsUserInDiscordServer(discordTag)
+		if serverError != nil {
+			response.Error = messages.AMError_UserNotInServer
+			return response
+		}
+
+		// generate a random uuid for the account registration
+		registrationCode, uuidError = uuid.NewUUID()
+		if uuidError != nil {
+			response.Error = messages.AMError_SystemError
+			return response
+		}
+
+		// Send a message to the user to validate their account
+		// If we can't reach a user, there's no point to adding the account to the database
+		pmError := am.EB.ValidateUser(username, discordUser.ID)
+		if pmError != nil {
+			response.Error = messages.AMError_DiscordMessageError
+			return response
+		}
+	} else {
+		// Discord validation not required - account is immediately validated
+		registrationCode = uuid.New()
 	}
 
 	// Now we can add the account to the database
 	account := messages.Account{
-		ID:               uuid.New().String(),
-		Username:         username,
-		HashedPassword:   hash,
-		DiscordTag:       discordTag,
-		DiscordID:        discordUser.ID,
-		ValidationCode:   registrationCode.String(),
-		ValidationStatus: 0, // 0 = pending validation
+		ID:             uuid.New().String(),
+		Username:       username,
+		HashedPassword: hash,
+		DiscordTag:     discordTag,
+		ValidationCode: registrationCode.String(),
 	}
+
+	if am.Config.Discord.RequireDiscord && discordUser != nil {
+		// Set Discord ID and validation status for Discord-required accounts
+		account.DiscordID = discordUser.ID
+		account.ValidationStatus = 0 // 0 = pending validation
+	} else {
+		// No Discord required - account is immediately validated
+		account.DiscordID = ""
+		account.ValidationStatus = 1 // 1 = validated
+	}
+
 	dbError := am.DB.AddRecord("Accounts", &account)
 	if dbError != nil {
 		// If we hit this, we have a problem because validation above missed something

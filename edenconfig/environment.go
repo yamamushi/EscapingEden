@@ -73,6 +73,11 @@ func (c *Config) LoadFromEnvironment() {
 	if roleID := os.Getenv("EDEN_DISCORD_REGISTERED_ROLE_ID"); roleID != "" {
 		c.Discord.RegisteredRoleID = roleID
 	}
+	if requireDiscord := os.Getenv("EDEN_DISCORD_REQUIRE_DISCORD"); requireDiscord != "" {
+		if require, err := strconv.ParseBool(requireDiscord); err == nil {
+			c.Discord.RequireDiscord = require
+		}
+	}
 
 	// WorldGen configuration
 	if dimensions := os.Getenv("EDEN_WORLDGEN_DIMENSIONS"); dimensions != "" {
@@ -107,6 +112,7 @@ func GetEnvironmentOverrides() map[string]string {
 		"EDEN_DISCORD_ADMIN_IDS",
 		"EDEN_DISCORD_REGISTRATION_CHANNEL_ID",
 		"EDEN_DISCORD_REGISTERED_ROLE_ID",
+		"EDEN_DISCORD_REQUIRE_DISCORD",
 		"EDEN_WORLDGEN_DIMENSIONS",
 		"EDEN_WORLDGEN_CHUNK_SIZE",
 	}
@@ -147,6 +153,13 @@ func (c *Config) SetDefaults() {
 	}
 	if c.DB.Port == "" && strings.ToLower(c.DB.Type) == "mongodb" {
 		c.DB.Port = "27017"
+	}
+
+	// Discord defaults
+	// Default to NOT requiring Discord registration (false)
+	// This can be overridden in config file or environment variable
+	if !c.Discord.RequireDiscord && os.Getenv("EDEN_DISCORD_REQUIRE_DISCORD") == "" {
+		c.Discord.RequireDiscord = false
 	}
 
 	// WorldGen defaults
