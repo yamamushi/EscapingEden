@@ -52,6 +52,9 @@ get_tool_description() {
         "debug_database.go")
             echo "Debug tool to examine database contents and find characters"
             ;;
+        "test_equipment.go")
+            echo "Test the character equipment system functionality"
+            ;;
         *)
             echo "No description available"
             ;;

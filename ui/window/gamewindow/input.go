@@ -21,6 +21,9 @@ func (gw *GameWindow) HandleInput(input types.Input) {
 			gw.HandleCommand(types.InputCharacter, input.Data)
 		case types.InputEscape:
 			gw.HandleCommand(types.InputEscape, "")
+		case types.InputUp, types.InputDown, types.InputLeft, types.InputRight:
+			// Forward arrow keys to menus if any are open
+			gw.HandleCommand(input.Type, input.Data)
 		}
 	}
 }
@@ -136,6 +139,9 @@ func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 	case "i":
 		gw.RequestInventoryUpdate(nil, "")
 		gw.DisplayInventoryAfterReceive(true)
+		return
+	case "c":
+		gw.DisplayCharacterEquipment()
 		return
 	default:
 		return // Do nothing

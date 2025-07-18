@@ -18,6 +18,7 @@ const (
 	MenuTypeNull MenuType = iota
 	MenuTypeInventory
 	MenuTypeItemInfo
+	MenuTypeCharacterEquipment
 )
 
 type MenuBoxType interface {
