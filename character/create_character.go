@@ -22,6 +22,9 @@ func (cm *CharacterManager) CreateCharacter(info messages.CharacterInfo) message
 		FirstLogin:    1,           // 1 = true, 0 = false
 	}
 
+	// Initialize default attributes for new characters
+	newCharInfo.Attributes.SetDefaultAttributes()
+
 	err := cm.DB.AddRecord("Characters", &newCharInfo)
 	if err != nil {
 		log.Println(err.Error())

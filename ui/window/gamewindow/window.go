@@ -1,6 +1,7 @@
 package gamewindow
 
 import (
+	"fmt"
 	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
@@ -117,6 +118,7 @@ func (gw *GameWindow) UpdateContents() {
 		gw.SendToConsole(messages.WindowMessage{Type: messages.WM_GameCommand, Data: messages.GameManagerMessage{Type: messages.GameManager_GetCharacterView, Data: messages.GameMessageData{CharacterID: gw.GetCharacterInfoField("id"), Data: messages.GameViewDimensions{Width: gw.Width, Height: gw.Height}}}})
 		//gw.PrintStringToMap(gw.X+1, gw.Y+1, "Game Window", gw.Terminal.Bold())
 		gw.DrawStatusBar()
+		gw.DrawCharacterAttributes()
 		gw.DrawMenus()
 		if gw.CloseMenus {
 			for _, menu := range gw.Menus {
@@ -260,4 +262,43 @@ func (gw *GameWindow) UnlockPendingInventory() {
 		gw.PendingInventoryMutex.Unlock()
 		gw.PendingInventory = false
 	}
+}
+
+// DrawCharacterAttributes displays character attributes in the bottom left of the status bar area
+func (gw *GameWindow) DrawCharacterAttributes() {
+	// Use the Window's built-in mutex locking
+	gw.LockMutex()
+	defer gw.UnlockMutex()
+
+	// Get character attributes
+	attrs := gw.CharacterInfo.Attributes
+
+	// Define abbreviated attribute names and their values
+	attributeDisplay := []struct {
+		name  string
+		value int
+	}{
+		{"STR", attrs.Strength},
+		{"DEX", attrs.Dexterity},
+		{"CON", attrs.Constitution},
+		{"INT", attrs.Intelligence},
+		{"WIS", attrs.Wisdom},
+		{"CHA", attrs.Charisma},
+	}
+
+	// Calculate starting position for attributes display (bottom left of status bar)
+	startY := 2 // Bottom line of status bar area (third line)
+	startX := 2 // Left side with small margin
+
+	// Build the complete attributes string with proper spacing
+	var attributesText string
+	for i, attr := range attributeDisplay {
+		if i > 0 {
+			attributesText += "  " // Two spaces between attributes
+		}
+		attributesText += fmt.Sprintf("%s:%d", attr.name, attr.value)
+	}
+
+	// Draw all attributes as a single string
+	gw.PrintStringToStatusBar(startX, startY, attributesText, gw.Terminal.Bold())
 }

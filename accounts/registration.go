@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/yamamushi/EscapingEden/edenbot"
 	"github.com/yamamushi/EscapingEden/edenutil"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
@@ -115,7 +116,7 @@ func (am *AccountManager) CreateAccount(username, password, discordTag string) m
 		return response
 	}
 
-	var discordUser *messages.DiscordUser
+	var discordUser *edenbot.DiscordUser
 	var registrationCode uuid.UUID
 	var uuidError error
 

@@ -1,9 +1,11 @@
 package messages
 
 import (
+	"strings"
+	"time"
+
 	"github.com/yamamushi/EscapingEden/edentypes"
 	"github.com/yamamushi/EscapingEden/ui/util"
-	"time"
 )
 
 // Equipment represents all equipped items on a character using item IDs for database references
@@ -50,6 +52,16 @@ type Equipment struct {
 	RightPinkyRingID  string `json:"right_pinky_ring_id,omitempty"`
 }
 
+// Attributes represents a character's core attributes
+type Attributes struct {
+	Strength     int `json:"strength"`
+	Dexterity    int `json:"dexterity"`
+	Constitution int `json:"constitution"`
+	Intelligence int `json:"intelligence"`
+	Wisdom       int `json:"wisdom"`
+	Charisma     int `json:"charisma"`
+}
+
 type CharacterInfo struct {
 	ID          string `storm:"index"`
 	UserID      string
@@ -74,6 +86,9 @@ type CharacterInfo struct {
 
 	// The character's equipped items
 	Equipment Equipment
+
+	// The character's attributes
+	Attributes Attributes
 }
 
 type PlayerViewHistoryCoordinate struct {
@@ -240,4 +255,74 @@ func (e *Equipment) GetEquippedItemCount() int {
 		}
 	}
 	return count
+}
+
+// Attributes helper methods
+
+// GetAttribute returns the value of a specific attribute by name
+func (a *Attributes) GetAttribute(name string) int {
+	switch strings.ToLower(name) {
+	case "strength", "str":
+		return a.Strength
+	case "dexterity", "dex":
+		return a.Dexterity
+	case "constitution", "con":
+		return a.Constitution
+	case "intelligence", "int":
+		return a.Intelligence
+	case "wisdom", "wis":
+		return a.Wisdom
+	case "charisma", "cha":
+		return a.Charisma
+	default:
+		return 0
+	}
+}
+
+// SetAttribute sets the value of a specific attribute by name
+func (a *Attributes) SetAttribute(name string, value int) bool {
+	switch strings.ToLower(name) {
+	case "strength", "str":
+		a.Strength = value
+	case "dexterity", "dex":
+		a.Dexterity = value
+	case "constitution", "con":
+		a.Constitution = value
+	case "intelligence", "int":
+		a.Intelligence = value
+	case "wisdom", "wis":
+		a.Wisdom = value
+	case "charisma", "cha":
+		a.Charisma = value
+	default:
+		return false
+	}
+	return true
+}
+
+// GetAttributeModifier returns the D&D-style modifier for an attribute (-5 to +10 for scores 1-30)
+func (a *Attributes) GetAttributeModifier(name string) int {
+	score := a.GetAttribute(name)
+	return (score - 10) / 2
+}
+
+// GetTotal returns the sum of all attributes
+func (a *Attributes) GetTotal() int {
+	return a.Strength + a.Dexterity + a.Constitution + a.Intelligence + a.Wisdom + a.Charisma
+}
+
+// SetDefaultAttributes sets default starting attributes (typically 10 for average)
+func (a *Attributes) SetDefaultAttributes() {
+	a.Strength = 10
+	a.Dexterity = 10
+	a.Constitution = 10
+	a.Intelligence = 10
+	a.Wisdom = 10
+	a.Charisma = 10
+}
+
+// IsEmpty returns true if all attributes are zero (indicating uninitialized)
+func (a *Attributes) IsEmpty() bool {
+	return a.Strength == 0 && a.Dexterity == 0 && a.Constitution == 0 &&
+		a.Intelligence == 0 && a.Wisdom == 0 && a.Charisma == 0
 }
