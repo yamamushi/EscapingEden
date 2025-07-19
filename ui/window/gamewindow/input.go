@@ -1,6 +1,7 @@
 package gamewindow
 
 import (
+	"fmt"
 	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 	"github.com/yamamushi/EscapingEden/ui/types"
@@ -65,6 +66,7 @@ func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 		return
 	}
 	gw.MenusMutex.Unlock()
+
 	//gw.Log.Println(logging.LogInfo, "GameWindow Input: ", strconv.Itoa(int(input[0])))
 	// convert input to an int and send the value to the console
 	if int(input[0]) == 4 {
@@ -88,6 +90,15 @@ func (gw *GameWindow) HandleCommand(inputType types.InputType, input string) {
 		}
 		return
 	}
+
+	// Check if we're in build wall mode BEFORE clearing status bar
+	if gw.buildWallMode {
+		gw.Log.Println(logging.LogInfo, fmt.Sprintf("Build wall mode active, received input: '%s'", input))
+		if gw.HandleBuildWallDirection(input) {
+			return
+		}
+	}
+
 	gw.StatusBarMutex.Lock()
 	gw.StatusBarMessage = ""
 	gw.StatusBarMutex.Unlock()

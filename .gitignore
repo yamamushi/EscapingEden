@@ -8,5 +8,6 @@ EscapingEden
 deploy.sh
 *.map
 update-assets.sh
+.kiro
 .DS_Store
 *.tgz

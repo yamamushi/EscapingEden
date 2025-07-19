@@ -49,13 +49,20 @@ type GameWindow struct {
 	Inventory []edentypes.Item
 	Hotkeys   map[string]edentypes.Item
 
-	InventoryMutex              sync.Mutex
-	PendingInventoryMutex       sync.Mutex
-	PendingInventory            bool
-	InventoryDisplayType        edentypes.ItemType
-	MenuCallback                interface{}
-	InventoryCallbackPrompt     string
-	DisplayInventoryPostReceive bool
+	InventoryMutex                       sync.Mutex
+	PendingInventoryMutex                sync.Mutex
+	PendingInventory                     bool
+	InventoryDisplayType                 edentypes.ItemType
+	MenuCallback                         interface{}
+	InventoryCallbackPrompt              string
+	DisplayInventoryPostReceive          bool
+	MaterialSelectionCallback            func(*MenuBox, string)
+	MaterialSelectionPrompt              string
+	DisplayMaterialSelectionAfterReceive bool
+
+	// Build wall state
+	buildWallMode     bool
+	buildWallMaterial *edentypes.Item
 }
 
 // GameWindowState is an enum for storing game window state
@@ -141,6 +148,12 @@ func (gw *GameWindow) UpdateContents() {
 func (gw *GameWindow) SetStatusBarMessage(message string) {
 	gw.StatusBarMutex.Lock()
 	defer gw.StatusBarMutex.Unlock()
+
+	// Don't overwrite direction selection message when in build wall mode
+	if gw.buildWallMode && message == "Select material to build wall with:" {
+		return
+	}
+
 	gw.StatusBarMessage = message
 }
 

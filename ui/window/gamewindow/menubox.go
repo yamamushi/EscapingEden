@@ -74,10 +74,16 @@ func (mb *MenuBox) ToggleHotkeyCheck(toggle bool) {
 }
 
 func (mb *MenuBox) HandleInput(gw *GameWindow, inputType types.InputType, input string) {
-	//gw.Log.Println(logging.LogInfo, "Menubox received input: ", input)
+	gw.Log.Println(logging.LogInfo, "Menubox received input: ", input)
 	// Handle input for the menu box
 	// First check if the input is a keybind
 	if inputType == types.InputEscape {
+		mb.CloseMenus(gw)
+		return
+	}
+
+	// Handle "!" key to close menus
+	if input == "!" {
 		mb.CloseMenus(gw)
 		return
 	}
@@ -95,16 +101,20 @@ func (mb *MenuBox) HandleInput(gw *GameWindow, inputType types.InputType, input 
 	}
 	for _, option := range mb.Options {
 		if input == option.Keybind {
-			//gw.Log.Println(logging.LogInfo, "Menubox received input for ", option.Name)
+			gw.Log.Println(logging.LogInfo, "Menubox received input for ", option.Name)
 			// If it is, call the callback
 			switch option.Callback.(type) {
 			case func(box *MenuBox):
+				gw.Log.Println(logging.LogInfo, "Calling func(*MenuBox) callback")
 				option.Callback.(func(*MenuBox))(mb)
 			case func():
+				gw.Log.Println(logging.LogInfo, "Calling func() callback")
 				option.Callback.(func())()
 			case func(string):
+				gw.Log.Println(logging.LogInfo, "Calling func(string) callback")
 				option.Callback.(func(string))(input)
 			case func(*MenuBox, string):
+				gw.Log.Println(logging.LogInfo, "Calling func(*MenuBox, string) callback")
 				option.Callback.(func(*MenuBox, string))(mb, input)
 			default:
 				log.Println(fmt.Sprintf("Unhandled type of callback %T", option.Callback))

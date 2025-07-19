@@ -2,6 +2,7 @@ package gamewindow
 
 import (
 	"github.com/yamamushi/EscapingEden/edentypes"
+	"github.com/yamamushi/EscapingEden/logging"
 	"github.com/yamamushi/EscapingEden/messages"
 )
 
@@ -24,8 +25,14 @@ func (gw *GameWindow) Listen() {
 				gw.UnlockPendingInventory()
 				// cast the data to []*edenitems.Item
 				gw.UpdateInventory(inventory)
+				gw.Log.Println(logging.LogInfo, "Inventory received, total items:", len(inventory))
 				if gw.DisplayInventoryPostReceive {
+					gw.Log.Println(logging.LogInfo, "Displaying inventory after receive")
 					gw.DisplayInventory()
+				}
+				if gw.DisplayMaterialSelectionAfterReceive {
+					gw.Log.Println(logging.LogInfo, "Displaying material selection after receive")
+					gw.DisplayMaterialSelection()
 				}
 			case messages.GM_FailedDig:
 				//gw.Log.Println(logging.LogInfo, "Game Window received failed dig message from console")
