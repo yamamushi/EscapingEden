@@ -1,0 +1,83 @@
+{
+  "tickRate": 200,
+  "maxQueueSize": 3,
+  "actions": {
+    "move": {
+      "tickCost": 5,
+      "description": "Moving one tile",
+      "canQueue": true,
+      "interruptible": true,
+      "category": "movement"
+    },
+    "mine": {
+      "tickCost": 20,
+      "description": "Mining a tile",
+      "canQueue": true,
+      "interruptible": false,
+      "category": "resource"
+    },
+    "build_wall": {
+      "tickCost": 15,
+      "description": "Building a wall",
+      "canQueue": true,
+      "interruptible": false,
+      "category": "construction"
+    },
+    "dig": {
+      "tickCost": 10,
+      "description": "Digging a tile",
+      "canQueue": true,
+      "interruptible": true,
+      "category": "terrain"
+    },
+    "build_floor": {
+      "tickCost": 12,
+      "description": "Building a floor",
+      "canQueue": true,
+      "interruptible": false,
+      "category": "construction"
+    },
+    "build_door": {
+      "tickCost": 18,
+      "description": "Building a door",
+      "canQueue": true,
+      "interruptible": false,
+      "category": "construction"
+    },
+    "build_stairs": {
+      "tickCost": 25,
+      "description": "Building stairs",
+      "canQueue": true,
+      "interruptible": false,
+      "category": "construction"
+    },
+    "gather": {
+      "tickCost": 8,
+      "description": "Gathering resources from the environment",
+      "canQueue": true,
+      "interruptible": true,
+      "category": "resource"
+    },
+    "craft": {
+      "tickCost": 30,
+      "description": "Crafting an item",
+      "canQueue": true,
+      "interruptible": false,
+      "category": "crafting"
+    },
+    "repair": {
+      "tickCost": 20,
+      "description": "Repairing an item or structure",
+      "canQueue": true,
+      "interruptible": false,
+      "category": "crafting"
+    },
+    "rest": {
+      "tickCost": 50,
+      "description": "Resting to recover stamina",
+      "canQueue": true,
+      "interruptible": true,
+      "category": "social"
+    }
+  }
+}

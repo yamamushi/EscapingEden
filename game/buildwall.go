@@ -3,52 +3,77 @@ package game
 import (
 	"errors"
 	"github.com/yamamushi/EscapingEden/edentypes"
-	"log"
 	"strings"
 )
 
 func (gm *GameManager) HandleBuildWallRequest(itemID string, toolID string, charID string, deltaX, deltaY int) error {
-	item := edentypes.Item{}
-	err := gm.DB.One("Items", "ID", itemID, &item)
-	if err != nil {
-		//gm.Log.Println("Failed to get item", err.Error())
-		return errors.New("failed to get item")
-	}
-
-	wallTypePrefix := strings.ToLower(item.Name) + "_wall"
-
-	// We're not using the tool right now so nil works fine
-	/*tool := edentypes.Item{}
-	err = gm.DB.One("Items", "ID", toolID, &tool)
-	if err != nil {
-		//gm.Log.Println("Failed to get item", err.Error())
-		return errors.New("failed to get tool")
-	}
-	*/
-
-	// Lock the map
-	//gm.MapChunks[0].Mutex.Lock()
-	//defer gm.MapChunks[0].Mutex.Unlock()
-	// Get the character's position
+	// Get character
 	character, err := gm.GetCharacter(charID)
 	if err != nil {
-		log.Println("Failed to get character", err.Error())
 		return errors.New("character not found")
 	}
+
+	// Validate building material
+	item := edentypes.Item{}
+	err = gm.DB.One("Items", "ID", itemID, &item)
+	if err != nil {
+		return errors.New("building material not found")
+	}
+
+	// Check if character has the item in inventory
+	hasItem := gm.CharacterHasItem(charID, itemID)
+	if !hasItem {
+		return errors.New("you don't have the required building material")
+	}
+
+	// Validate tool if provided
+	if toolID != "" {
+		tool := edentypes.Item{}
+		err = gm.DB.One("Items", "ID", toolID, &tool)
+		if err != nil {
+			return errors.New("building tool not found")
+		}
+
+		// Check if tool is appropriate for building
+		if tool.Type != edentypes.ItemTool {
+			return errors.New("item is not a tool")
+		}
+	}
+
+	// Get target tile information
 	mapChunk, tile, x, y, z := gm.GetTileFromCharacter(charID, character.Position.X+deltaX, character.Position.Y+deltaY, 0)
 	if tile == nil {
-		//log.Println("Tile not found")
-		return errors.New("tile not found")
+		return errors.New("target location not found")
 	}
+
+	// Check if target tile is buildable
 	if strings.Contains(tile.TileType, "wall") {
-		//log.Println("Tile is already wall")
-		return errors.New("tile is already wall")
+		return errors.New("there is already a wall here")
 	}
+
+	// Check if another player is standing at the target location
+	gm.activeCharactersMutex.Lock()
+	targetPlayer := gm.GetCharacterAt(mapChunk, character.Position.X+deltaX, character.Position.Y+deltaY)
+	gm.activeCharactersMutex.Unlock()
+
+	if targetPlayer != nil && targetPlayer.ID != charID {
+		return errors.New("cannot build on occupied tile")
+	}
+
+	// Consume building material from inventory
+	err = gm.RemoveFromCharacterInventory(charID, itemID)
+	if err != nil {
+		return errors.New("failed to consume building material")
+	}
+
+	// Build the wall
+	wallTypePrefix := strings.ToLower(item.Name) + "_wall"
 	tile.TileType = wallTypePrefix
-	//log.Println("Getting Tile at ", x, y, z)
+
+	// Fix wall alignment with surrounding walls
 	globalX, globalY, globalZ := gm.LocalToGlobalTile(x, y, z, mapChunk)
-	// Now we want to check the surrounding to tiles to see if any are also walls
 	gm.FixWallAlignment(globalX, globalY, globalZ, 3, true)
+
 	return nil
 }
 

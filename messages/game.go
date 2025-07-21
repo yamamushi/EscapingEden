@@ -34,6 +34,10 @@ const (
 	GM_AdminTeleportResponse
 	GM_AdminSpawnListResponse
 	GM_AdminLocationResponse
+	GM_ActionQueueUpdate
+	GM_ActionStarted
+	GM_ActionCompleted
+	GM_ActionFailed
 )
 
 type GameMessageCommand int
@@ -85,6 +89,13 @@ type GameCharBuildWall struct {
 	ToolID string // Unused for now, but will be used for tools that are required to build
 }
 
+type GameCharMine struct {
+	DeltaX int
+	DeltaY int
+	ItemID string // Expected resource to mine
+	ToolID string // Mining tool to use
+}
+
 type GameAdminTeleport struct {
 	AdminID        string
 	TargetPlayerID string
@@ -98,4 +109,48 @@ type GameAdminListSpawns struct {
 type GameAdminGetLocation struct {
 	AdminID        string
 	TargetPlayerID string
+}
+
+// Action queue related message types
+type GameActionInfo struct {
+	Type          string  `json:"type"`
+	Description   string  `json:"description"`
+	Progress      float64 `json:"progress"` // 0.0 to 1.0
+	TicksLeft     int     `json:"ticksLeft"`
+	TotalTicks    int     `json:"totalTicks"`
+	Interruptible bool    `json:"interruptible"`
+}
+
+type GameActionQueueUpdate struct {
+	CharacterID   string            `json:"characterId"`
+	CurrentAction *GameActionInfo   `json:"currentAction"`
+	QueuedActions []*GameActionInfo `json:"queuedActions"`
+	MaxQueue      int               `json:"maxQueue"`
+}
+
+type GameActionStarted struct {
+	CharacterID string `json:"characterId"`
+	ActionType  string `json:"actionType"`
+	Description string `json:"description"`
+	Duration    int    `json:"duration"`
+}
+
+type GameActionCompleted struct {
+	CharacterID string      `json:"characterId"`
+	ActionType  string      `json:"actionType"`
+	Success     bool        `json:"success"`
+	Result      interface{} `json:"result"`
+}
+
+type GameActionFailed struct {
+	CharacterID string `json:"characterId"`
+	ActionType  string `json:"actionType"`
+	Reason      string `json:"reason"`
+}
+
+// GameQueueAction represents a request to queue an action
+type GameQueueAction struct {
+	CharacterID string      `json:"characterId"`
+	ActionType  string      `json:"actionType"`
+	Data        interface{} `json:"data"`
 }

@@ -51,6 +51,10 @@ type GameManager struct {
 
 	// Item system
 	ItemRegistry *edentypes.ItemRegistry
+
+	// Action system
+	ActionManager *ActionManager
+	GameTicker    *GameTicker
 }
 
 func NewGameManager(receiveChannel chan messages.GameManagerMessage, sendChannel chan messages.ConnectionManagerMessage, db edendb.DatabaseType, log logging.LoggerType, conf *edenconfig.Config) *GameManager {
@@ -112,6 +116,13 @@ func (gm *GameManager) Init() error {
 
 	// Set up command system components
 	gm.initializeCommandSystem()
+
+	// Initialize action system
+	err = gm.initializeActionSystem()
+	if err != nil {
+		gm.Log.Println(logging.LogError, "Failed to initialize action system:", err)
+		return err
+	}
 
 	// Start performance monitoring
 	monitor := NewChunkMonitor(gm)
@@ -190,28 +201,36 @@ func (gm *GameManager) initializeCommandSystem() {
 	gm.Log.Println(logging.LogInfo, "Command system initialized")
 }
 
-// deltaToDirection converts x,y deltas to a direction string
-func (gm *GameManager) deltaToDirection(deltaX, deltaY int) string {
-	switch {
-	case deltaX == 0 && deltaY == -1:
-		return "n" // north
-	case deltaX == 0 && deltaY == 1:
-		return "s" // south
-	case deltaX == 1 && deltaY == 0:
-		return "e" // east
-	case deltaX == -1 && deltaY == 0:
-		return "w" // west
-	case deltaX == 1 && deltaY == -1:
-		return "ne" // northeast
-	case deltaX == -1 && deltaY == -1:
-		return "nw" // northwest
-	case deltaX == 1 && deltaY == 1:
-		return "se" // southeast
-	case deltaX == -1 && deltaY == 1:
-		return "sw" // southwest
-	default:
-		return "" // invalid direction
+// initializeActionSystem sets up the tick-based action system
+func (gm *GameManager) initializeActionSystem() error {
+	gm.Log.Println(logging.LogInfo, "Initializing action system...")
+
+	// Initialize action registry with configuration
+	registry := NewActionRegistry(gm.Log)
+	err := registry.LoadFromFile("./config/actions.json")
+	if err != nil {
+		return fmt.Errorf("failed to load action registry: %v", err)
 	}
+
+	// Initialize action manager with game handler
+	gm.ActionManager = NewActionManager(registry, gm, gm.Log)
+	gm.ActionManager.SetSendChannel(gm.SendChannel)
+
+	// Initialize game ticker
+	gm.GameTicker = NewGameTicker(200*time.Millisecond, gm.Log)
+	err = gm.ActionManager.SetGameTicker(gm.GameTicker)
+	if err != nil {
+		return fmt.Errorf("failed to set game ticker: %v", err)
+	}
+
+	// Start the ticker
+	err = gm.GameTicker.Start()
+	if err != nil {
+		return fmt.Errorf("failed to start game ticker: %v", err)
+	}
+
+	gm.Log.Println(logging.LogInfo, "Action system initialized successfully")
+	return nil
 }
 
 // ProcessCommand processes a player command through the command system

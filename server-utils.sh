@@ -55,6 +55,9 @@ get_tool_description() {
         "test_equipment.go")
             echo "Test the character equipment system functionality"
             ;;
+        "test_tick_system.go")
+            echo "Validate game tick system configuration and test timing accuracy"
+            ;;
         *)
             echo "No description available"
             ;;

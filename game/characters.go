@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/yamamushi/EscapingEden/edentypes"
@@ -116,8 +117,13 @@ func (gm *GameManager) GetCharacter(characterID string) (character *messages.Cha
 
 // Note this does not lock the mutex, it is assumed that the caller has already locked it!
 func (gm *GameManager) GetCharacterAt(chunk *MapChunk, X, Y int) (character *messages.CharacterInfo) {
+	// Generate coordinate-based ID for comparison
+	coordinateBasedID := fmt.Sprintf("%d-%d-%d", chunk.GlobalPosition.X, chunk.GlobalPosition.Y, chunk.GlobalPosition.Z)
+
 	for i, character := range gm.ActiveCharacters {
-		if character.Record.Position.X == X && character.Record.Position.Y == Y && character.Record.CurrentMapID == chunk.ID {
+		// Check both UUID-based ID and coordinate-based ID for compatibility
+		if character.Record.Position.X == X && character.Record.Position.Y == Y &&
+			(character.Record.CurrentMapID == chunk.ID || character.Record.CurrentMapID == coordinateBasedID) {
 			return gm.ActiveCharacters[i].Record
 		}
 	}
@@ -305,4 +311,22 @@ func (gm *GameManager) CreateDefaultInventory() []edentypes.Item {
 
 	gm.Log.Println(logging.LogInfo, "Created default inventory with", len(inventory), "items from JSON definitions")
 	return inventory
+}
+
+// CharacterHasItem checks if a character has a specific item in their inventory
+func (gm *GameManager) CharacterHasItem(characterID string, itemID string) bool {
+	gm.activeCharactersMutex.Lock()
+	defer gm.activeCharactersMutex.Unlock()
+
+	for _, character := range gm.ActiveCharacters {
+		if character.ID == characterID {
+			for _, item := range character.Record.Inventory {
+				if item.ID == itemID {
+					return true
+				}
+			}
+			break
+		}
+	}
+	return false
 }

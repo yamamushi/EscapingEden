@@ -2,36 +2,108 @@ package game
 
 import (
 	"errors"
+	"fmt"
 	"github.com/yamamushi/EscapingEden/edentypes"
-	"log"
+	"github.com/yamamushi/EscapingEden/logging"
+	"strings"
 )
 
 func (gm *GameManager) HandleDigRequest(itemID string, charID string, deltaX, deltaY int) error {
-	item := edentypes.Item{}
-	err := gm.DB.One("Items", "ID", itemID, &item)
-	if err != nil {
-		//gm.Log.Println("Failed to get item", err.Error())
-		return errors.New("failed to get item")
-	}
-
+	// Get character
 	character, err := gm.GetCharacter(charID)
 	if err != nil {
-		log.Println("Failed to get character", err.Error())
 		return errors.New("character not found")
 	}
-	_, tile, _, _, _ := gm.GetTileFromCharacter(charID, character.Position.X+deltaX, character.Position.Y+deltaY, 0)
-	if tile == nil {
-		log.Println("Tile not found")
-		return errors.New("tile not found")
+
+	// Validate digging tool
+	item := edentypes.Item{}
+	err = gm.DB.One("Items", "ID", itemID, &item)
+	if err != nil {
+		return errors.New("digging tool not found")
 	}
+
+	// Check if character has the tool in inventory
+	hasTool := gm.CharacterHasItem(charID, itemID)
+	if !hasTool {
+		return errors.New("you don't have the required digging tool")
+	}
+
+	// Check if tool is appropriate for digging
+	if item.Type != edentypes.ItemTool {
+		return errors.New("item is not a tool")
+	}
+
+	// Get target tile information
+	mapChunk, tile, x, y, z := gm.GetTileFromCharacter(charID, character.Position.X+deltaX, character.Position.Y+deltaY, 0)
+	if tile == nil {
+		return errors.New("target location not found")
+	}
+
+	// Check if target tile can be dug
 	if tile.TileType == "floor" {
-		//log.Println("Tile is already floor")
 		return errors.New("tile is already floor")
 	}
+
+	// Check if tile is diggable (not certain wall types that shouldn't be dug)
+	if !gm.isTileDiggable(tile.TileType) {
+		return errors.New("this tile cannot be dug")
+	}
+
+	// Check if another player is standing at the target location
+	gm.activeCharactersMutex.Lock()
+	targetPlayer := gm.GetCharacterAt(mapChunk, character.Position.X+deltaX, character.Position.Y+deltaY)
+	gm.activeCharactersMutex.Unlock()
+
+	if targetPlayer != nil && targetPlayer.ID != charID {
+		return errors.New("cannot dig on occupied tile")
+	}
+
+	// Convert tile to floor
+	originalTileType := tile.TileType
 	tile.TileType = "floor"
 
-	globalX, globalY, globalZ := gm.LocalToGlobalTile(character.Position.X+deltaX, character.Position.Y+deltaY, 0, gm.GetMapChunkByID(character.CurrentMapID))
+	// Fix wall alignment for surrounding tiles
+	globalX, globalY, globalZ := gm.LocalToGlobalTile(x, y, z, mapChunk)
 	gm.FixWallAlignment(globalX, globalY, globalZ, 1, false)
 
+	// Consume tool durability
+	err = gm.consumeToolDurability(charID, itemID, 1)
+	if err != nil {
+		gm.Log.Println(logging.LogWarn, fmt.Sprintf("Failed to consume tool durability: %v", err))
+	}
+
+	gm.Log.Println(logging.LogInfo, fmt.Sprintf("Character %s dug %s at (%d, %d)", charID, originalTileType, x, y))
 	return nil
+}
+
+// isTileDiggable checks if a tile type can be dug
+func (gm *GameManager) isTileDiggable(tileType string) bool {
+	// Define which tile types can be dug
+	diggableTiles := map[string]bool{
+		"stone":  true,
+		"dirt":   true,
+		"sand":   true,
+		"gravel": true,
+		"clay":   true,
+		"ore":    true,
+		"coal":   true,
+		"rock":   true,
+	}
+
+	// Check for wall types that can be dug
+	if strings.Contains(tileType, "_wall") {
+		// Most walls can be dug, but some special walls might not be
+		specialWalls := map[string]bool{
+			"bedrock_wall":    false,
+			"reinforced_wall": false,
+			"magic_wall":      false,
+		}
+
+		if !specialWalls[tileType] {
+			return true // Most walls can be dug
+		}
+		return false
+	}
+
+	return diggableTiles[tileType]
 }
